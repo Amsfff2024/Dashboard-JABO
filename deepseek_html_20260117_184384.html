@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Alarms Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #17a2b8;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card {
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .stat-card.total { border-left-color: var(--primary-color); }
+        .stat-card.sites { border-left-color: var(--warning-color); }
+        .stat-card.unique { border-left-color: var(--info-color); }
+        
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .alarm-critical {
+            background-color: #fff5f5;
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .alarm-warning {
+            background-color: #fffbf0;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .alarm-info {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .filter-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .last-updated {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .export-btn:hover {
+            color: white;
+            opacity: 0.9;
+        }
+        
+        /* Optimasi lebar kolom dengan urutan baru */
+        .table th:nth-child(1) { width: 40px; }    /* # */
+        .table th:nth-child(2) { width: 120px; }   /* SITE ID */
+        .table th:nth-child(3) { width: 150px; }   /* Alarm Source */
+        .table th:nth-child(4) { width: 200px; }   /* Alarm Name */
+        .table th:nth-child(5) { width: 100px; }   /* Site Type */
+        .table th:nth-child(6) { width: 150px; }   /* Category */
+        .table th:nth-child(7) { width: 150px; }   /* First Occurred */
+        .table th:nth-child(8) { width: 350px; }   /* MO Name */
+        .table th:nth-child(9) { width: 80px; }    /* Source */
+        
+        /* Style untuk SITE ID */
+        .site-id-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        /* Style untuk MO Name yang panjang */
+        .mo-name-cell {
+            max-width: 400px;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+            
+            .table th:nth-child(n),
+            .table td:nth-child(n) {
+                width: auto !important;
+            }
+            
+            .mo-name-cell {
+                max-width: 200px;
+            }
+            
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+            
+            .stat-card .rounded-circle {
+                padding: 0.75rem !important;
+            }
+            
+            .stat-card .fa-2x {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt me-2"></i>VIP Alarms Dashboard
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3 last-updated" id="lastUpdated"></span>
+                <button class="btn btn-outline-light" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid mt-4">
+        <!-- Statistics Cards (UPDATED) -->
+        <div class="row mb-4" id="statsSection">
+            <!-- Stats akan diisi oleh JavaScript -->
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Alarm Name</label>
+                    <input type="text" class="form-control" id="filterAlarm" placeholder="Search alarm...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Site ID</label>
+                    <input type="text" class="form-control" id="filterSiteId" placeholder="Site ID">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="filterCategory">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Source</label>
+                    <select class="form-select" id="filterSource">
+                        <option value="all">All Sources</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Export Button -->
+        <div class="d-flex justify-content-end mb-3">
+            <button class="export-btn" onclick="exportToCSV()">
+                <i class="fas fa-download me-2"></i>Export to CSV
+            </button>
+        </div>
+        
+        <!-- Data Table (URUTAN KOLOM BARU) -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="alarmsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>SITE ID</th>
+                                <th>Alarm Source</th>
+                                <th>Alarm Name</th>
+                                <th>Site Type</th>
+                                <th>Category</th>
+                                <th>First Occurred</th>
+                                <th>MO Name</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-5 py-3 text-center text-muted">
+            <p>VIP Alarms Monitoring System &copy; 2024 | Powered by Google Apps Script</p>
+        </footer>
+    </div>
+    
+    <!-- Modal for Details -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Alarm Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Details akan diisi oleh JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        let table;
+        let currentData = [];
+        
+        // Initialize on page load
+        $(document).ready(function() {
+            loadPage();
+        });
+        
+        // Load all data and initialize page
+        function loadPage() {
+            google.script.run.withSuccessHandler(initializePage).getStatistics();
+        }
+        
+        // Initialize page with data
+        function initializePage(stats) {
+            loadCategories();
+            loadSources();
+            loadTableData();
+            updateLastUpdated();
+        }
+        
+        // Update statistics cards (VERSI BARU)
+        function updateStats(stats, uniqueSiteCount) {
+            const statsHtml = `
+                <div class="col-md-4">
+                    <div class="card stat-card total">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">TOTAL ALARMS</h6>
+                                    <h2 class="mb-0">${stats.total}</h2>
+                                    <p class="text-muted mb-0 small">All alarm incidents</p>
+                                </div>
+                                <div class="bg-primary text-white rounded-circle p-3">
+                                    <i class="fas fa-bell fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card sites">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">SITES AFFECTED</h6>
+                                    <h2 class="mb-0">${Object.keys(stats.bySiteType).length}</h2>
+                                    <p class="text-muted mb-0 small">By site type</p>
+                                </div>
+                                <div class="bg-warning text-white rounded-circle p-3">
+                                    <i class="fas fa-tower-cell fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card unique">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">UNIQUE SITE ID ISSUES</h6>
+                                    <h2 class="mb-0 text-info" id="uniqueSiteCount">${uniqueSiteCount}</h2>
+                                    <p class="text-muted mb-0 small">No duplicates counted</p>
+                                </div>
+                                <div class="bg-info text-white rounded-circle p-3">
+                                    <i class="fas fa-exclamation-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('statsSection').innerHTML = statsHtml;
+        }
+        
+        // Load categories dropdown
+        function loadCategories() {
+            google.script.run.withSuccessHandler(function(categories) {
+                const select = document.getElementById('filterCategory');
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+            }).getUniqueCategories();
+        }
+        
+        // Load sources dropdown
+        function loadSources() {
+            google.script.run.withSuccessHandler(function(sources) {
+                const select = document.getElementById('filterSource');
+                sources.forEach(source => {
+                    const option = document.createElement('option');
+                    option.value = source;
+                    option.textContent = source;
+                    select.appendChild(option);
+                });
+            }).getUniqueSources();
+        }
+        
+        // Load table data
+        function loadTableData(filters = {}) {
+            google.script.run.withSuccessHandler(function(data) {
+                currentData = data;
+                renderTable(data);
+            }).loadData(filters);
+        }
+        
+        // Render table dengan urutan kolom baru
+        function renderTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            // Hitung unique Site IDs (tanpa duplikat)
+            const uniqueSiteIds = new Set();
+            
+            data.forEach((item, index) => {
+                const rowClass = getRowClass(item);
+                
+                // Simpan Site ID untuk statistik
+                if (item['SITE ID']) {
+                    uniqueSiteIds.add(item['SITE ID']);
+                }
+                
+                const row = `
+                    <tr class="${rowClass}" onclick="showDetails(${index})" style="cursor: pointer;">
+                        <td>${index + 1}</td>
+                        <td class="site-id-cell"><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td>
+                        <td>${item['Alarm Source'] || 'N/A'}</td>
+                        <td><strong>${item['Name'] || 'N/A'}</strong></td>
+                        <td>${item['Site Type'] || 'N/A'}</td>
+                        <td><span class="badge bg-secondary">${item['Category VIP POI'] || 'N/A'}</span></td>
+                        <td>${formatDateTime(item['First Occurred (NT)'])}</td>
+                        <td class="mo-name-cell"><small>${item['MO Name'] || 'N/A'}</small></td>
+                        <td><span class="badge bg-info">${item['Source'] || 'N/A'}</span></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            
+            // Get statistics and update with unique site count
+            google.script.run.withSuccessHandler(function(stats) {
+                updateStats(stats, uniqueSiteIds.size);
+            }).getStatistics();
+            
+            // Initialize DataTable
+            if (!table) {
+                table = $('#alarmsTable').DataTable({
+                    pageLength: 25,
+                    order: [[6, 'desc']], // Sort by First Occurred (column index 6)
+                    language: {
+                        search: "Search all columns:"
+                    },
+                    columnDefs: [
+                        { width: "40px", targets: 0 },   // #
+                        { width: "120px", targets: 1 },  // SITE ID
+                        { width: "150px", targets: 2 },  // Alarm Source
+                        { width: "200px", targets: 3 },  // Alarm Name
+                        { width: "100px", targets: 4 },  // Site Type
+                        { width: "150px", targets: 5 },  // Category
+                        { width: "150px", targets: 6 },  // First Occurred
+                        { width: "350px", targets: 7 },  // MO Name
+                        { width: "80px", targets: 8 }    // Source
+                    ]
+                });
+            } else {
+                table.destroy();
+                table = $('#alarmsTable').DataTable({
+                    pageLength: 25,
+                    order: [[6, 'desc']],
+                    columnDefs: [
+                        { width: "40px", targets: 0 },
+                        { width: "120px", targets: 1 },
+                        { width: "150px", targets: 2 },
+                        { width: "200px", targets: 3 },
+                        { width: "100px", targets: 4 },
+                        { width: "150px", targets: 5 },
+                        { width: "150px", targets: 6 },
+                        { width: "350px", targets: 7 },
+                        { width: "80px", targets: 8 }
+                    ]
+                });
+            }
+        }
+        
+        // Get row class based on alarm type
+        function getRowClass(item) {
+            const alarmName = item['Name'] || '';
+            
+            if (alarmName.includes('UNAVAILABLE') || alarmName.includes('FAILURE')) {
+                return 'alarm-critical';
+            } else if (alarmName.includes('DEGRADED') || alarmName.includes('THRESHOLD')) {
+                return 'alarm-warning';
+            } else {
+                return 'alarm-info';
+            }
+        }
+        
+        // Show details modal
+        function showDetails(index) {
+            const item = currentData[index];
+            
+            const detailsHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Site Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Site ID:</strong></td><td><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td></tr>
+                            <tr><td><strong>Alarm Source:</strong></td><td>${item['Alarm Source'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Alarm Name:</strong></td><td>${item['Name'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Site Type:</strong></td><td>${item['Site Type'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Category & Status</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Category:</strong></td><td>${item['Category VIP POI'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td>${item['Clearance Status'] || 'N/A'}</td></tr>
+                            <tr><td><strong>First Occurred:</strong></td><td>${formatDateTime(item['First Occurred (NT)'])}</td></tr>
+                            <tr><td><strong>Source:</strong></td><td>${item['Source'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Technical Details</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>MO Name:</strong></td><td><small>${item['MO Name'] || 'N/A'}</small></td></tr>
+                            <tr><td><strong>NE Type:</strong></td><td>${item['NE Type'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Cleared On:</strong></td><td>${item['Cleared On (NT)'] === '-' ? 'Still Active' : formatDateTime(item['Cleared On (NT)'])}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalBody').innerHTML = detailsHtml;
+            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            modal.show();
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const filters = {
+                alarmName: document.getElementById('filterAlarm').value,
+                siteId: document.getElementById('filterSiteId').value,
+                category: document.getElementById('filterCategory').value,
+                source: document.getElementById('filterSource').value
+            };
+            
+            loadTableData(filters);
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterAlarm').value = '';
+            document.getElementById('filterSiteId').value = '';
+            document.getElementById('filterCategory').value = 'all';
+            document.getElementById('filterSource').value = 'all';
+            
+            loadTableData({});
+        }
+        
+        // Refresh data
+        function refreshData() {
+            loadPage();
+            showToast('Data refreshed successfully!', 'success');
+        }
+        
+        // Export to CSV dengan urutan kolom baru
+        function exportToCSV() {
+            if (currentData.length === 0) {
+                showToast('No data to export!', 'warning');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Urutan kolom sesuai dengan tabel
+            const headers = [
+                'SITE ID', 'Alarm Source', 'Name', 'Site Type',
+                'Category VIP POI', 'First Occurred (NT)', 'MO Name', 'Source'
+            ];
+            
+            csvContent += headers.join(",") + "\r\n";
+            
+            // Add data
+            currentData.forEach(item => {
+                const row = headers.map(header => {
+                    const value = item[header] || '';
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csvContent += row.join(",") + "\r\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `vip_alarms_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('CSV exported successfully!', 'success');
+        }
+        
+        // Format date time
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr || dateTimeStr === '-') return '-';
+            
+            try {
+                const date = new Date(dateTimeStr);
+                return date.toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return dateTimeStr;
+            }
+        }
+        
+        // Update last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            const formattedTime = now.toLocaleString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('lastUpdated').textContent = `Last updated: ${formattedTime}`;
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            // Create toast container if it doesn't exist
+            if (!document.getElementById('toastContainer')) {
+                const toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.position = 'fixed';
+                toastContainer.style.top = '20px';
+                toastContainer.style.right = '20px';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+            
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('toastContainer').innerHTML += toastHtml;
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+            
+            // Remove toast after it's hidden
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+        }
+    </script>
+</body>
+</html>
