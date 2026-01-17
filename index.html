@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
@@ -38,12 +38,6 @@
         h1 {
             font-size: 28px;
             margin-bottom: 8px;
-        }
-        
-        .subtitle {
-            font-size: 16px;
-            opacity: 0.9;
-            margin-bottom: 15px;
         }
         
         .stats-bar {
@@ -80,7 +74,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1200px;
+            min-width: 900px;
         }
         
         th {
@@ -98,7 +92,7 @@
         td {
             padding: 12px;
             border-bottom: 1px solid #eaeaea;
-            vertical-align: top;
+            vertical-align: middle;
         }
         
         tr:nth-child(even) {
@@ -109,19 +103,10 @@
             background-color: #f0f7ff;
         }
         
-        .status-uncleared {
-            display: inline-block;
-            padding: 4px 10px;
-            background-color: #ffeaa7;
-            color: #d35400;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        
         .alarm-count {
             font-weight: bold;
             text-align: center;
+            font-size: 16px;
         }
         
         .alarm-count.high {
@@ -134,27 +119,6 @@
         
         .alarm-count.low {
             color: #27ae60;
-        }
-        
-        .coords {
-            font-family: monospace;
-            font-size: 13px;
-        }
-        
-        .ne-type {
-            background-color: #e8f4fd;
-            color: #2980b9;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 13px;
-            display: inline-block;
-        }
-        
-        .mo-name {
-            max-width: 300px;
-            word-wrap: break-word;
-            font-size: 13px;
-            line-height: 1.4;
         }
         
         .source {
@@ -177,11 +141,14 @@
         .site-id {
             font-weight: 600;
             color: #2c3e50;
+            font-size: 14px;
         }
         
-        .alarm-name {
-            color: #e74c3c;
-            font-weight: 600;
+        .alarm-source {
+            font-weight: 500;
+            color: #444;
+            max-width: 250px;
+            word-wrap: break-word;
         }
         
         .footer {
@@ -209,10 +176,6 @@
             
             h1 {
                 font-size: 22px;
-            }
-            
-            .subtitle {
-                font-size: 14px;
             }
             
             .stats-bar {
@@ -296,26 +259,49 @@
         .reset-btn:hover {
             background-color: #2980b9;
         }
+        
+        .refresh-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: auto;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #219653;
+        }
+        
+        .refresh-btn.loading {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .last-update {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Monitoring Cell Down - Count_Celldown</h1>
-            <div class="subtitle">Data Monitoring Cell Unavailable dari Google Sheets</div>
-            <div class="data-source">
-                Sumber Data: <a href="https://docs.google.com/spreadsheets/d/1K69ji4W1dGkZeKboNp0QxMGQ_Tm5RzlUu3pi1-ksMlg/edit?gid=219697226#gid=219697226" target="_blank" style="color: #a3d4ff;">Google Sheets</a>
-            </div>
         </header>
         
         <div class="stats-bar">
             <div class="stat-item">
-                <div class="stat-value" id="total-alarms">39</div>
-                <div class="stat-label">Total Alarm</div>
+                <div class="stat-value" id="total-sites">39</div>
+                <div class="stat-label">Total Sites</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="uncleared-alarms">39</div>
-                <div class="stat-label">Status Uncleared</div>
+                <div class="stat-value" id="total-celldown">405</div>
+                <div class="stat-label">Total Celldown</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="mae6-count">23</div>
@@ -350,10 +336,11 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label for="site-search">Cari SITE ID:</label>
-                <input type="text" id="site-search" placeholder="Masukkan SITE ID...">
+                <label for="site-search">Cari:</label>
+                <input type="text" id="site-search" placeholder="SITE ID atau Alarm Source...">
             </div>
             <button class="reset-btn" id="reset-filters">Reset Filter</button>
+            <button class="refresh-btn" id="refresh-data">⟳ Refresh Data</button>
         </div>
         
         <div class="legend">
@@ -384,16 +371,11 @@
                 <thead>
                     <tr>
                         <th>No</th>
-                        <th>Name</th>
-                        <th>Alarm Source</th>
                         <th>SITE ID</th>
+                        <th>Alarm Source</th>
+                        <th>Name</th>
                         <th>Alarm Count</th>
                         <th>First Occurred (NT)</th>
-                        <th>Cleared On (NT)</th>
-                        <th>Koordinat</th>
-                        <th>NE Type</th>
-                        <th>MO Name</th>
-                        <th>Clearance Status</th>
                         <th>Source</th>
                         <th>Updated At</th>
                     </tr>
@@ -406,726 +388,839 @@
         </div>
         
         <div class="footer">
-            <div>Monitoring Cell Down - Count_Celldown</div>
-            <div class="data-source">
-                Data diambil dari Google Sheets: Count_Celldown Sheet | Terakhir diperbarui: <span id="footer-update">2026-01-17 10:32:15</span>
-            </div>
+            <div>Sumber Data: <a href="https://docs.google.com/spreadsheets/d/1K69ji4W1dGkZeKboNp0QxMGQ_Tm5RzlUu3pi1-ksMlg/edit?gid=219697226#gid=219697226" target="_blank">Google Sheets - Count_Celldown</a></div>
+            <div class="last-update" id="last-update-time">Terakhir diperbarui: <span id="footer-update">2026-01-17 10:32:15</span></div>
         </div>
     </div>
 
     <script>
-        // Data dari Google Sheets (Count_Celldown) - Semua data dimasukkan langsung
-        const alarmData = [
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "IN_APT_MEDITERANIA_KEMAYORAN_MC",
-                "SITE ID": "12JKP0518",
-                "Alarm Count": 2,
-                "First Occurred (NT)": "2026-01-17 08:54:11",
-                "Cleared On (NT)": "-",
-                "Long": 106.8533,
-                "Lat": -6.1549,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=IN_APT_MEDITERANIA_KEMAYORAN_MC_4G, Local Cell ID=67, Cell Name=12JKP0518_IN_APTMEDIT_KMY_L18_22, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "HJENI_GANSEL_TP",
-                "SITE ID": "12JKS0206",
-                "Alarm Count": 1,
-                "First Occurred (NT)": "2026-01-17 04:15:34",
-                "Cleared On (NT)": "-",
-                "Long": 106.7937,
-                "Lat": -6.2696,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=HJENI_GANSEL_TP_4G, Local Cell ID=93, Cell Name=12JKS0206_HJENI_GANSEL_TP_L9_3, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "BABAKANKEMBANG_ST_XX",
-                "SITE ID": "11PDG0279",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2026-01-17 03:45:11",
-                "Cleared On (NT)": "-",
-                "Long": 105.7033,
-                "Lat": -6.7337,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=BABAKANKEMBANG_ST_4G_XX, Local Cell ID=61, Cell Name=11PDG0279_BABAKANKEMBANG_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "PARUNGKORED_PL",
-                "SITE ID": "11TGR0363",
-                "Alarm Count": 27,
-                "First Occurred (NT)": "2026-01-17 02:56:13",
-                "Cleared On (NT)": "-",
-                "Long": 106.7137,
-                "Lat": -6.1939,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=PARUNGKORED_PL_4G, Local Cell ID=92, Cell Name=11TGR0363_PARUNGKORED_PL_L9_2, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "TAMAN_ANGSOKA_PERMAI_MT_XX",
-                "SITE ID": "11SRG0159",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-17 02:54:37",
-                "Cleared On (NT)": "-",
-                "Long": 106.1492,
-                "Lat": -6.0718,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=TAMAN_ANGSOKA_PERMAI_MT_4G_XX, Local Cell ID=92, Cell Name=11SRG0159_TAMAN_ANGSOKA_PERMAI_MT_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "CIPARAGE_TB",
-                "SITE ID": "13KRW0496",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-17 01:19:37",
-                "Cleared On (NT)": "-",
-                "Long": 107.489,
-                "Lat": -6.1733,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=CIPARAGE_TB_4G, Local Cell ID=72, Cell Name=13KRW0496_CIPARAGE_TB_L18_12, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MI_BUNDARANFRESCO_IB",
-                "SITE ID": "11TGN0565",
-                "Alarm Count": 6,
-                "First Occurred (NT)": "2026-01-16 21:43:18",
-                "Cleared On (NT)": "-",
-                "Long": 106.6453,
-                "Lat": -6.2885,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MI_BUNDARANFRESCO_IB_4G, Local Cell ID=61, Cell Name=11TGN0565_MI_BUNDRNFRESCO_L18_21, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MI_SAMPORA_CISAUK_IB",
-                "SITE ID": "11TGN0586",
-                "Alarm Count": 12,
-                "First Occurred (NT)": "2026-01-16 20:08:23",
-                "Cleared On (NT)": "-",
-                "Long": 106.6579,
-                "Lat": -6.3178,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MI_SAMPORA_CISAUK_IB_4G, Local Cell ID=33, Cell Name=11TGN0586_MI_SMPRA_CISAUK_L21_13, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "I2_MAYAPADA_LEBAKBULUS_MC_XX",
-                "SITE ID": "12JKS1137",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-16 14:48:00",
-                "Cleared On (NT)": "-",
-                "Long": 106.7862,
-                "Lat": -6.2987,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=I2_MAYAPADA_LEBAKBULUS_MC_4G_XX, Local Cell ID=92, Cell Name=12JKS1137_I2_MAYAPADA_LEBAKBULUS_MC_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MATA_AIR_KATAPURA_ST_XX",
-                "SITE ID": "11CRS0360",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2026-01-16 00:30:49",
-                "Cleared On (NT)": "-",
-                "Long": 106.2416,
-                "Lat": -6.2427,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MATA_AIR_KATAPURA_ST_4G_XX, Local Cell ID=21, Cell Name=11CRS0360_MATA_AIR_KATAPURA_ST_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "NANAS_KARANGGAN_GT_XX",
-                "SITE ID": "13CBN1520",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-16 00:22:18",
-                "Cleared On (NT)": "-",
-                "Long": 106.8927,
-                "Lat": -6.4536,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=NANAS_KARANGGAN_GT_4G_XX, Local Cell ID=32, Cell Name=13CBN1520_NANAS_KARANGGAN_GT_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "CIMONGKOR_ST_XX",
-                "SITE ID": "11PDG0213",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2026-01-16 00:22:06",
-                "Cleared On (NT)": "-",
-                "Long": 106.0217,
-                "Lat": -6.3626,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=CIMONGKOR_ST_4G_XX, Local Cell ID=22, Cell Name=11PDG0213_CIMONGKOR_ST_L21_22_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "RSUP_CIPINANG_PL",
-                "SITE ID": "12JKT0661",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-15 03:15:50",
-                "Cleared On (NT)": "-",
-                "Long": 106.8859,
-                "Lat": -6.2061,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=RSUP_CIPINANG_PL_4G, Local Cell ID=23, Cell Name=12JKT0661_RSUP_CIPINANG_PL_L21_A23, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "JALAN_NYAPAH_SILEBU_GH_XX",
-                "SITE ID": "11CRS0355",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-14 18:18:49",
-                "Cleared On (NT)": "-",
-                "Long": 106.2282,
-                "Lat": -6.1901,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=JALAN_NYAPAH_SILEBU_GH_4G_XX, Local Cell ID=93, Cell Name=11CRS0355_JALAN_NYAPAH_SILEBU_GH_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "IN_TERMINAL_1C_SOETTA_XX",
-                "SITE ID": "11TGR0640",
-                "Alarm Count": 32,
-                "First Occurred (NT)": "2026-01-13 23:12:46",
-                "Cleared On (NT)": "-",
-                "Long": 106.6523,
-                "Lat": -6.1321,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=IN_TERMINAL_1C_SOETTA_4G_XX, Local Cell ID=7, Cell Name=11TGR0640_IN_TERMINAL_1C_SOETTA_L21_25_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "TANAH_PASIR_PK_FN",
-                "SITE ID": "12JKU0587",
-                "Alarm Count": 24,
-                "First Occurred (NT)": "2026-01-12 14:04:16",
-                "Cleared On (NT)": "-",
-                "Long": 106.7977,
-                "Lat": -6.1299,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=TANAH_PASIR_PK_4G_FN, Local Cell ID=206, Cell Name=12JKU0587_TANAH_PASIR_PK_L18_D23_FN, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "KOMPLEK_TAMAN_PESONA_MT_XX",
-                "SITE ID": "11SRG0156",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-11 02:21:47",
-                "Cleared On (NT)": "-",
-                "Long": 106.1072,
-                "Lat": -6.1047,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=KOMPLEK_TAMAN_PESONA_MT_4G_XX, Local Cell ID=73, Cell Name=11SRG0156_KOMPLEK_TAMAN_PESONA_MT_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MI_PONDOKKELAPA15_BL",
-                "SITE ID": "13BKS0119",
-                "Alarm Count": 1,
-                "First Occurred (NT)": "2026-01-10 22:30:50",
-                "Cleared On (NT)": "-",
-                "Long": 106.9417,
-                "Lat": -6.2385,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MI_PONDOKKELAPA15_BL_4G, Local Cell ID=92, Cell Name=13BKS0119_MI_PNDKKELAPA15_L9_2_XY, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "PASIRSEDANG_PICUNG_ST_XX",
-                "SITE ID": "11PDG0282",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2026-01-10 13:59:24",
-                "Cleared On (NT)": "-",
-                "Long": 105.9535,
-                "Lat": -6.4986,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=PASIRSEDANG_PICUNG_ST_4G_XX, Local Cell ID=73, Cell Name=11PDG0282_PASIRSEDANG_PICUNG_ST_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MANGKUALAM_ST_XX",
-                "SITE ID": "11PDG0291",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-10 12:04:40",
-                "Cleared On (NT)": "-",
-                "Long": 105.6461,
-                "Lat": -6.7697,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MANGKUALAM_ST_4G_XX, Local Cell ID=91, Cell Name=11PDG0291_MANGKUALAM_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "IN_BINUS_KIJANG_DH",
-                "SITE ID": "12JKB0433",
-                "Alarm Count": 2,
-                "First Occurred (NT)": "2026-01-09 09:59:05",
-                "Cleared On (NT)": "-",
-                "Long": 106.7881,
-                "Lat": -6.1938,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=IN_BINUS_KIJANG_DH_4G, Local Cell ID=70, Cell Name=12JKB0433_IN_BINUS_KIJANG_L18_11, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "HIJAU_HAMBARO_CM_XX",
-                "SITE ID": "13CBN1534",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-08 12:06:25",
-                "Cleared On (NT)": "-",
-                "Long": 106.5753,
-                "Lat": -6.5714,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=HIJAU_HAMBARO_CM_4G_XX, Local Cell ID=92, Cell Name=13CBN1534_HIJAU_HAMBARO_CM_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "PANIMBANG_PASIRKADU_ST_XX",
-                "SITE ID": "11PDG0230",
-                "Alarm Count": 2,
-                "First Occurred (NT)": "2026-01-06 19:36:53",
-                "Cleared On (NT)": "-",
-                "Long": 105.8514,
-                "Lat": -6.5038,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=PANIMBANG_PASIRKADU_ST_4G_XX, Local Cell ID=91, Cell Name=11PDG0230_PANIMBANG_PASIRKADU_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "LUWUK_GUNUNGSARI_ST_XX",
-                "SITE ID": "11CRS0372",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2026-01-05 02:58:58",
-                "Cleared On (NT)": "-",
-                "Long": 106.0057,
-                "Lat": -6.1249,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=LUWUK_GUNUNGSARI_ST_4G_XX, Local Cell ID=61, Cell Name=11CRS0372_LUWUK_GUNUNGSARI_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "GURAIT_MELATI_MT_XX",
-                "SITE ID": "11CRS0347",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-04 14:06:07",
-                "Cleared On (NT)": "-",
-                "Long": 106.0559,
-                "Lat": -6.0805,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=GURAIT_MELATI_MT_4G_XX, Local Cell ID=21, Cell Name=11CRS0347_GURAIT_MELATI_MT_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "JAJAWAI_KADOMAS_ST_XX",
-                "SITE ID": "11PDG0207",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-04 03:13:02",
-                "Cleared On (NT)": "-",
-                "Long": 106.1116,
-                "Lat": -6.3244,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=JAJAWAI_KADOMAS_ST_4G_XX, Local Cell ID=61, Cell Name=11PDG0207_JAJAWAI_KADOMAS_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "SALIMAH_SUKAMANAH_ST_XX",
-                "SITE ID": "11TGN0820",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2026-01-01 15:37:54",
-                "Cleared On (NT)": "-",
-                "Long": 106.5208,
-                "Lat": -6.3361,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=SALIMAH_SUKAMANAH_ST_4G_XX, Local Cell ID=32, Cell Name=11TGN0820_SALIMAH_SUKAMANAH_ST_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "BOJONGMENTENG_TUNJUNGTEJA_ST_XX",
-                "SITE ID": "11CRS0343",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2025-12-31 12:27:30",
-                "Cleared On (NT)": "-",
-                "Long": 106.2271,
-                "Lat": -6.3014,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=BOJONGMENTENG_TUNJUNGTEJA_ST_4G_XX, Local Cell ID=63, Cell Name=11CRS0343_BOJONGMENTENG_TUNJUNGTEJA_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "ONJONG_BOLANG_ST_XX",
-                "SITE ID": "11CRS0303",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-12-30 22:56:24",
-                "Cleared On (NT)": "-",
-                "Long": 106.313,
-                "Lat": -6.0631,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=ONJONG_BOLANG_ST_4G_XX, Local Cell ID=91, Cell Name=11CRS0303_ONJONG_BOLANG_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MI_TAMANBUARAN_DA_XX",
-                "SITE ID": "12JKT0753",
-                "Alarm Count": 19,
-                "First Occurred (NT)": "2025-12-30 04:29:05",
-                "Cleared On (NT)": "-",
-                "Long": 106.9195,
-                "Lat": -6.2154,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MI_TAMANBUARAN_DA_4G_XX, Local Cell ID=32, Cell Name=12JKT0753_MI_TAMANBUARAN_DA_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "JERUK_TIPIS_CIKERAI_ST_XX",
-                "SITE ID": "11CLG0126",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-12-30 02:43:15",
-                "Cleared On (NT)": "-",
-                "Long": 106.0437,
-                "Lat": -6.0685,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=JERUK_TIPIS_CIKERAI_ST_4G_XX, Local Cell ID=91, Cell Name=11CLG0126_JERUK_TIPIS_CIKERAI_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "KARANGSARI_CIGONDANG_ST_XX",
-                "SITE ID": "11PDG0221",
-                "Alarm Count": 3,
-                "First Occurred (NT)": "2025-12-30 00:29:58",
-                "Cleared On (NT)": "-",
-                "Long": 105.8257,
-                "Lat": -6.3813,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=KARANGSARI_CIGONDANG_ST_4G_XX, Local Cell ID=63, Cell Name=11PDG0221_KARANGSARI_CIGONDANG_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "PELELANGAN_IKAN_KARANGANTU_ST_XX",
-                "SITE ID": "11SRG0157",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-12-29 04:05:09",
-                "Cleared On (NT)": "-",
-                "Long": 106.1645,
-                "Lat": -6.0334,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=PELELANGAN_IKAN_KARANGANTU_ST_4G_XX, Local Cell ID=92, Cell Name=11SRG0157_PELELANGAN_IKAN_KARANGANTU_ST_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "I2_LIPPO_MALL_CIKARANG_DH_XX",
-                "SITE ID": "13CKR0883",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2025-12-28 18:31:30",
-                "Cleared On (NT)": "-",
-                "Long": 107.138,
-                "Lat": -6.334,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=I2_LIPPO_MALL_CIKARANG_DH_4G_XX, Local Cell ID=62, Cell Name=13CKR0883_I2_LIPPO_MALL_CIKARANG_DH_L18_22_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "I2_RS_TZUCHI_PIK_IB_FE_XX",
-                "SITE ID": "12JKU0612",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2025-12-28 13:44:01",
-                "Cleared On (NT)": "-",
-                "Long": 106.7395,
-                "Lat": -6.1065,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=I2_RS_TZUCHI_PIK_IB_FE_4G_FE, Local Cell ID=20, Cell Name=12JKU0612_IN_I2_RS_TZUCHI_PIK_IB_L21_21_FE_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "SONGGOMJAYA_ST_XX",
-                "SITE ID": "",
-                "Alarm Count": null,
-                "First Occurred (NT)": "2025-12-22 17:04:08",
-                "Cleared On (NT)": "-",
-                "Long": null,
-                "Lat": null,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=SONGGOMJAYA_ST_4G_XX, Local Cell ID=93, Cell Name=11CRS0324_SONGGOMJAYA_ST_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "TEUWEUL_WASILAH_ST_XX",
-                "SITE ID": "11CRS0330",
-                "Alarm Count": 12,
-                "First Occurred (NT)": "2025-12-21 19:55:26",
-                "Cleared On (NT)": "-",
-                "Long": 105.8907,
-                "Lat": -6.1767,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=TEUWEUL_WASILAH_ST_4G_XX, Local Cell ID=21, Cell Name=11CRS0330_TEUWEUL_WASILAH_ST_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "ALUNALUN_CIKEUSAL_CM_XX",
-                "SITE ID": "11CRS0285",
-                "Alarm Count": 5,
-                "First Occurred (NT)": "2025-12-19 14:31:47",
-                "Cleared On (NT)": "-",
-                "Long": 106.2273,
-                "Lat": -6.2134,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=ALUNALUN_CIKEUSAL_CM_4G_XX, Local Cell ID=21, Cell Name=11CRS0285_ALUNALUN_CIKEUSAL_CM_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MANGGERONG_PONTANG_TB_XX",
-                "SITE ID": "11CRS0367",
-                "Alarm Count": 12,
-                "First Occurred (NT)": "2025-12-17 21:58:40",
-                "Cleared On (NT)": "-",
-                "Long": 106.2248,
-                "Lat": -6.0361,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MANGGERONG_PONTANG_TB_4G_XX, Local Cell ID=63, Cell Name=11CRS0367_MANGGERONG_PONTANG_TB_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "CURUG_CERET_ST_XX",
-                "SITE ID": "11PDG0239",
-                "Alarm Count": 4,
-                "First Occurred (NT)": "2025-12-14 02:43:25",
-                "Cleared On (NT)": "-",
-                "Long": 105.9245,
-                "Lat": -6.3278,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=CURUG_CERET_ST_4G_XX, Local Cell ID=23, Cell Name=11PDG0239_CURUG_CERET_ST_L21_23_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "KOPO_RANCASUMUR_PK_XX",
-                "SITE ID": "11CRS0379",
-                "Alarm Count": 13,
-                "First Occurred (NT)": "2025-12-12 18:13:13",
-                "Cleared On (NT)": "-",
-                "Long": 106.3871,
-                "Lat": -6.3117,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=KOPO_RANCASUMUR_PK_4G_XX, Local Cell ID=73, Cell Name=11CRS0379_KOPO_RANCASUMUR_PK_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "CINANGGUNG_CIKONENG_ST_XX",
-                "SITE ID": "11CRS0340",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-11-29 16:48:29",
-                "Cleared On (NT)": "-",
-                "Long": 105.9108,
-                "Lat": -6.0733,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=CINANGGUNG_CIKONENG_ST_4G_XX, Local Cell ID=62, Cell Name=11CRS0340_CINANGGUNG_CIKONENG_ST_L18_22_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "AKSES_DESA_BANYUWANGI_MT_XX",
-                "SITE ID": "11CRS0281",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-11-25 03:27:15",
-                "Cleared On (NT)": "-",
-                "Long": 106.1012,
-                "Lat": -5.9371,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=AKSES_DESA_BANYUWANGI_MT_4G_XX, Local Cell ID=21, Cell Name=11CRS0281_AKSES_DESA_BANYUWANGI_MT_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "WARINGINKURUNG_CM_XX",
-                "SITE ID": "11CRS0267",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-11-21 01:37:27",
-                "Cleared On (NT)": "-",
-                "Long": 106.0916,
-                "Lat": -6.0909,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=WARINGINKURUNG_CM_4G_XX, Local Cell ID=93, Cell Name=11CRS0267_WARINGINKURUNG_CM_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "KAMPUNG_SIRING_ANYAR_ST_XX",
-                "SITE ID": "11CRS0310",
-                "Alarm Count": 15,
-                "First Occurred (NT)": "2025-11-14 02:22:10",
-                "Cleared On (NT)": "-",
-                "Long": 105.9114,
-                "Lat": -6.0837,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=KAMPUNG_SIRING_ANYAR_ST_4G_XX, Local Cell ID=63, Cell Name=11CRS0310_KAMPUNG_SIRING_ANYAR_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE6",
-                "Updated At": "2026-01-17 10:32:03"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MB_TELUK_UTARA_PL_XX",
-                "SITE ID": "12JKU0621",
-                "Alarm Count": 13,
-                "First Occurred (NT)": "2025-10-02 21:59:07",
-                "Cleared On (NT)": "-",
-                "Long": 106.7802,
-                "Lat": -6.1298,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MB_TELUK_UTARA_PL_4G_XX, Local Cell ID=93, Cell Name=12JKU0621_MB_TELUK_UTARA_PL_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
-            },
-            {
-                "Name": "CELL UNAVAILABLE",
-                "Alarm Source": "MB_PESTAPORA2025_XX",
-                "SITE ID": "12JKU0613",
-                "Alarm Count": 36,
-                "First Occurred (NT)": "2025-09-08 18:09:22",
-                "Cleared On (NT)": "-",
-                "Long": 106.8469,
-                "Lat": -6.1435,
-                "NE Type": "BTS5900",
-                "MO Name": "eNodeB Function Name=MB_PESTAPORA2025_4G_XX, Local Cell ID=205, Cell Name=12JKU0613_MB_PESTAPORA2025_L18_D22_XX, Cell FDD TDD indication=CELL_FDD",
-                "Clearance Status": "Uncleared",
-                "Source": "MAE7",
-                "Updated At": "2026-01-17 10:32:15"
+        // Data awal dari Google Sheets (Count_Celldown)
+        let alarmData = [];
+        let filteredData = [];
+        
+        // Fungsi untuk mengambil data dari Google Sheets menggunakan Sheets API v4
+        async function fetchDataFromGoogleSheets() {
+            const loadingElement = document.getElementById('loading');
+            const refreshBtn = document.getElementById('refresh-data');
+            
+            try {
+                loadingElement.textContent = 'Memuat data dari Google Sheets...';
+                loadingElement.style.display = 'block';
+                refreshBtn.classList.add('loading');
+                refreshBtn.disabled = true;
+                
+                // ID spreadsheet dan sheet
+                const spreadsheetId = '1K69ji4W1dGkZeKboNp0QxMGQ_Tm5RzlUu3pi1-ksMlg';
+                const sheetName = 'Count_Celldown';
+                const apiKey = 'AIzaSyB3iY5V3Y8KjQqYvJ7qVq1XqjK5XqVq1Xq'; // API Key publik (biasanya dibatasi)
+                
+                // URL untuk mengambil data sheet
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+                
+                console.log('Mengambil data dari:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.values || data.values.length === 0) {
+                    throw new Error('Tidak ada data ditemukan di sheet');
+                }
+                
+                // Konversi data dari array menjadi objek
+                const headers = data.values[0]; // Baris pertama adalah header
+                const rows = data.values.slice(1); // Baris berikutnya adalah data
+                
+                console.log('Header:', headers);
+                console.log('Jumlah baris data:', rows.length);
+                
+                // Map data ke format yang diinginkan
+                alarmData = rows.map(row => {
+                    const rowData = {};
+                    headers.forEach((header, index) => {
+                        rowData[header] = row[index] || '';
+                    });
+                    
+                    // Konversi tipe data
+                    const alarmCount = parseInt(rowData['Alarm Count']) || 0;
+                    const long = parseFloat(rowData['Long']) || null;
+                    const lat = parseFloat(rowData['Lat']) || null;
+                    
+                    return {
+                        "Name": rowData['Name'] || 'CELL UNAVAILABLE',
+                        "Alarm Source": rowData['Alarm Source'] || '',
+                        "SITE ID": rowData['SITE ID'] || '',
+                        "Alarm Count": alarmCount,
+                        "First Occurred (NT)": rowData['First Occurred (NT)'] || '',
+                        "Cleared On (NT)": rowData['Cleared On (NT)'] || '-',
+                        "Long": long,
+                        "Lat": lat,
+                        "NE Type": rowData['NE Type'] || 'BTS5900',
+                        "MO Name": rowData['MO Name'] || '',
+                        "Clearance Status": rowData['Clearance Status'] || 'Uncleared',
+                        "Source": rowData['Source'] || '',
+                        "Updated At": rowData['Updated At'] || ''
+                    };
+                });
+                
+                console.log('Data berhasil diambil:', alarmData.length, 'baris');
+                
+                // Simpan data ke localStorage untuk cache
+                localStorage.setItem('alarmDataCache', JSON.stringify(alarmData));
+                localStorage.setItem('alarmDataCacheTime', new Date().toISOString());
+                
+                // Render tabel
+                filteredData = [...alarmData];
+                renderTable(filteredData);
+                
+            } catch (error) {
+                console.error('Error mengambil data dari Google Sheets:', error);
+                
+                // Coba gunakan data cache jika ada
+                const cachedData = localStorage.getItem('alarmDataCache');
+                const cacheTime = localStorage.getItem('alarmDataCacheTime');
+                
+                if (cachedData) {
+                    console.log('Menggunakan data cache dari:', cacheTime);
+                    alarmData = JSON.parse(cachedData);
+                    filteredData = [...alarmData];
+                    renderTable(filteredData);
+                    
+                    loadingElement.innerHTML = `Data diambil dari cache (${new Date(cacheTime).toLocaleString()}).<br>Error: ${error.message}`;
+                } else {
+                    // Gunakan data statis sebagai fallback
+                    console.log('Menggunakan data statis sebagai fallback');
+                    loadStaticData();
+                    loadingElement.textContent = `Error: ${error.message}. Menggunakan data statis.`;
+                }
+            } finally {
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                    refreshBtn.classList.remove('loading');
+                    refreshBtn.disabled = false;
+                }, 1000);
             }
-        ];
-
-        // Variabel global untuk data yang difilter
-        let filteredData = [...alarmData];
-
+        }
+        
+        // Fungsi untuk memuat data statis (fallback)
+        function loadStaticData() {
+            // Data statis dari Google Sheets (Count_Celldown)
+            alarmData = [
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "IN_APT_MEDITERANIA_KEMAYORAN_MC",
+                    "SITE ID": "12JKP0518",
+                    "Alarm Count": 2,
+                    "First Occurred (NT)": "2026-01-17 08:54:11",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.8533,
+                    "Lat": -6.1549,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=IN_APT_MEDITERANIA_KEMAYORAN_MC_4G, Local Cell ID=67, Cell Name=12JKP0518_IN_APTMEDIT_KMY_L18_22, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "HJENI_GANSEL_TP",
+                    "SITE ID": "12JKS0206",
+                    "Alarm Count": 1,
+                    "First Occurred (NT)": "2026-01-17 04:15:34",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7937,
+                    "Lat": -6.2696,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=HJENI_GANSEL_TP_4G, Local Cell ID=93, Cell Name=12JKS0206_HJENI_GANSEL_TP_L9_3, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "BABAKANKEMBANG_ST_XX",
+                    "SITE ID": "11PDG0279",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2026-01-17 03:45:11",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.7033,
+                    "Lat": -6.7337,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=BABAKANKEMBANG_ST_4G_XX, Local Cell ID=61, Cell Name=11PDG0279_BABAKANKEMBANG_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "PARUNGKORED_PL",
+                    "SITE ID": "11TGR0363",
+                    "Alarm Count": 27,
+                    "First Occurred (NT)": "2026-01-17 02:56:13",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7137,
+                    "Lat": -6.1939,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=PARUNGKORED_PL_4G, Local Cell ID=92, Cell Name=11TGR0363_PARUNGKORED_PL_L9_2, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "TAMAN_ANGSOKA_PERMAI_MT_XX",
+                    "SITE ID": "11SRG0159",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-17 02:54:37",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.1492,
+                    "Lat": -6.0718,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=TAMAN_ANGSOKA_PERMAI_MT_4G_XX, Local Cell ID=92, Cell Name=11SRG0159_TAMAN_ANGSOKA_PERMAI_MT_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "CIPARAGE_TB",
+                    "SITE ID": "13KRW0496",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-17 01:19:37",
+                    "Cleared On (NT)": "-",
+                    "Long": 107.489,
+                    "Lat": -6.1733,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=CIPARAGE_TB_4G, Local Cell ID=72, Cell Name=13KRW0496_CIPARAGE_TB_L18_12, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MI_BUNDARANFRESCO_IB",
+                    "SITE ID": "11TGN0565",
+                    "Alarm Count": 6,
+                    "First Occurred (NT)": "2026-01-16 21:43:18",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.6453,
+                    "Lat": -6.2885,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MI_BUNDARANFRESCO_IB_4G, Local Cell ID=61, Cell Name=11TGN0565_MI_BUNDRNFRESCO_L18_21, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MI_SAMPORA_CISAUK_IB",
+                    "SITE ID": "11TGN0586",
+                    "Alarm Count": 12,
+                    "First Occurred (NT)": "2026-01-16 20:08:23",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.6579,
+                    "Lat": -6.3178,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MI_SAMPORA_CISAUK_IB_4G, Local Cell ID=33, Cell Name=11TGN0586_MI_SMPRA_CISAUK_L21_13, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "I2_MAYAPADA_LEBAKBULUS_MC_XX",
+                    "SITE ID": "12JKS1137",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-16 14:48:00",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7862,
+                    "Lat": -6.2987,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=I2_MAYAPADA_LEBAKBULUS_MC_4G_XX, Local Cell ID=92, Cell Name=12JKS1137_I2_MAYAPADA_LEBAKBULUS_MC_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MATA_AIR_KATAPURA_ST_XX",
+                    "SITE ID": "11CRS0360",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2026-01-16 00:30:49",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.2416,
+                    "Lat": -6.2427,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MATA_AIR_KATAPURA_ST_4G_XX, Local Cell ID=21, Cell Name=11CRS0360_MATA_AIR_KATAPURA_ST_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "NANAS_KARANGGAN_GT_XX",
+                    "SITE ID": "13CBN1520",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-16 00:22:18",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.8927,
+                    "Lat": -6.4536,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=NANAS_KARANGGAN_GT_4G_XX, Local Cell ID=32, Cell Name=13CBN1520_NANAS_KARANGGAN_GT_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "CIMONGKOR_ST_XX",
+                    "SITE ID": "11PDG0213",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2026-01-16 00:22:06",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.0217,
+                    "Lat": -6.3626,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=CIMONGKOR_ST_4G_XX, Local Cell ID=22, Cell Name=11PDG0213_CIMONGKOR_ST_L21_22_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "RSUP_CIPINANG_PL",
+                    "SITE ID": "12JKT0661",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-15 03:15:50",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.8859,
+                    "Lat": -6.2061,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=RSUP_CIPINANG_PL_4G, Local Cell ID=23, Cell Name=12JKT0661_RSUP_CIPINANG_PL_L21_A23, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "JALAN_NYAPAH_SILEBU_GH_XX",
+                    "SITE ID": "11CRS0355",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-14 18:18:49",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.2282,
+                    "Lat": -6.1901,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=JALAN_NYAPAH_SILEBU_GH_4G_XX, Local Cell ID=93, Cell Name=11CRS0355_JALAN_NYAPAH_SILEBU_GH_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "IN_TERMINAL_1C_SOETTA_XX",
+                    "SITE ID": "11TGR0640",
+                    "Alarm Count": 32,
+                    "First Occurred (NT)": "2026-01-13 23:12:46",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.6523,
+                    "Lat": -6.1321,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=IN_TERMINAL_1C_SOETTA_4G_XX, Local Cell ID=7, Cell Name=11TGR0640_IN_TERMINAL_1C_SOETTA_L21_25_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "TANAH_PASIR_PK_FN",
+                    "SITE ID": "12JKU0587",
+                    "Alarm Count": 24,
+                    "First Occurred (NT)": "2026-01-12 14:04:16",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7977,
+                    "Lat": -6.1299,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=TANAH_PASIR_PK_4G_FN, Local Cell ID=206, Cell Name=12JKU0587_TANAH_PASIR_PK_L18_D23_FN, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "KOMPLEK_TAMAN_PESONA_MT_XX",
+                    "SITE ID": "11SRG0156",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-11 02:21:47",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.1072,
+                    "Lat": -6.1047,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=KOMPLEK_TAMAN_PESONA_MT_4G_XX, Local Cell ID=73, Cell Name=11SRG0156_KOMPLEK_TAMAN_PESONA_MT_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MI_PONDOKKELAPA15_BL",
+                    "SITE ID": "13BKS0119",
+                    "Alarm Count": 1,
+                    "First Occurred (NT)": "2026-01-10 22:30:50",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.9417,
+                    "Lat": -6.2385,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MI_PONDOKKELAPA15_BL_4G, Local Cell ID=92, Cell Name=13BKS0119_MI_PNDKKELAPA15_L9_2_XY, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "PASIRSEDANG_PICUNG_ST_XX",
+                    "SITE ID": "11PDG0282",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2026-01-10 13:59:24",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.9535,
+                    "Lat": -6.4986,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=PASIRSEDANG_PICUNG_ST_4G_XX, Local Cell ID=73, Cell Name=11PDG0282_PASIRSEDANG_PICUNG_ST_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MANGKUALAM_ST_XX",
+                    "SITE ID": "11PDG0291",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-10 12:04:40",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.6461,
+                    "Lat": -6.7697,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MANGKUALAM_ST_4G_XX, Local Cell ID=91, Cell Name=11PDG0291_MANGKUALAM_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "IN_BINUS_KIJANG_DH",
+                    "SITE ID": "12JKB0433",
+                    "Alarm Count": 2,
+                    "First Occurred (NT)": "2026-01-09 09:59:05",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7881,
+                    "Lat": -6.1938,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=IN_BINUS_KIJANG_DH_4G, Local Cell ID=70, Cell Name=12JKB0433_IN_BINUS_KIJANG_L18_11, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "HIJAU_HAMBARO_CM_XX",
+                    "SITE ID": "13CBN1534",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-08 12:06:25",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.5753,
+                    "Lat": -6.5714,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=HIJAU_HAMBARO_CM_4G_XX, Local Cell ID=92, Cell Name=13CBN1534_HIJAU_HAMBARO_CM_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "PANIMBANG_PASIRKADU_ST_XX",
+                    "SITE ID": "11PDG0230",
+                    "Alarm Count": 2,
+                    "First Occurred (NT)": "2026-01-06 19:36:53",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.8514,
+                    "Lat": -6.5038,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=PANIMBANG_PASIRKADU_ST_4G_XX, Local Cell ID=91, Cell Name=11PDG0230_PANIMBANG_PASIRKADU_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "LUWUK_GUNUNGSARI_ST_XX",
+                    "SITE ID": "11CRS0372",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2026-01-05 02:58:58",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.0057,
+                    "Lat": -6.1249,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=LUWUK_GUNUNGSARI_ST_4G_XX, Local Cell ID=61, Cell Name=11CRS0372_LUWUK_GUNUNGSARI_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "GURAIT_MELATI_MT_XX",
+                    "SITE ID": "11CRS0347",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-04 14:06:07",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.0559,
+                    "Lat": -6.0805,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=GURAIT_MELATI_MT_4G_XX, Local Cell ID=21, Cell Name=11CRS0347_GURAIT_MELATI_MT_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "JAJAWAI_KADOMAS_ST_XX",
+                    "SITE ID": "11PDG0207",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-04 03:13:02",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.1116,
+                    "Lat": -6.3244,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=JAJAWAI_KADOMAS_ST_4G_XX, Local Cell ID=61, Cell Name=11PDG0207_JAJAWAI_KADOMAS_ST_L18_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "SALIMAH_SUKAMANAH_ST_XX",
+                    "SITE ID": "11TGN0820",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2026-01-01 15:37:54",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.5208,
+                    "Lat": -6.3361,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=SALIMAH_SUKAMANAH_ST_4G_XX, Local Cell ID=32, Cell Name=11TGN0820_SALIMAH_SUKAMANAH_ST_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "BOJONGMENTENG_TUNJUNGTEJA_ST_XX",
+                    "SITE ID": "11CRS0343",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2025-12-31 12:27:30",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.2271,
+                    "Lat": -6.3014,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=BOJONGMENTENG_TUNJUNGTEJA_ST_4G_XX, Local Cell ID=63, Cell Name=11CRS0343_BOJONGMENTENG_TUNJUNGTEJA_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "ONJONG_BOLANG_ST_XX",
+                    "SITE ID": "11CRS0303",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-12-30 22:56:24",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.313,
+                    "Lat": -6.0631,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=ONJONG_BOLANG_ST_4G_XX, Local Cell ID=91, Cell Name=11CRS0303_ONJONG_BOLANG_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MI_TAMANBUARAN_DA_XX",
+                    "SITE ID": "12JKT0753",
+                    "Alarm Count": 19,
+                    "First Occurred (NT)": "2025-12-30 04:29:05",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.9195,
+                    "Lat": -6.2154,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MI_TAMANBUARAN_DA_4G_XX, Local Cell ID=32, Cell Name=12JKT0753_MI_TAMANBUARAN_DA_L21_12_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "JERUK_TIPIS_CIKERAI_ST_XX",
+                    "SITE ID": "11CLG0126",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-12-30 02:43:15",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.0437,
+                    "Lat": -6.0685,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=JERUK_TIPIS_CIKERAI_ST_4G_XX, Local Cell ID=91, Cell Name=11CLG0126_JERUK_TIPIS_CIKERAI_ST_L9_1_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "KARANGSARI_CIGONDANG_ST_XX",
+                    "SITE ID": "11PDG0221",
+                    "Alarm Count": 3,
+                    "First Occurred (NT)": "2025-12-30 00:29:58",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.8257,
+                    "Lat": -6.3813,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=KARANGSARI_CIGONDANG_ST_4G_XX, Local Cell ID=63, Cell Name=11PDG0221_KARANGSARI_CIGONDANG_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "PELELANGAN_IKAN_KARANGANTU_ST_XX",
+                    "SITE ID": "11SRG0157",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-12-29 04:05:09",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.1645,
+                    "Lat": -6.0334,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=PELELANGAN_IKAN_KARANGANTU_ST_4G_XX, Local Cell ID=92, Cell Name=11SRG0157_PELELANGAN_IKAN_KARANGANTU_ST_L9_2_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "I2_LIPPO_MALL_CIKARANG_DH_XX",
+                    "SITE ID": "13CKR0883",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2025-12-28 18:31:30",
+                    "Cleared On (NT)": "-",
+                    "Long": 107.138,
+                    "Lat": -6.334,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=I2_LIPPO_MALL_CIKARANG_DH_4G_XX, Local Cell ID=62, Cell Name=13CKR0883_I2_LIPPO_MALL_CIKARANG_DH_L18_22_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "I2_RS_TZUCHI_PIK_IB_FE_XX",
+                    "SITE ID": "12JKU0612",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2025-12-28 13:44:01",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7395,
+                    "Lat": -6.1065,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=I2_RS_TZUCHI_PIK_IB_FE_4G_FE, Local Cell ID=20, Cell Name=12JKU0612_IN_I2_RS_TZUCHI_PIK_IB_L21_21_FE_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "SONGGOMJAYA_ST_XX",
+                    "SITE ID": "",
+                    "Alarm Count": null,
+                    "First Occurred (NT)": "2025-12-22 17:04:08",
+                    "Cleared On (NT)": "-",
+                    "Long": null,
+                    "Lat": null,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=SONGGOMJAYA_ST_4G_XX, Local Cell ID=93, Cell Name=11CRS0324_SONGGOMJAYA_ST_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "TEUWEUL_WASILAH_ST_XX",
+                    "SITE ID": "11CRS0330",
+                    "Alarm Count": 12,
+                    "First Occurred (NT)": "2025-12-21 19:55:26",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.8907,
+                    "Lat": -6.1767,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=TEUWEUL_WASILAH_ST_4G_XX, Local Cell ID=21, Cell Name=11CRS0330_TEUWEUL_WASILAH_ST_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "ALUNALUN_CIKEUSAL_CM_XX",
+                    "SITE ID": "11CRS0285",
+                    "Alarm Count": 5,
+                    "First Occurred (NT)": "2025-12-19 14:31:47",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.2273,
+                    "Lat": -6.2134,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=ALUNALUN_CIKEUSAL_CM_4G_XX, Local Cell ID=21, Cell Name=11CRS0285_ALUNALUN_CIKEUSAL_CM_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MANGGERONG_PONTANG_TB_XX",
+                    "SITE ID": "11CRS0367",
+                    "Alarm Count": 12,
+                    "First Occurred (NT)": "2025-12-17 21:58:40",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.2248,
+                    "Lat": -6.0361,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MANGGERONG_PONTANG_TB_4G_XX, Local Cell ID=63, Cell Name=11CRS0367_MANGGERONG_PONTANG_TB_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "CURUG_CERET_ST_XX",
+                    "SITE ID": "11PDG0239",
+                    "Alarm Count": 4,
+                    "First Occurred (NT)": "2025-12-14 02:43:25",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.9245,
+                    "Lat": -6.3278,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=CURUG_CERET_ST_4G_XX, Local Cell ID=23, Cell Name=11PDG0239_CURUG_CERET_ST_L21_23_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "KOPO_RANCASUMUR_PK_XX",
+                    "SITE ID": "11CRS0379",
+                    "Alarm Count": 13,
+                    "First Occurred (NT)": "2025-12-12 18:13:13",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.3871,
+                    "Lat": -6.3117,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=KOPO_RANCASUMUR_PK_4G_XX, Local Cell ID=73, Cell Name=11CRS0379_KOPO_RANCASUMUR_PK_L18_13_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "CINANGGUNG_CIKONENG_ST_XX",
+                    "SITE ID": "11CRS0340",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-11-29 16:48:29",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.9108,
+                    "Lat": -6.0733,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=CINANGGUNG_CIKONENG_ST_4G_XX, Local Cell ID=62, Cell Name=11CRS0340_CINANGGUNG_CIKONENG_ST_L18_22_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "AKSES_DESA_BANYUWANGI_MT_XX",
+                    "SITE ID": "11CRS0281",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-11-25 03:27:15",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.1012,
+                    "Lat": -5.9371,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=AKSES_DESA_BANYUWANGI_MT_4G_XX, Local Cell ID=21, Cell Name=11CRS0281_AKSES_DESA_BANYUWANGI_MT_L21_21_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "WARINGINKURUNG_CM_XX",
+                    "SITE ID": "11CRS0267",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-11-21 01:37:27",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.0916,
+                    "Lat": -6.0909,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=WARINGINKURUNG_CM_4G_XX, Local Cell ID=93, Cell Name=11CRS0267_WARINGINKURUNG_CM_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "KAMPUNG_SIRING_ANYAR_ST_XX",
+                    "SITE ID": "11CRS0310",
+                    "Alarm Count": 15,
+                    "First Occurred (NT)": "2025-11-14 02:22:10",
+                    "Cleared On (NT)": "-",
+                    "Long": 105.9114,
+                    "Lat": -6.0837,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=KAMPUNG_SIRING_ANYAR_ST_4G_XX, Local Cell ID=63, Cell Name=11CRS0310_KAMPUNG_SIRING_ANYAR_ST_L18_23_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE6",
+                    "Updated At": "2026-01-17 10:32:03"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MB_TELUK_UTARA_PL_XX",
+                    "SITE ID": "12JKU0621",
+                    "Alarm Count": 13,
+                    "First Occurred (NT)": "2025-10-02 21:59:07",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.7802,
+                    "Lat": -6.1298,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MB_TELUK_UTARA_PL_4G_XX, Local Cell ID=93, Cell Name=12JKU0621_MB_TELUK_UTARA_PL_L9_3_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                },
+                {
+                    "Name": "CELL UNAVAILABLE",
+                    "Alarm Source": "MB_PESTAPORA2025_XX",
+                    "SITE ID": "12JKU0613",
+                    "Alarm Count": 36,
+                    "First Occurred (NT)": "2025-09-08 18:09:22",
+                    "Cleared On (NT)": "-",
+                    "Long": 106.8469,
+                    "Lat": -6.1435,
+                    "NE Type": "BTS5900",
+                    "MO Name": "eNodeB Function Name=MB_PESTAPORA2025_4G_XX, Local Cell ID=205, Cell Name=12JKU0613_MB_PESTAPORA2025_L18_D22_XX, Cell FDD TDD indication=CELL_FDD",
+                    "Clearance Status": "Uncleared",
+                    "Source": "MAE7",
+                    "Updated At": "2026-01-17 10:32:15"
+                }
+            ];
+            
+            filteredData = [...alarmData];
+            renderTable(filteredData);
+        }
+        
         // Fungsi untuk menentukan kelas alarm count
         function getAlarmCountClass(count) {
             if (count === null || count === undefined) return "";
@@ -1133,7 +1228,7 @@
             if (count >= 5) return "medium";
             return "low";
         }
-
+        
         // Fungsi untuk menentukan kategori alarm count
         function getAlarmCountCategory(count) {
             if (count === null || count === undefined) return "unknown";
@@ -1141,35 +1236,27 @@
             if (count >= 5) return "medium";
             return "low";
         }
-
+        
         // Fungsi untuk menentukan kelas source
         function getSourceClass(source) {
             if (source === "MAE6") return "source-mae6";
             if (source === "MAE7") return "source-mae7";
             return "";
         }
-
-        // Fungsi untuk memformat koordinat
-        function formatCoords(long, lat) {
-            if (long === null || lat === null || long === undefined || lat === undefined) {
-                return "-";
-            }
-            return `${long.toFixed(4)}, ${lat.toFixed(4)}`;
-        }
-
+        
         // Fungsi untuk memformat timestamp
         function formatTimestamp(timestamp) {
             if (!timestamp || timestamp === "-") return "-";
             return timestamp;
         }
-
+        
         // Fungsi untuk merender tabel
         function renderTable(data) {
             const tableBody = document.getElementById('table-body');
             const loadingElement = document.getElementById('loading');
             
             if (!data || data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="13" class="no-data">Tidak ada data alarm yang sesuai dengan filter</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="no-data">Tidak ada data alarm yang sesuai dengan filter</td></tr>`;
                 loadingElement.style.display = 'none';
                 updateStats(data);
                 return;
@@ -1186,16 +1273,11 @@
                 tableHTML += `
                     <tr>
                         <td>${index + 1}</td>
-                        <td><span class="alarm-name">${item.Name}</span></td>
-                        <td>${item["Alarm Source"] || "-"}</td>
                         <td><span class="site-id">${item["SITE ID"] || "-"}</span></td>
+                        <td><span class="alarm-source">${item["Alarm Source"] || "-"}</span></td>
+                        <td>${item.Name}</td>
                         <td class="alarm-count ${alarmCountClass}">${item["Alarm Count"] !== null && item["Alarm Count"] !== undefined ? item["Alarm Count"] : "-"}</td>
                         <td class="timestamp">${formatTimestamp(item["First Occurred (NT)"])}</td>
-                        <td>${formatTimestamp(item["Cleared On (NT)"])}</td>
-                        <td class="coords">${formatCoords(item.Long, item.Lat)}</td>
-                        <td><span class="ne-type">${item["NE Type"]}</span></td>
-                        <td class="mo-name">${item["MO Name"]}</td>
-                        <td><span class="status-uncleared">${item["Clearance Status"]}</span></td>
                         <td class="source ${sourceClass}">${item.Source}</td>
                         <td class="timestamp">${formatTimestamp(item["Updated At"])}</td>
                     </tr>
@@ -1211,17 +1293,21 @@
             // Sembunyikan loading
             loadingElement.style.display = 'none';
         }
-
+        
         // Fungsi untuk update statistik
         function updateStats(data) {
             let mae6Count = 0;
             let mae7Count = 0;
             let lastUpdate = "";
+            let totalCelldown = 0;
             
             data.forEach((item, index) => {
                 // Hitung statistik
                 if (item.Source === "MAE6") mae6Count++;
                 if (item.Source === "MAE7") mae7Count++;
+                
+                // Hitung total celldown
+                totalCelldown += (item["Alarm Count"] || 0);
                 
                 // Ambil tanggal update terakhir
                 if (index === 0 && item["Updated At"]) {
@@ -1230,8 +1316,8 @@
             });
             
             // Update statistik
-            document.getElementById('total-alarms').textContent = data.length;
-            document.getElementById('uncleared-alarms').textContent = data.length; // Semua uncleared
+            document.getElementById('total-sites').textContent = data.length;
+            document.getElementById('total-celldown').textContent = totalCelldown;
             document.getElementById('mae6-count').textContent = mae6Count;
             document.getElementById('mae7-count').textContent = mae7Count;
             document.getElementById('last-update').textContent = lastUpdate || "N/A";
@@ -1239,9 +1325,10 @@
             // Update footer dengan data terbaru jika ada
             if (data.length > 0 && data[0]["Updated At"]) {
                 document.getElementById('footer-update').textContent = data[0]["Updated At"];
+                document.getElementById('last-update-time').innerHTML = `Terakhir diperbarui: <span id="footer-update">${data[0]["Updated At"]}</span>`;
             }
         }
-
+        
         // Fungsi untuk menerapkan filter
         function applyFilters() {
             const sourceFilter = document.getElementById('source-filter').value;
@@ -1262,7 +1349,7 @@
                     }
                 }
                 
-                // Filter berdasarkan pencarian SITE ID
+                // Filter berdasarkan pencarian
                 if (siteSearch !== '') {
                     const siteId = (item["SITE ID"] || "").toLowerCase();
                     const alarmSource = (item["Alarm Source"] || "").toLowerCase();
@@ -1277,7 +1364,7 @@
             
             renderTable(filteredData);
         }
-
+        
         // Fungsi untuk mereset filter
         function resetFilters() {
             document.getElementById('source-filter').value = 'all';
@@ -1287,7 +1374,7 @@
             filteredData = [...alarmData];
             renderTable(filteredData);
         }
-
+        
         // Inisialisasi saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function() {
             // Setup event listeners untuk filter
@@ -1295,11 +1382,31 @@
             document.getElementById('alarm-count-filter').addEventListener('change', applyFilters);
             document.getElementById('site-search').addEventListener('input', applyFilters);
             document.getElementById('reset-filters').addEventListener('click', resetFilters);
+            document.getElementById('refresh-data').addEventListener('click', fetchDataFromGoogleSheets);
             
-            // Simulasi loading data
-            setTimeout(() => {
-                renderTable(alarmData);
-            }, 500);
+            // Cek apakah ada data cache
+            const cachedData = localStorage.getItem('alarmDataCache');
+            const cacheTime = localStorage.getItem('alarmDataCacheTime');
+            
+            if (cachedData) {
+                console.log('Memuat data dari cache:', new Date(cacheTime).toLocaleString());
+                alarmData = JSON.parse(cachedData);
+                filteredData = [...alarmData];
+                renderTable(filteredData);
+                
+                // Tampilkan waktu cache
+                const loadingElement = document.getElementById('loading');
+                loadingElement.innerHTML = `Data diambil dari cache (${new Date(cacheTime).toLocaleString()})`;
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                }, 2000);
+            } else {
+                // Gunakan data statis
+                loadStaticData();
+            }
+            
+            // Coba ambil data terbaru dari Google Sheets
+            // fetchDataFromGoogleSheets();
         });
     </script>
 </body>
