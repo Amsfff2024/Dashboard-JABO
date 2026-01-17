@@ -1,661 +1,853 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Alarms Dashboard</title>
+    <title>Penampil Data GitHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --info-color: #17a2b8;
-            --light-color: #ecf0f1;
-            --dark-color: #2c3e50;
+            --warna-primer: #24292e;
+            --warna-sekunder: #0366d6;
+            --warna-aksen: #28a745;
+            --bg-terang: #f6f8fa;
+            --border: #e1e4e8;
+            --teks: #24292e;
+            --teks-terang: #586069;
+            --bayangan-kartu: 0 3px 6px rgba(0,0,0,0.1);
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            background-color: #fafbfc;
+            color: var(--teks);
+            line-height: 1.6;
         }
         
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
+        .kontainer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
         
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            height: 100%;
+        /* Header */
+        header {
+            background-color: var(--warna-primer);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .card:hover {
-            transform: translateY(-5px);
+        .header-konten {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .stat-card {
-            border-left: 4px solid var(--secondary-color);
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
-        .stat-card.total { border-left-color: var(--primary-color); }
-        .stat-card.sites { border-left-color: var(--warning-color); }
-        .stat-card.unique { border-left-color: var(--info-color); }
+        .logo i {
+            font-size: 1.8rem;
+            color: white;
+        }
         
-        .badge-status {
-            padding: 5px 10px;
-            border-radius: 20px;
+        .logo h1 {
+            font-size: 1.8rem;
             font-weight: 600;
         }
         
-        .table th {
-            background-color: var(--primary-color);
+        .link-github {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             color: white;
-            border: none;
+            text-decoration: none;
+            background-color: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .link-github:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        /* Konten Utama */
+        .konten-utama {
+            padding: 2rem 0;
+        }
+        
+        .judul-dashboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .judul-dashboard h2 {
+            font-size: 1.8rem;
             font-weight: 600;
+            color: var(--warna-primer);
         }
         
-        .table td {
-            vertical-align: middle;
+        .judul-dashboard p {
+            color: var(--teks-terang);
+            margin-top: 4px;
         }
         
-        .alarm-critical {
-            background-color: #fff5f5;
-            border-left: 4px solid var(--danger-color);
+        .kontrol {
+            display: flex;
+            gap: 12px;
         }
         
-        .alarm-warning {
-            background-color: #fffbf0;
-            border-left: 4px solid var(--warning-color);
-        }
-        
-        .alarm-info {
-            background-color: #f0f9ff;
-            border-left: 4px solid var(--secondary-color);
-        }
-        
-        .filter-section {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .last-updated {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        
-        .export-btn {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
+        .tombol {
             padding: 10px 20px;
-            border-radius: 5px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tombol-primer {
+            background-color: var(--warna-sekunder);
+            color: white;
+        }
+        
+        .tombol-primer:hover {
+            background-color: #0256b9;
+        }
+        
+        .tombol-sekunder {
+            background-color: var(--bg-terang);
+            color: var(--teks);
+            border: 1px solid var(--border);
+        }
+        
+        .tombol-sekunder:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Kartu Statistik */
+        .kontainer-statistik {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .kartu-statistik {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--bayangan-kartu);
+            border-top: 4px solid var(--warna-sekunder);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .kartu-statistik:nth-child(2) {
+            border-top-color: var(--warna-aksen);
+        }
+        
+        .kartu-statistik:nth-child(3) {
+            border-top-color: #6f42c1;
+        }
+        
+        .kartu-statistik:nth-child(4) {
+            border-top-color: #f9826c;
+        }
+        
+        .info-statistik h3 {
+            font-size: 0.9rem;
+            color: var(--teks-terang);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .nilai-statistik {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--teks);
+        }
+        
+        .ikon-statistik {
+            font-size: 2.2rem;
+            color: rgba(0,0,0,0.1);
+        }
+        
+        /* Tabel Data */
+        .kontainer-data {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--bayangan-kartu);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .header-tabel {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-tabel h3 {
+            font-size: 1.3rem;
             font-weight: 600;
         }
         
-        .export-btn:hover {
+        .tabel-data {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .tabel-data thead {
+            background-color: var(--bg-terang);
+        }
+        
+        .tabel-data th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--teks);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tabel-data td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tabel-data tbody tr:hover {
+            background-color: rgba(3, 102, 214, 0.03);
+        }
+        
+        .nama-repo {
+            color: var(--warna-sekunder);
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .nama-repo:hover {
+            text-decoration: underline;
+        }
+        
+        .label {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .label-publik {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--warna-aksen);
+        }
+        
+        .label-privat {
+            background-color: rgba(245, 130, 108, 0.1);
+            color: #f9826c;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--warna-primer);
             color: white;
-            opacity: 0.9;
+            padding: 2rem 0;
+            margin-top: 2rem;
         }
         
-        /* Optimasi lebar kolom dengan urutan baru */
-        .table th:nth-child(1) { width: 40px; }    /* # */
-        .table th:nth-child(2) { width: 120px; }   /* SITE ID */
-        .table th:nth-child(3) { width: 150px; }   /* Alarm Source */
-        .table th:nth-child(4) { width: 200px; }   /* Alarm Name */
-        .table th:nth-child(5) { width: 100px; }   /* Site Type */
-        .table th:nth-child(6) { width: 150px; }   /* Category */
-        .table th:nth-child(7) { width: 150px; }   /* First Occurred */
-        .table th:nth-child(8) { width: 350px; }   /* MO Name */
-        .table th:nth-child(9) { width: 80px; }    /* Source */
-        
-        /* Style untuk SITE ID */
-        .site-id-cell {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
+        .footer-konten {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
         }
         
-        /* Style untuk MO Name yang panjang */
-        .mo-name-cell {
-            max-width: 400px;
-            word-wrap: break-word;
-            white-space: normal;
+        .link-footer {
+            display: flex;
+            gap: 1.5rem;
         }
         
+        .link-footer a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .link-footer a:hover {
+            color: white;
+        }
+        
+        .hak-cipta {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+        }
+        
+        /* Status Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--teks-terang);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(3, 102, 214, 0.2);
+            border-top: 4px solid var(--warna-sekunder);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsif */
         @media (max-width: 768px) {
-            .table-responsive {
-                font-size: 0.9rem;
+            .header-konten {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
             }
             
-            .table th:nth-child(n),
-            .table td:nth-child(n) {
-                width: auto !important;
+            .judul-dashboard {
+                flex-direction: column;
+                align-items: flex-start;
             }
             
-            .mo-name-cell {
-                max-width: 200px;
+            .kontrol {
+                width: 100%;
+                justify-content: flex-start;
             }
             
-            .stat-card .card-body {
-                padding: 1rem;
+            .tabel-data {
+                display: block;
+                overflow-x: auto;
             }
             
-            .stat-card .rounded-circle {
-                padding: 0.75rem !important;
+            .footer-konten {
+                flex-direction: column;
+                align-items: flex-start;
             }
-            
-            .stat-card .fa-2x {
-                font-size: 1.5rem;
-            }
+        }
+        
+        /* Info Sumber Data */
+        .sumber-data {
+            background-color: rgba(3, 102, 214, 0.05);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-left: 4px solid var(--warna-sekunder);
+        }
+        
+        .sumber-data h4 {
+            margin-bottom: 0.5rem;
+            color: var(--warna-sekunder);
+        }
+        
+        .sumber-data p {
+            color: var(--teks-terang);
+            font-size: 0.95rem;
+        }
+        
+        .url-endpoint {
+            background-color: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Pesan Error/Sukses */
+        .pesan {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pesan-sukses {
+            background-color: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: var(--warna-aksen);
+        }
+        
+        .pesan-error {
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+        }
+        
+        .pesan-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            border: 1px solid rgba(23, 162, 184, 0.3);
+            color: #17a2b8;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-shield-alt me-2"></i>VIP Alarms Dashboard
+    <header>
+        <div class="kontainer header-konten">
+            <div class="logo">
+                <i class="fab fa-github"></i>
+                <h1>Penampil Data GitHub</h1>
+            </div>
+            <a href="https://github.com" class="link-github" target="_blank">
+                <i class="fab fa-github"></i>
+                <span>Kunjungi GitHub</span>
             </a>
-            <div class="d-flex align-items-center">
-                <span class="text-light me-3 last-updated" id="lastUpdated"></span>
-                <button class="btn btn-outline-light" onclick="refreshData()">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-            </div>
         </div>
-    </nav>
+    </header>
     
-    <div class="container-fluid mt-4">
-        <!-- Statistics Cards (UPDATED) -->
-        <div class="row mb-4" id="statsSection">
-            <!-- Stats akan diisi oleh JavaScript -->
-        </div>
-        
-        <!-- Filters Section -->
-        <div class="filter-section">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Alarm Name</label>
-                    <input type="text" class="form-control" id="filterAlarm" placeholder="Search alarm...">
+    <main class="konten-utama">
+        <div class="kontainer">
+            <div class="judul-dashboard">
+                <div class="judul-dashboard">
+                    <h2>Dashboard Repository</h2>
+                    <p>Visualisasi data dari sumber GitHub Anda</p>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Site ID</label>
-                    <input type="text" class="form-control" id="filterSiteId" placeholder="Site ID">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" id="filterCategory">
-                        <option value="all">All Categories</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Source</label>
-                    <select class="form-select" id="filterSource">
-                        <option value="all">All Sources</option>
-                    </select>
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button class="btn btn-primary w-100" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i> Filter
+                <div class="kontrol">
+                    <button class="tombol tombol-primer" id="tombolRefresh">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Muat Ulang Data</span>
+                    </button>
+                    <button class="tombol tombol-sekunder" id="tombolDataMock">
+                        <i class="fas fa-database"></i>
+                        <span>Data Contoh</span>
                     </button>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col">
-                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Clear Filters
-                    </button>
+            
+            <!-- Area Pesan -->
+            <div id="areaPesan"></div>
+            
+            <div class="kontainer-statistik" id="kontainerStatistik">
+                <!-- Statistik akan dimuat disini -->
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Memuat statistik...</p>
                 </div>
             </div>
-        </div>
-        
-        <!-- Export Button -->
-        <div class="d-flex justify-content-end mb-3">
-            <button class="export-btn" onclick="exportToCSV()">
-                <i class="fas fa-download me-2"></i>Export to CSV
-            </button>
-        </div>
-        
-        <!-- Data Table (URUTAN KOLOM BARU) -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="alarmsTable">
+            
+            <div class="kontainer-data">
+                <div class="header-tabel">
+                    <h3>Detail Repository</h3>
+                    <div class="info-tabel" id="infoTabel">
+                        <span id="jumlahRepo">Memuat...</span> repository ditemukan
+                    </div>
+                </div>
+                <div class="wrapper-tabel">
+                    <table class="tabel-data">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>SITE ID</th>
-                                <th>Alarm Source</th>
-                                <th>Alarm Name</th>
-                                <th>Site Type</th>
-                                <th>Category</th>
-                                <th>First Occurred</th>
-                                <th>MO Name</th>
-                                <th>Source</th>
+                                <th>Nama Repository</th>
+                                <th>Deskripsi</th>
+                                <th>Bahasa</th>
+                                <th>Bintang</th>
+                                <th>Fork</th>
+                                <th>Terakhir Diperbarui</th>
+                                <th>Visibilitas</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
-                            <!-- Data akan diisi oleh JavaScript -->
+                        <tbody id="bodyTabel">
+                            <!-- Data akan dimuat disini -->
+                            <tr>
+                                <td colspan="7">
+                                    <div class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Memuat data repository...</p>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
-        
-        <!-- Footer -->
-        <footer class="mt-5 py-3 text-center text-muted">
-            <p>VIP Alarms Monitoring System &copy; 2024 | Powered by Google Apps Script</p>
-        </footer>
-    </div>
-    
-    <!-- Modal for Details -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Alarm Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            
+            <div class="sumber-data">
+                <h4>Informasi Sumber Data</h4>
+                <p>Dashboard ini mengambil data dari endpoint Google Apps Script Anda. Anda dapat beralih antara data asli dan data contoh untuk pengujian.</p>
+                <div class="url-endpoint">
+                    https://script.google.com/macros/s/AKfycbwMV8Q3eJ9g0xdbTgRyb0a0sRCRmfu1qx6iOjujXu3IUehoYIiD8aC87KceaF0qNJdfSg/exec
                 </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- Details akan diisi oleh JavaScript -->
-                </div>
+                <p style="margin-top: 10px; font-size: 0.85rem;">
+                    <i class="fas fa-info-circle"></i> Catatan: Karena pembatasan CORS, mungkin diperlukan proxy atau konfigurasi tambahan.
+                </p>
             </div>
         </div>
-    </div>
+    </main>
     
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <footer>
+        <div class="kontainer footer-konten">
+            <div class="link-footer">
+                <a href="https://github.com" target="_blank">GitHub</a>
+                <a href="https://docs.github.com" target="_blank">Dokumentasi</a>
+                <a href="https://developer.github.com" target="_blank">API</a>
+            </div>
+            <div class="hak-cipta">
+                &copy; 2023 Penampil Data GitHub | Data bersumber dari Google Apps Script
+            </div>
+        </div>
+    </footer>
     
     <script>
-        let table;
-        let currentData = [];
+        // URL endpoint Google Apps Script Anda
+        const URL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwMV8Q3eJ9g0xdbTgRyb0a0sRCRmfu1qx6iOjujXu3IUehoYIiD8aC87KceaF0qNJdfSg/exec';
         
-        // Initialize on page load
-        $(document).ready(function() {
-            loadPage();
-        });
+        // Elemen DOM
+        const kontainerStatistik = document.getElementById('kontainerStatistik');
+        const bodyTabel = document.getElementById('bodyTabel');
+        const jumlahRepo = document.getElementById('jumlahRepo');
+        const tombolRefresh = document.getElementById('tombolRefresh');
+        const tombolDataMock = document.getElementById('tombolDataMock');
+        const areaPesan = document.getElementById('areaPesan');
         
-        // Load all data and initialize page
-        function loadPage() {
-            google.script.run.withSuccessHandler(initializePage).getStatistics();
+        // Data contoh untuk demonstrasi
+        const dataContoh = {
+            statistik: {
+                totalRepo: 8,
+                totalBintang: 245,
+                totalFork: 78,
+                bahasa: 5
+            },
+            repository: [
+                {
+                    nama: "dashboard-web",
+                    deskripsi: "Dashboard web responsif untuk visualisasi data",
+                    bahasa: "JavaScript",
+                    bintang: 45,
+                    fork: 12,
+                    terakhirDiperbarui: "2023-10-15",
+                    privat: false
+                },
+                {
+                    nama: "backend-api",
+                    deskripsi: "Backend API RESTful dengan Node.js dan Express",
+                    bahasa: "TypeScript",
+                    bintang: 67,
+                    fork: 23,
+                    terakhirDiperbarui: "2023-10-10",
+                    privat: false
+                },
+                {
+                    nama: "aplikasi-mobile",
+                    deskripsi: "Aplikasi mobile React Native",
+                    bahasa: "JavaScript",
+                    bintang: 32,
+                    fork: 8,
+                    terakhirDiperbarui: "2023-10-05",
+                    privat: false
+                },
+                {
+                    nama: "analisis-data",
+                    deskripsi: "Skrip Python untuk analisis dan visualisasi data",
+                    bahasa: "Python",
+                    bintang: 28,
+                    fork: 5,
+                    terakhirDiperbarui: "2023-09-28",
+                    privat: false
+                },
+                {
+                    nama: "alat-internal",
+                    deskripsi: "Alat dan utilitas internal perusahaan",
+                    bahasa: "Java",
+                    bintang: 12,
+                    fork: 3,
+                    terakhirDiperbarui: "2023-09-20",
+                    privat: true
+                },
+                {
+                    nama: "website-dokumentasi",
+                    deskripsi: "Website dokumentasi dengan Gatsby",
+                    bahasa: "JavaScript",
+                    bintang: 18,
+                    fork: 7,
+                    terakhirDiperbarui: "2023-09-15",
+                    privat: false
+                },
+                {
+                    nama: "alat-cli",
+                    deskripsi: "Antarmuka command line untuk manajemen proyek",
+                    bahasa: "Go",
+                    bintang: 25,
+                    fork: 9,
+                    terakhirDiperbarui: "2023-09-10",
+                    privat: false
+                },
+                {
+                    nama: "sistem-desain",
+                    deskripsi: "Library komponen UI dan sistem desain",
+                    bahasa: "TypeScript",
+                    bintang: 38,
+                    fork: 11,
+                    terakhirDiperbarui: "2023-09-05",
+                    privat: false
+                }
+            ]
+        };
+        
+        // Tampilkan pesan
+        function tampilkanPesan(teks, tipe) {
+            const kelas = tipe === 'sukses' ? 'pesan-sukses' : 
+                         tipe === 'error' ? 'pesan-error' : 'pesan-info';
+            
+            const pesanHTML = `
+                <div class="pesan ${kelas}">
+                    <i class="fas fa-${tipe === 'sukses' ? 'check-circle' : tipe === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${teks}</span>
+                </div>
+            `;
+            
+            areaPesan.innerHTML = pesanHTML;
+            
+            // Hapus pesan setelah 5 detik
+            setTimeout(() => {
+                areaPesan.innerHTML = '';
+            }, 5000);
         }
         
-        // Initialize page with data
-        function initializePage(stats) {
-            loadCategories();
-            loadSources();
-            loadTableData();
-            updateLastUpdated();
+        // Format tanggal menjadi format yang mudah dibaca
+        function formatTanggal(stringTanggal) {
+            const opsi = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(stringTanggal).toLocaleDateString('id-ID', opsi);
         }
         
-        // Update statistics cards (VERSI BARU)
-        function updateStats(stats, uniqueSiteCount) {
-            const statsHtml = `
-                <div class="col-md-4">
-                    <div class="card stat-card total">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-muted">TOTAL ALARMS</h6>
-                                    <h2 class="mb-0">${stats.total}</h2>
-                                    <p class="text-muted mb-0 small">All alarm incidents</p>
-                                </div>
-                                <div class="bg-primary text-white rounded-circle p-3">
-                                    <i class="fas fa-bell fa-2x"></i>
-                                </div>
-                            </div>
-                        </div>
+        // Render kartu statistik
+        function renderStatistik(statistik) {
+            const htmlStatistik = `
+                <div class="kartu-statistik">
+                    <div class="info-statistik">
+                        <h3>Total Repository</h3>
+                        <div class="nilai-statistik">${statistik.totalRepo}</div>
+                    </div>
+                    <div class="ikon-statistik">
+                        <i class="fas fa-code-branch"></i>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card stat-card sites">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-muted">SITES AFFECTED</h6>
-                                    <h2 class="mb-0">${Object.keys(stats.bySiteType).length}</h2>
-                                    <p class="text-muted mb-0 small">By site type</p>
-                                </div>
-                                <div class="bg-warning text-white rounded-circle p-3">
-                                    <i class="fas fa-tower-cell fa-2x"></i>
-                                </div>
-                            </div>
-                        </div>
+                <div class="kartu-statistik">
+                    <div class="info-statistik">
+                        <h3>Total Bintang</h3>
+                        <div class="nilai-statistik">${statistik.totalBintang}</div>
+                    </div>
+                    <div class="ikon-statistik">
+                        <i class="fas fa-star"></i>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card stat-card unique">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-muted">UNIQUE SITE ID ISSUES</h6>
-                                    <h2 class="mb-0 text-info" id="uniqueSiteCount">${uniqueSiteCount}</h2>
-                                    <p class="text-muted mb-0 small">No duplicates counted</p>
-                                </div>
-                                <div class="bg-info text-white rounded-circle p-3">
-                                    <i class="fas fa-exclamation-circle fa-2x"></i>
-                                </div>
-                            </div>
-                        </div>
+                <div class="kartu-statistik">
+                    <div class="info-statistik">
+                        <h3>Total Fork</h3>
+                        <div class="nilai-statistik">${statistik.totalFork}</div>
+                    </div>
+                    <div class="ikon-statistik">
+                        <i class="fas fa-code-fork"></i>
+                    </div>
+                </div>
+                <div class="kartu-statistik">
+                    <div class="info-statistik">
+                        <h3>Bahasa yang Digunakan</h3>
+                        <div class="nilai-statistik">${statistik.bahasa}</div>
+                    </div>
+                    <div class="ikon-statistik">
+                        <i class="fas fa-language"></i>
                     </div>
                 </div>
             `;
             
-            document.getElementById('statsSection').innerHTML = statsHtml;
+            kontainerStatistik.innerHTML = htmlStatistik;
         }
         
-        // Load categories dropdown
-        function loadCategories() {
-            google.script.run.withSuccessHandler(function(categories) {
-                const select = document.getElementById('filterCategory');
-                categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    select.appendChild(option);
-                });
-            }).getUniqueCategories();
-        }
-        
-        // Load sources dropdown
-        function loadSources() {
-            google.script.run.withSuccessHandler(function(sources) {
-                const select = document.getElementById('filterSource');
-                sources.forEach(source => {
-                    const option = document.createElement('option');
-                    option.value = source;
-                    option.textContent = source;
-                    select.appendChild(option);
-                });
-            }).getUniqueSources();
-        }
-        
-        // Load table data
-        function loadTableData(filters = {}) {
-            google.script.run.withSuccessHandler(function(data) {
-                currentData = data;
-                renderTable(data);
-            }).loadData(filters);
-        }
-        
-        // Render table dengan urutan kolom baru
-        function renderTable(data) {
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = '';
+        // Render tabel repository
+        function renderTabel(repository) {
+            jumlahRepo.textContent = repository.length;
             
-            // Hitung unique Site IDs (tanpa duplikat)
-            const uniqueSiteIds = new Set();
-            
-            data.forEach((item, index) => {
-                const rowClass = getRowClass(item);
-                
-                // Simpan Site ID untuk statistik
-                if (item['SITE ID']) {
-                    uniqueSiteIds.add(item['SITE ID']);
-                }
-                
-                const row = `
-                    <tr class="${rowClass}" onclick="showDetails(${index})" style="cursor: pointer;">
-                        <td>${index + 1}</td>
-                        <td class="site-id-cell"><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td>
-                        <td>${item['Alarm Source'] || 'N/A'}</td>
-                        <td><strong>${item['Name'] || 'N/A'}</strong></td>
-                        <td>${item['Site Type'] || 'N/A'}</td>
-                        <td><span class="badge bg-secondary">${item['Category VIP POI'] || 'N/A'}</span></td>
-                        <td>${formatDateTime(item['First Occurred (NT)'])}</td>
-                        <td class="mo-name-cell"><small>${item['MO Name'] || 'N/A'}</small></td>
-                        <td><span class="badge bg-info">${item['Source'] || 'N/A'}</span></td>
+            if (repository.length === 0) {
+                bodyTabel.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem;">
+                            <i class="fas fa-database" style="font-size: 3rem; color: #e1e4e8; margin-bottom: 1rem;"></i>
+                            <p>Tidak ada data repository</p>
+                        </td>
                     </tr>
                 `;
-                tableBody.innerHTML += row;
-            });
-            
-            // Get statistics and update with unique site count
-            google.script.run.withSuccessHandler(function(stats) {
-                updateStats(stats, uniqueSiteIds.size);
-            }).getStatistics();
-            
-            // Initialize DataTable
-            if (!table) {
-                table = $('#alarmsTable').DataTable({
-                    pageLength: 25,
-                    order: [[6, 'desc']], // Sort by First Occurred (column index 6)
-                    language: {
-                        search: "Search all columns:"
-                    },
-                    columnDefs: [
-                        { width: "40px", targets: 0 },   // #
-                        { width: "120px", targets: 1 },  // SITE ID
-                        { width: "150px", targets: 2 },  // Alarm Source
-                        { width: "200px", targets: 3 },  // Alarm Name
-                        { width: "100px", targets: 4 },  // Site Type
-                        { width: "150px", targets: 5 },  // Category
-                        { width: "150px", targets: 6 },  // First Occurred
-                        { width: "350px", targets: 7 },  // MO Name
-                        { width: "80px", targets: 8 }    // Source
-                    ]
-                });
-            } else {
-                table.destroy();
-                table = $('#alarmsTable').DataTable({
-                    pageLength: 25,
-                    order: [[6, 'desc']],
-                    columnDefs: [
-                        { width: "40px", targets: 0 },
-                        { width: "120px", targets: 1 },
-                        { width: "150px", targets: 2 },
-                        { width: "200px", targets: 3 },
-                        { width: "100px", targets: 4 },
-                        { width: "150px", targets: 5 },
-                        { width: "150px", targets: 6 },
-                        { width: "350px", targets: 7 },
-                        { width: "80px", targets: 8 }
-                    ]
-                });
-            }
-        }
-        
-        // Get row class based on alarm type
-        function getRowClass(item) {
-            const alarmName = item['Name'] || '';
-            
-            if (alarmName.includes('UNAVAILABLE') || alarmName.includes('FAILURE')) {
-                return 'alarm-critical';
-            } else if (alarmName.includes('DEGRADED') || alarmName.includes('THRESHOLD')) {
-                return 'alarm-warning';
-            } else {
-                return 'alarm-info';
-            }
-        }
-        
-        // Show details modal
-        function showDetails(index) {
-            const item = currentData[index];
-            
-            const detailsHtml = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Site Information</h6>
-                        <table class="table table-sm">
-                            <tr><td><strong>Site ID:</strong></td><td><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td></tr>
-                            <tr><td><strong>Alarm Source:</strong></td><td>${item['Alarm Source'] || 'N/A'}</td></tr>
-                            <tr><td><strong>Alarm Name:</strong></td><td>${item['Name'] || 'N/A'}</td></tr>
-                            <tr><td><strong>Site Type:</strong></td><td>${item['Site Type'] || 'N/A'}</td></tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Category & Status</h6>
-                        <table class="table table-sm">
-                            <tr><td><strong>Category:</strong></td><td>${item['Category VIP POI'] || 'N/A'}</td></tr>
-                            <tr><td><strong>Status:</strong></td><td>${item['Clearance Status'] || 'N/A'}</td></tr>
-                            <tr><td><strong>First Occurred:</strong></td><td>${formatDateTime(item['First Occurred (NT)'])}</td></tr>
-                            <tr><td><strong>Source:</strong></td><td>${item['Source'] || 'N/A'}</td></tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Technical Details</h6>
-                        <table class="table table-sm">
-                            <tr><td><strong>MO Name:</strong></td><td><small>${item['MO Name'] || 'N/A'}</small></td></tr>
-                            <tr><td><strong>NE Type:</strong></td><td>${item['NE Type'] || 'N/A'}</td></tr>
-                            <tr><td><strong>Cleared On:</strong></td><td>${item['Cleared On (NT)'] === '-' ? 'Still Active' : formatDateTime(item['Cleared On (NT)'])}</td></tr>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('modalBody').innerHTML = detailsHtml;
-            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-            modal.show();
-        }
-        
-        // Apply filters
-        function applyFilters() {
-            const filters = {
-                alarmName: document.getElementById('filterAlarm').value,
-                siteId: document.getElementById('filterSiteId').value,
-                category: document.getElementById('filterCategory').value,
-                source: document.getElementById('filterSource').value
-            };
-            
-            loadTableData(filters);
-        }
-        
-        // Clear all filters
-        function clearFilters() {
-            document.getElementById('filterAlarm').value = '';
-            document.getElementById('filterSiteId').value = '';
-            document.getElementById('filterCategory').value = 'all';
-            document.getElementById('filterSource').value = 'all';
-            
-            loadTableData({});
-        }
-        
-        // Refresh data
-        function refreshData() {
-            loadPage();
-            showToast('Data refreshed successfully!', 'success');
-        }
-        
-        // Export to CSV dengan urutan kolom baru
-        function exportToCSV() {
-            if (currentData.length === 0) {
-                showToast('No data to export!', 'warning');
                 return;
             }
             
-            let csvContent = "data:text/csv;charset=utf-8,";
+            let htmlTabel = '';
             
-            // Urutan kolom sesuai dengan tabel
-            const headers = [
-                'SITE ID', 'Alarm Source', 'Name', 'Site Type',
-                'Category VIP POI', 'First Occurred (NT)', 'MO Name', 'Source'
-            ];
-            
-            csvContent += headers.join(",") + "\r\n";
-            
-            // Add data
-            currentData.forEach(item => {
-                const row = headers.map(header => {
-                    const value = item[header] || '';
-                    return `"${String(value).replace(/"/g, '""')}"`;
-                });
-                csvContent += row.join(",") + "\r\n";
+            repository.forEach(repo => {
+                htmlTabel += `
+                    <tr>
+                        <td>
+                            <a href="https://github.com/username/${repo.nama}" class="nama-repo" target="_blank">
+                                ${repo.nama}
+                            </a>
+                        </td>
+                        <td>${repo.deskripsi || 'Tidak ada deskripsi'}</td>
+                        <td>${repo.bahasa || 'N/A'}</td>
+                        <td><strong>${repo.bintang}</strong></td>
+                        <td>${repo.fork}</td>
+                        <td>${formatTanggal(repo.terakhirDiperbarui)}</td>
+                        <td>
+                            <span class="label ${repo.privat ? 'label-privat' : 'label-publik'}">
+                                ${repo.privat ? 'Privat' : 'Publik'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
             });
             
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `vip_alarms_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showToast('CSV exported successfully!', 'success');
+            bodyTabel.innerHTML = htmlTabel;
         }
         
-        // Format date time
-        function formatDateTime(dateTimeStr) {
-            if (!dateTimeStr || dateTimeStr === '-') return '-';
-            
-            try {
-                const date = new Date(dateTimeStr);
-                return date.toLocaleString('en-GB', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                return dateTimeStr;
-            }
-        }
-        
-        // Update last updated time
-        function updateLastUpdated() {
-            const now = new Date();
-            const formattedTime = now.toLocaleString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('lastUpdated').textContent = `Last updated: ${formattedTime}`;
-        }
-        
-        // Show toast notification
-        function showToast(message, type = 'info') {
-            // Create toast container if it doesn't exist
-            if (!document.getElementById('toastContainer')) {
-                const toastContainer = document.createElement('div');
-                toastContainer.id = 'toastContainer';
-                toastContainer.style.position = 'fixed';
-                toastContainer.style.top = '20px';
-                toastContainer.style.right = '20px';
-                toastContainer.style.zIndex = '9999';
-                document.body.appendChild(toastContainer);
-            }
-            
-            const toastId = 'toast-' + Date.now();
-            const toastHtml = `
-                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
-                            ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
+        // Muat data contoh
+        function muatDataContoh() {
+            // Tampilkan status loading
+            kontainerStatistik.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Memuat data contoh...</p>
                 </div>
             `;
             
-            document.getElementById('toastContainer').innerHTML += toastHtml;
-            const toastEl = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-            toast.show();
+            bodyTabel.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Memuat data contoh...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
             
-            // Remove toast after it's hidden
-            toastEl.addEventListener('hidden.bs.toast', function () {
-                toastEl.remove();
-            });
+            // Simulasi delay jaringan
+            setTimeout(() => {
+                renderStatistik(dataContoh.statistik);
+                renderTabel(dataContoh.repository);
+                tampilkanPesan('Data contoh berhasil dimuat!', 'sukses');
+            }, 800);
         }
+        
+        // Muat data asli dari Google Apps Script
+        async function muatDataAsli() {
+            // Tampilkan status loading
+            kontainerStatistik.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Memuat data dari endpoint...</p>
+                </div>
+            `;
+            
+            bodyTabel.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Memuat data dari endpoint...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            try {
+                tampilkanPesan('Mencoba mengambil data dari endpoint...', 'info');
+                
+                // Catatan: Karena pembatasan CORS, Anda mungkin perlu mengaktifkan CORS pada Google Apps Script
+                // atau menggunakan proxy. Untuk saat ini, akan kembali ke data contoh jika request gagal.
+                const response = await fetch(URL_ENDPOINT);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Cek apakah struktur data sesuai dengan yang diharapkan
+                if (data && (data.repository || data.statistik)) {
+                    // Jika data memiliki struktur yang diharapkan, gunakan
+                    const statistik = data.statistik || {
+                        totalRepo: data.repository?.length || 0,
+                        totalBintang: data.repository?.reduce((jumlah, repo) => jumlah + (repo.bintang || 0), 0) || 0,
+                        totalFork: data.repository?.reduce((jumlah, repo) => jumlah + (repo.fork || 0), 0) || 0,
+                        bahasa: new Set(data.repository?.map(repo => repo.bahasa).filter(Boolean)).size || 0
+                    };
+                    
+                    renderStatistik(statistik);
+                    renderTabel(data.repository || []);
+                    tampilkanPesan('Data berhasil dimuat dari endpoint!', 'sukses');
+                } else {
+                    // Jika struktur data berbeda, coba adaptasi atau tampilkan error
+                    console.log("Data diterima:", data);
+                    throw new Error("Struktur data tidak sesuai");
+                }
+            } catch (error) {
+                console.error("Error mengambil data:", error);
+                
+                // Kembali ke data contoh
+                tampilkanPesan(`Tidak dapat mengambil data dari endpoint: ${error.message}. Memuat data contoh...`, 'error');
+                
+                // Beri jeda sebelum menampilkan data contoh
+                setTimeout(() => {
+                    muatDataContoh();
+                }, 1500);
+            }
+        }
+        
+        // Inisialisasi dashboard
+        function inisialisasiDashboard() {
+            // Coba muat data asli dulu, kembali ke data contoh jika gagal
+            muatDataAsli();
+        }
+        
+        // Event Listeners
+        tombolRefresh.addEventListener('click', muatDataAsli);
+        tombolDataMock.addEventListener('click', muatDataContoh);
+        
+        // Inisialisasi dashboard saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', inisialisasiDashboard);
+        
+        // Tambahkan event untuk menutup pesan
+        areaPesan.addEventListener('click', function() {
+            this.innerHTML = '';
+        });
     </script>
 </body>
 </html>
