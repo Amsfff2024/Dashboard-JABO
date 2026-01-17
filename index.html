@@ -7,566 +7,246 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <!-- Font Google untuk tampilan lebih profesional -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Warna baru yang lebih modern dan accessible */
-            --primary-dark: #1a365d;
-            --primary-main: #2d70b3;
-            --primary-light: #4299e1;
-            --primary-gradient: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
-            
-            /* Status colors - lebih soft */
-            --critical-color: #f56565;
-            --warning-color: #ed8936;
-            --info-color: #4299e1;
-            --success-color: #48bb78;
-            
-            /* Neutral palette */
-            --dark-color: #2d3748;
-            --gray-700: #4a5568;
-            --gray-500: #718096;
-            --gray-300: #e2e8f0;
-            --gray-100: #f7fafc;
-            --light-color: #ffffff;
-            
-            /* Spacing */
-            --border-radius: 12px;
-            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --hover-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.06);
-            
-            /* Animations */
-            --transition-speed: 0.25s;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #17a2b8;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #f8fafc 100%);
-            color: var(--dark-color);
-            min-height: 100vh;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
         }
         
-        /* ========== NAVBAR ========== */
-        .navbar-custom {
-            background: var(--primary-gradient);
-            padding: 1rem 0;
-            box-shadow: 0 4px 12px rgba(26, 54, 93, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .navbar-custom .navbar-brand {
+        .navbar-brand {
             font-weight: 700;
-            font-size: 1.75rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            letter-spacing: -0.5px;
+            font-size: 1.5rem;
         }
         
-        .navbar-custom .navbar-brand i {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.75rem;
+        .card {
+            border: none;
             border-radius: 10px;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
         
-        .last-updated {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-weight: 500;
-        }
-        
-        .btn-refresh {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all var(--transition-speed) ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-refresh:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* ========== STATS CARDS ========== */
-        .stats-container {
-            margin-top: 2rem;
-            margin-bottom: 2rem;
+        .card:hover {
+            transform: translateY(-5px);
         }
         
         .stat-card {
-            background: var(--light-color);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--card-shadow);
-            border: none;
-            transition: all var(--transition-speed) ease;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
+            border-left: 4px solid var(--secondary-color);
         }
         
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-        }
+        .stat-card.total { border-left-color: var(--primary-color); }
+        .stat-card.unique { border-left-color: var(--info-color); }
         
-        .stat-card.total::before { background: var(--primary-main); }
-        .stat-card.sites::before { background: var(--warning-color); }
-        .stat-card.unique::before { background: var(--info-color); }
-        
-        .stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--hover-shadow);
-        }
-        
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-        
-        .stat-icon.total { background: linear-gradient(135deg, #667eea 0%, var(--primary-main) 100%); }
-        .stat-icon.sites { background: linear-gradient(135deg, #f093fb 0%, var(--warning-color) 100%); }
-        .stat-icon.unique { background: linear-gradient(135deg, #4facfe 0%, var(--info-color) 100%); }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            line-height: 1;
-            margin: 0.5rem 0;
-            background: linear-gradient(135deg, var(--dark-color), var(--gray-700));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .stat-label {
-            color: var(--gray-500);
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
             font-weight: 600;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
         }
         
-        .stat-desc {
-            color: var(--gray-500);
-            font-size: 0.85rem;
-        }
-        
-        /* ========== FILTER SECTION ========== */
-        .filter-section {
-            background: var(--light-color);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--gray-300);
-        }
-        
-        .filter-section .form-label {
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .filter-section .form-control,
-        .filter-section .form-select {
-            border: 2px solid var(--gray-300);
-            border-radius: 8px;
-            padding: 0.625rem 1rem;
-            font-size: 0.95rem;
-            transition: all var(--transition-speed) ease;
-        }
-        
-        .filter-section .form-control:focus,
-        .filter-section .form-select:focus {
-            border-color: var(--primary-main);
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
-        }
-        
-        .btn-filter {
-            background: var(--primary-gradient);
+        .table th {
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 0.75rem;
-            border-radius: 8px;
             font-weight: 600;
-            width: 100%;
-            transition: all var(--transition-speed) ease;
         }
         
-        .btn-filter:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(66, 153, 225, 0.2);
-        }
-        
-        .btn-clear {
-            background: transparent;
-            color: var(--gray-500);
-            border: 2px solid var(--gray-300);
-            padding: 0.5rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all var(--transition-speed) ease;
-        }
-        
-        .btn-clear:hover {
-            border-color: var(--critical-color);
-            color: var(--critical-color);
-            background: rgba(245, 101, 101, 0.05);
-        }
-        
-        /* ========== TABLE ========== */
-        .table-container {
-            background: var(--light-color);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 3rem;
-        }
-        
-        .table-header {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 1.25rem 1.5rem;
-        }
-        
-        .table-header h2 {
-            margin: 0;
-            font-weight: 600;
-            font-size: 1.25rem;
-        }
-        
-        .table-responsive {
-            padding: 1.5rem;
-        }
-        
-        #alarmsTable {
-            --bs-table-bg: transparent;
-            --bs-table-striped-bg: var(--gray-100);
-            --bs-table-hover-bg: rgba(66, 153, 225, 0.08);
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 0;
-        }
-        
-        #alarmsTable thead th {
-            background-color: var(--gray-100);
-            color: var(--dark-color);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 1rem 1.25rem;
-            border-bottom: 2px solid var(--gray-300);
-            white-space: nowrap;
-        }
-        
-        #alarmsTable tbody td {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--gray-300);
+        .table td {
             vertical-align: middle;
         }
         
-        #alarmsTable tbody tr {
-            transition: all var(--transition-speed) ease;
-            cursor: pointer;
-        }
-        
-        #alarmsTable tbody tr:hover {
-            background-color: rgba(66, 153, 225, 0.05) !important;
-            transform: scale(1.002);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        /* Row status indicators */
         .alarm-critical {
-            border-left: 4px solid var(--critical-color);
+            background-color: #fff5f5;
+            border-left: 4px solid var(--danger-color);
         }
         
         .alarm-warning {
+            background-color: #fffbf0;
             border-left: 4px solid var(--warning-color);
         }
         
         .alarm-info {
-            border-left: 4px solid var(--info-color);
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--secondary-color);
         }
         
-        /* Badges */
-        .badge-category {
-            background: var(--gray-100);
-            color: var(--dark-color);
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.8rem;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .badge-source {
-            background: rgba(66, 153, 225, 0.1);
-            color: var(--primary-main);
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.8rem;
-        }
-        
-        .site-id-cell {
-            font-family: 'SF Mono', 'Cascadia Code', 'Roboto Mono', monospace;
-            font-weight: 600;
-            color: var(--primary-dark);
-            background: rgba(66, 153, 225, 0.08);
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            display: inline-block;
-        }
-        
-        /* ========== EXPORT BUTTON ========== */
-        .export-section {
-            margin-bottom: 1.5rem;
-        }
-        
-        .btn-export {
-            background: linear-gradient(135deg, var(--success-color), #38a169);
-            color: white;
-            border: none;
-            padding: 0.875rem 2rem;
+        .filter-section {
+            background-color: white;
             border-radius: 10px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all var(--transition-speed) ease;
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.25);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .btn-export:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.35);
-            color: white;
-        }
-        
-        /* ========== FOOTER ========== */
-        footer {
-            background: var(--dark-color);
-            color: var(--gray-300);
-            padding: 2rem 0;
-            margin-top: 3rem;
-            text-align: center;
-        }
-        
-        footer p {
-            margin: 0;
+        .last-updated {
             font-size: 0.9rem;
+            color: #6c757d;
         }
         
-        /* ========== MODAL ========== */
-        .modal-header {
-            background: var(--primary-gradient);
+        .export-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
-            padding: 1.5rem;
-        }
-        
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-            opacity: 0.8;
-        }
-        
-        .modal-content {
-            border-radius: var(--border-radius);
             border: none;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
         }
         
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .navbar-custom .navbar-brand {
-                font-size: 1.25rem;
-            }
-            
-            .stat-number {
-                font-size: 2rem;
-            }
-            
-            .filter-section .col-md-3,
-            .filter-section .col-md-2 {
-                margin-bottom: 1rem;
-            }
-            
-            .btn-filter, .btn-clear {
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-            
-            .table-responsive {
-                padding: 0.5rem;
-                font-size: 0.85rem;
-            }
-            
-            #alarmsTable thead th,
-            #alarmsTable tbody td {
-                padding: 0.75rem 0.5rem;
-            }
+        .export-btn:hover {
+            color: white;
+            opacity: 0.9;
         }
         
-        /* ========== CUSTOM SCROLLBAR ========== */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        /* Optimasi lebar kolom dengan urutan baru */
+        .table th:nth-child(1) { width: 40px; }    /* # */
+        .table th:nth-child(2) { width: 120px; }   /* SITE ID */
+        .table th:nth-child(3) { width: 150px; }   /* Alarm Source */
+        .table th:nth-child(4) { width: 200px; }   /* Alarm Name */
+        .table th:nth-child(5) { width: 100px; }   /* Site Type */
+        .table th:nth-child(6) { width: 150px; }   /* Category */
+        .table th:nth-child(7) { width: 150px; }   /* First Occurred */
+        .table th:nth-child(8) { width: 350px; }   /* MO Name */
+        .table th:nth-child(9) { width: 80px; }    /* Source */
+        
+        /* Style untuk SITE ID */
+        .site-id-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
         }
         
-        ::-webkit-scrollbar-track {
-            background: var(--gray-100);
-            border-radius: 4px;
+        /* Style untuk MO Name yang panjang */
+        .mo-name-cell {
+            max-width: 400px;
+            word-wrap: break-word;
+            white-space: normal;
         }
         
-        ::-webkit-scrollbar-thumb {
-            background: var(--gray-500);
-            border-radius: 4px;
+        /* Auto-refresh indicator */
+        .auto-refresh-indicator {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background-color: var(--info-color);
+            color: white;
         }
         
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--gray-700);
+        /* Statistik cards layout yang lebih rapat */
+        .stats-container {
+            display: flex;
+            gap: 15px; /* Jarak antar card lebih kecil */
+            margin-bottom: 20px;
         }
         
-        /* ========== LOADING ANIMATION ========== */
-        .loading-spinner {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 9999;
+        .stat-card {
+            flex: 1;
+            min-width: 0; /* Untuk mencegah overflow */
+        }
+        
+        /* Perbaikan spacing di dalam card */
+        .stat-card .card-body {
+            padding: 1.25rem;
+        }
+        
+        /* Icon lebih kecil untuk hemat ruang */
+        .stat-card .rounded-circle {
+            padding: 0.8rem !important;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--gray-300);
-            border-top: 4px solid var(--primary-main);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .stat-card .fa-2x {
+            font-size: 1.5rem;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* Angka statistik lebih besar */
+        .stat-card h2 {
+            font-size: 2.2rem;
+            margin-bottom: 0.25rem;
         }
         
-        /* ========== TOAST ========== */
-        .toast-container {
-            z-index: 9999;
-        }
-        
-        .toast {
-            border-radius: 10px;
-            border: none;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        /* ========== EMPTY STATE ========== */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--gray-500);
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--gray-300);
-        }
-        
-        .empty-state h4 {
-            color: var(--gray-700);
+        .stat-card h6 {
+            font-size: 0.85rem;
             margin-bottom: 0.5rem;
         }
         
-        /* ========== PAGINATION CUSTOM ========== */
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            border: 1px solid var(--gray-300) !important;
-            border-radius: 8px !important;
-            margin: 0 3px !important;
-            padding: 0.375rem 0.75rem !important;
-            color: var(--dark-color) !important;
+        .stat-card .small {
+            font-size: 0.75rem;
         }
         
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: var(--primary-gradient) !important;
-            color: white !important;
-            border: none !important;
-        }
-        
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: var(--gray-100) !important;
-            border-color: var(--primary-main) !important;
-            color: var(--primary-main) !important;
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+            
+            .table th:nth-child(n),
+            .table td:nth-child(n) {
+                width: auto !important;
+            }
+            
+            .mo-name-cell {
+                max-width: 200px;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+            
+            .stat-card h2 {
+                font-size: 1.8rem;
+            }
+            
+            .stat-card .rounded-circle {
+                padding: 0.6rem !important;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .stat-card .fa-2x {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Loading Spinner -->
-    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-        <div class="spinner"></div>
-    </div>
-    
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+        <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-shield-alt"></i>
-                <span>VIP Alarms Dashboard</span>
+                <i class="fas fa-shield-alt me-2"></i>VIP Alarms Dashboard
             </a>
-            <div class="d-flex align-items-center gap-3">
-                <span class="last-updated" id="lastUpdated"></span>
-                <button class="btn-refresh" onclick="refreshData()">
+            <div class="d-flex align-items-center">
+                <span class="auto-refresh-indicator me-2" id="refreshIndicator">
+                    <i class="fas fa-clock"></i> Auto-refresh: 5 min
+                </span>
+                <span class="text-light me-3 last-updated" id="lastUpdated"></span>
+                <button class="btn btn-outline-light" onclick="refreshData()">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
             </div>
         </div>
     </nav>
     
-    <div class="container">
-        <!-- Statistics Cards -->
-        <div class="row stats-container" id="statsSection">
+    <div class="container-fluid mt-4">
+        <!-- Statistics Cards - Layout baru yang lebih rapat -->
+        <div class="stats-container" id="statsSection">
             <!-- Stats akan diisi oleh JavaScript -->
         </div>
         
@@ -574,99 +254,76 @@
         <div class="filter-section">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">
-                        <i class="fas fa-search me-1"></i> Alarm Name
-                    </label>
-                    <input type="text" class="form-control" id="filterAlarm" placeholder="Search alarm name...">
+                    <label class="form-label">Alarm Name</label>
+                    <input type="text" class="form-control" id="filterAlarm" placeholder="Search alarm...">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="fas fa-hashtag me-1"></i> Site ID
-                    </label>
-                    <input type="text" class="form-control" id="filterSiteId" placeholder="Enter Site ID">
+                    <label class="form-label">Site ID</label>
+                    <input type="text" class="form-control" id="filterSiteId" placeholder="Site ID">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">
-                        <i class="fas fa-tag me-1"></i> Category
-                    </label>
+                    <label class="form-label">Category</label>
                     <select class="form-select" id="filterCategory">
                         <option value="all">All Categories</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">
-                        <i class="fas fa-database me-1"></i> Source
-                    </label>
+                    <label class="form-label">Source</label>
                     <select class="form-select" id="filterSource">
                         <option value="all">All Sources</option>
                     </select>
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button class="btn-filter" onclick="applyFilters()">
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">
                         <i class="fas fa-filter"></i> Filter
                     </button>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <button class="btn-clear" onclick="clearFilters()">
-                        <i class="fas fa-times me-1"></i> Clear All Filters
+                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear Filters
                     </button>
                 </div>
             </div>
         </div>
         
         <!-- Export Button -->
-        <div class="export-section d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <i class="fas fa-info-circle text-primary"></i>
-                    <small class="text-muted ms-1">Click any row for detailed view</small>
-                </div>
-            </div>
-            <button class="btn-export" onclick="exportToCSV()">
-                <i class="fas fa-download"></i> Export to CSV
+        <div class="d-flex justify-content-end mb-3">
+            <button class="export-btn" onclick="exportToCSV()">
+                <i class="fas fa-download me-2"></i>Export to CSV
             </button>
         </div>
         
-        <!-- Data Table -->
-        <div class="table-container">
-            <div class="table-header">
-                <h2>Active Alarms</h2>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover" id="alarmsTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>SITE ID</th>
-                            <th>Alarm Source</th>
-                            <th>Alarm Name</th>
-                            <th>Site Type</th>
-                            <th>Category</th>
-                            <th>First Occurred</th>
-                            <th>MO Name</th>
-                            <th>Source</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Data akan diisi oleh JavaScript -->
-                    </tbody>
-                </table>
+        <!-- Data Table (URUTAN KOLOM BARU) -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="alarmsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>SITE ID</th>
+                                <th>Alarm Source</th>
+                                <th>Alarm Name</th>
+                                <th>Site Type</th>
+                                <th>Category</th>
+                                <th>First Occurred</th>
+                                <th>MO Name</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
         <!-- Footer -->
-        <footer>
-            <div class="container">
-                <p>VIP Alarms Monitoring System &copy; 2024 | Powered by Google Apps Script</p>
-                <p class="mt-2">
-                    <small>
-                        <i class="fas fa-clock me-1"></i>
-                        <span id="footerLastUpdated">Last updated: --:--:--</span>
-                    </small>
-                </p>
-            </div>
+        <footer class="mt-5 py-3 text-center text-muted">
+            <p>VIP Alarms Monitoring System &copy; 2024 | Powered by Google Apps Script | Auto-refresh every 5 minutes</p>
         </footer>
     </div>
     
@@ -675,16 +332,11 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>Alarm Details
-                    </h5>
+                    <h5 class="modal-title">Alarm Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="modalBody">
                     <!-- Details akan diisi oleh JavaScript -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -697,46 +349,59 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
-        // Loading state functions
-        function showLoading() {
-            document.getElementById('loadingSpinner').style.display = 'flex';
+        let table;
+        let currentData = [];
+        let refreshInterval;
+        let refreshCountdown = 300; // 5 menit dalam detik
+        
+        // Initialize on page load
+        $(document).ready(function() {
+            loadPage();
+            startAutoRefresh();
+        });
+        
+        // Load all data and initialize page
+        function loadPage() {
+            google.script.run.withSuccessHandler(initializePage).getStatistics();
         }
         
-        function hideLoading() {
-            document.getElementById('loadingSpinner').style.display = 'none';
+        // Initialize page with data
+        function initializePage(stats) {
+            loadCategories();
+            loadSources();
+            loadTableData();
+            updateLastUpdated();
         }
         
-        // Update updateStats function dengan desain baru
+        // Update statistics cards - LAYOUT BARU YANG LEBIH RAPAT
         function updateStats(stats, uniqueSiteCount) {
             const statsHtml = `
-                <div class="col-md-4 mb-4">
-                    <div class="stat-card total">
-                        <div class="stat-icon total">
-                            <i class="fas fa-bell fa-lg text-white"></i>
+                <div class="card stat-card total">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">TOTAL ALARMS</h6>
+                                <h2 class="mb-0">${stats.total}</h2>
+                                <p class="text-muted mb-0 small">All alarm incidents</p>
+                            </div>
+                            <div class="bg-primary text-white rounded-circle">
+                                <i class="fas fa-bell fa-2x"></i>
+                            </div>
                         </div>
-                        <div class="stat-label">Total Alarms</div>
-                        <div class="stat-number">${stats.total}</div>
-                        <div class="stat-desc">All active incidents</div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="stat-card sites">
-                        <div class="stat-icon sites">
-                            <i class="fas fa-tower-cell fa-lg text-white"></i>
+                <div class="card stat-card unique">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">UNIQUE SITE IDS</h6>
+                                <h2 class="mb-0 text-info">${uniqueSiteCount}</h2>
+                                <p class="text-muted mb-0 small">Distinct sites affected</p>
+                            </div>
+                            <div class="bg-info text-white rounded-circle">
+                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                            </div>
                         </div>
-                        <div class="stat-label">Sites Affected</div>
-                        <div class="stat-number">${Object.keys(stats.bySiteType).length}</div>
-                        <div class="stat-desc">Unique site types</div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="stat-card unique">
-                        <div class="stat-icon unique">
-                            <i class="fas fa-exclamation-triangle fa-lg text-white"></i>
-                        </div>
-                        <div class="stat-label">Unique Sites</div>
-                        <div class="stat-number">${uniqueSiteCount}</div>
-                        <div class="stat-desc">Without duplicates</div>
                     </div>
                 </div>
             `;
@@ -744,148 +409,208 @@
             document.getElementById('statsSection').innerHTML = statsHtml;
         }
         
-        // Update renderTable function untuk badge baru
-        function renderTable(data) {
-            const tableBody = document.getElementById('tableBody');
+        // Start auto-refresh timer
+        function startAutoRefresh() {
+            // Update countdown setiap detik
+            const countdownInterval = setInterval(() => {
+                refreshCountdown--;
+                updateRefreshIndicator();
+                
+                if (refreshCountdown <= 0) {
+                    refreshCountdown = 300; // Reset ke 5 menit
+                    autoRefreshData();
+                }
+            }, 1000);
             
-            if (data.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <h4>No alarms found</h4>
-                                <p>Try adjusting your filters or check back later.</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tableBody.innerHTML = '';
-            
-            // ... rest of your existing renderTable code ...
-            // Update badge classes in the row generation:
-            // <span class="badge-category">${item['Category VIP POI'] || 'N/A'}</span>
-            // <span class="badge-source">${item['Source'] || 'N/A'}</span>
-            
-            // The rest of your JavaScript functions remain the same
-            // Only visual elements are updated in the HTML generation
+            // Simpan interval ID untuk membersihkan nanti jika diperlukan
+            refreshInterval = countdownInterval;
         }
         
-        // Update showDetails modal dengan desain baru
-        function showDetails(index) {
-            const item = currentData[index];
+        // Update refresh indicator
+        function updateRefreshIndicator() {
+            const minutes = Math.floor(refreshCountdown / 60);
+            const seconds = refreshCountdown % 60;
+            const indicator = document.getElementById('refreshIndicator');
             
-            // Determine severity color
-            let severityColor = 'info';
-            let severityIcon = 'info-circle';
+            if (refreshCountdown <= 60) {
+                indicator.innerHTML = `<i class="fas fa-clock"></i> Refreshing in: ${seconds}s`;
+                indicator.style.backgroundColor = 'var(--warning-color)';
+            } else {
+                indicator.innerHTML = `<i class="fas fa-clock"></i> Auto-refresh: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                indicator.style.backgroundColor = 'var(--info-color)';
+            }
+        }
+        
+        // Auto refresh data
+        function autoRefreshData() {
+            google.script.run.withSuccessHandler(function(data) {
+                currentData = data;
+                renderTable(data);
+                updateLastUpdated();
+                showToast('Data automatically refreshed!', 'info');
+            }).loadData({});
+        }
+        
+        // Load categories dropdown
+        function loadCategories() {
+            google.script.run.withSuccessHandler(function(categories) {
+                const select = document.getElementById('filterCategory');
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+            }).getUniqueCategories();
+        }
+        
+        // Load sources dropdown
+        function loadSources() {
+            google.script.run.withSuccessHandler(function(sources) {
+                const select = document.getElementById('filterSource');
+                sources.forEach(source => {
+                    const option = document.createElement('option');
+                    option.value = source;
+                    option.textContent = source;
+                    select.appendChild(option);
+                });
+            }).getUniqueSources();
+        }
+        
+        // Load table data
+        function loadTableData(filters = {}) {
+            google.script.run.withSuccessHandler(function(data) {
+                currentData = data;
+                renderTable(data);
+                // Reset refresh timer ketika data dimuat manual
+                refreshCountdown = 300;
+                updateRefreshIndicator();
+            }).loadData(filters);
+        }
+        
+        // Render table dengan urutan kolom baru
+        function renderTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            // Hitung unique Site IDs (tanpa duplikat)
+            const uniqueSiteIds = new Set();
+            
+            data.forEach((item, index) => {
+                const rowClass = getRowClass(item);
+                
+                // Simpan Site ID untuk statistik
+                if (item['SITE ID']) {
+                    uniqueSiteIds.add(item['SITE ID']);
+                }
+                
+                const row = `
+                    <tr class="${rowClass}" onclick="showDetails(${index})" style="cursor: pointer;">
+                        <td>${index + 1}</td>
+                        <td class="site-id-cell"><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td>
+                        <td>${item['Alarm Source'] || 'N/A'}</td>
+                        <td><strong>${item['Name'] || 'N/A'}</strong></td>
+                        <td>${item['Site Type'] || 'N/A'}</td>
+                        <td><span class="badge bg-secondary">${item['Category VIP POI'] || 'N/A'}</span></td>
+                        <td>${formatDateTime(item['First Occurred (NT)'])}</td>
+                        <td class="mo-name-cell"><small>${item['MO Name'] || 'N/A'}</small></td>
+                        <td><span class="badge bg-info">${item['Source'] || 'N/A'}</span></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            
+            // Get statistics and update with unique site count
+            google.script.run.withSuccessHandler(function(stats) {
+                updateStats(stats, uniqueSiteIds.size);
+            }).getStatistics();
+            
+            // Initialize DataTable
+            if (!table) {
+                table = $('#alarmsTable').DataTable({
+                    pageLength: 25,
+                    order: [[6, 'desc']], // Sort by First Occurred (column index 6)
+                    language: {
+                        search: "Search all columns:"
+                    },
+                    columnDefs: [
+                        { width: "40px", targets: 0 },   // #
+                        { width: "120px", targets: 1 },  // SITE ID
+                        { width: "150px", targets: 2 },  // Alarm Source
+                        { width: "200px", targets: 3 },  // Alarm Name
+                        { width: "100px", targets: 4 },  // Site Type
+                        { width: "150px", targets: 5 },  // Category
+                        { width: "150px", targets: 6 },  // First Occurred
+                        { width: "350px", targets: 7 },  // MO Name
+                        { width: "80px", targets: 8 }    // Source
+                    ]
+                });
+            } else {
+                table.destroy();
+                table = $('#alarmsTable').DataTable({
+                    pageLength: 25,
+                    order: [[6, 'desc']],
+                    columnDefs: [
+                        { width: "40px", targets: 0 },
+                        { width: "120px", targets: 1 },
+                        { width: "150px", targets: 2 },
+                        { width: "200px", targets: 3 },
+                        { width: "100px", targets: 4 },
+                        { width: "150px", targets: 5 },
+                        { width: "150px", targets: 6 },
+                        { width: "350px", targets: 7 },
+                        { width: "80px", targets: 8 }
+                    ]
+                });
+            }
+        }
+        
+        // Get row class based on alarm type
+        function getRowClass(item) {
             const alarmName = item['Name'] || '';
             
             if (alarmName.includes('UNAVAILABLE') || alarmName.includes('FAILURE')) {
-                severityColor = 'critical';
-                severityIcon = 'times-circle';
+                return 'alarm-critical';
             } else if (alarmName.includes('DEGRADED') || alarmName.includes('THRESHOLD')) {
-                severityColor = 'warning';
-                severityIcon = 'exclamation-triangle';
+                return 'alarm-warning';
+            } else {
+                return 'alarm-info';
             }
+        }
+        
+        // Show details modal
+        function showDetails(index) {
+            const item = currentData[index];
             
             const detailsHtml = `
                 <div class="row">
-                    <div class="col-12 mb-4">
-                        <div class="alert alert-${severityColor} d-flex align-items-center">
-                            <i class="fas fa-${severityIcon} fa-2x me-3"></i>
-                            <div>
-                                <h5 class="alert-heading mb-1">${item['Name'] || 'N/A'}</h5>
-                                <p class="mb-0">${item['Alarm Source'] || 'N/A'} • Site ID: <code>${item['SITE ID'] || 'N/A'}</code></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Site Information</h6>
-                            </div>
-                            <div class="card-body">
-                                <dl class="row mb-0">
-                                    <dt class="col-sm-4">Site ID:</dt>
-                                    <dd class="col-sm-8"><code class="bg-light p-1 rounded">${item['SITE ID'] || 'N/A'}</code></dd>
-                                    
-                                    <dt class="col-sm-4">Alarm Source:</dt>
-                                    <dd class="col-sm-8">${item['Alarm Source'] || 'N/A'}</dd>
-                                    
-                                    <dt class="col-sm-4">Alarm Name:</dt>
-                                    <dd class="col-sm-8"><strong>${item['Name'] || 'N/A'}</strong></dd>
-                                    
-                                    <dt class="col-sm-4">Site Type:</dt>
-                                    <dd class="col-sm-8">${item['Site Type'] || 'N/A'}</dd>
-                                </dl>
-                            </div>
-                        </div>
+                        <h6>Site Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Site ID:</strong></td><td><code><strong>${item['SITE ID'] || 'N/A'}</strong></code></td></tr>
+                            <tr><td><strong>Alarm Source:</strong></td><td>${item['Alarm Source'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Alarm Name:</strong></td><td>${item['Name'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Site Type:</strong></td><td>${item['Site Type'] || 'N/A'}</td></tr>
+                        </table>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-tags me-2"></i>Category & Status</h6>
-                            </div>
-                            <div class="card-body">
-                                <dl class="row mb-0">
-                                    <dt class="col-sm-4">Category:</dt>
-                                    <dd class="col-sm-8"><span class="badge-category">${item['Category VIP POI'] || 'N/A'}</span></dd>
-                                    
-                                    <dt class="col-sm-4">Status:</dt>
-                                    <dd class="col-sm-8">
-                                        <span class="badge bg-${item['Clearance Status'] === 'Cleared' ? 'success' : 'warning'}">
-                                            ${item['Clearance Status'] || 'Active'}
-                                        </span>
-                                    </dd>
-                                    
-                                    <dt class="col-sm-4">First Occurred:</dt>
-                                    <dd class="col-sm-8">${formatDateTime(item['First Occurred (NT)'])}</dd>
-                                    
-                                    <dt class="col-sm-4">Source:</dt>
-                                    <dd class="col-sm-8"><span class="badge-source">${item['Source'] || 'N/A'}</span></dd>
-                                </dl>
-                            </div>
-                        </div>
+                        <h6>Category & Status</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Category:</strong></td><td>${item['Category VIP POI'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td>${item['Clearance Status'] || 'N/A'}</td></tr>
+                            <tr><td><strong>First Occurred:</strong></td><td>${formatDateTime(item['First Occurred (NT)'])}</td></tr>
+                            <tr><td><strong>Source:</strong></td><td>${item['Source'] || 'N/A'}</td></tr>
+                        </table>
                     </div>
                 </div>
-                <div class="row mt-4">
+                <div class="row mt-3">
                     <div class="col-12">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-cogs me-2"></i>Technical Details</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <dt>MO Name:</dt>
-                                        <dd class="mb-3"><small class="text-muted">${item['MO Name'] || 'N/A'}</small></dd>
-                                        
-                                        <dt>NE Type:</dt>
-                                        <dd class="mb-3">${item['NE Type'] || 'N/A'}</dd>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <dt>Cleared On:</dt>
-                                        <dd class="mb-3">
-                                            ${item['Cleared On (NT)'] === '-' || !item['Cleared On (NT)'] 
-                                                ? '<span class="badge bg-warning">Still Active</span>' 
-                                                : formatDateTime(item['Cleared On (NT)'])}
-                                        </dd>
-                                        
-                                        <dt>Duration:</dt>
-                                        <dd class="mb-0">
-                                            <span class="badge bg-light text-dark">
-                                                ${calculateDuration(item['First Occurred (NT)'], item['Cleared On (NT)'])}
-                                            </span>
-                                        </dd>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <h6>Technical Details</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>MO Name:</strong></td><td><small>${item['MO Name'] || 'N/A'}</small></td></tr>
+                            <tr><td><strong>NE Type:</strong></td><td>${item['NE Type'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Cleared On:</strong></td><td>${item['Cleared On (NT)'] === '-' ? 'Still Active' : formatDateTime(item['Cleared On (NT)'])}</td></tr>
+                        </table>
                     </div>
                 </div>
             `;
@@ -895,95 +620,138 @@
             modal.show();
         }
         
-        // Helper function to calculate duration
-        function calculateDuration(start, end) {
-            if (!start || start === '-') return 'N/A';
+        // Apply filters
+        function applyFilters() {
+            const filters = {
+                alarmName: document.getElementById('filterAlarm').value,
+                siteId: document.getElementById('filterSiteId').value,
+                category: document.getElementById('filterCategory').value,
+                source: document.getElementById('filterSource').value
+            };
             
-            const startDate = new Date(start);
-            const endDate = end && end !== '-' ? new Date(end) : new Date();
+            loadTableData(filters);
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterAlarm').value = '';
+            document.getElementById('filterSiteId').value = '';
+            document.getElementById('filterCategory').value = 'all';
+            document.getElementById('filterSource').value = 'all';
             
-            const diffMs = endDate - startDate;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            loadTableData({});
+        }
+        
+        // Refresh data
+        function refreshData() {
+            refreshCountdown = 300; // Reset timer
+            loadPage();
+            showToast('Data refreshed successfully!', 'success');
+        }
+        
+        // Export to CSV dengan urutan kolom baru
+        function exportToCSV() {
+            if (currentData.length === 0) {
+                showToast('No data to export!', 'warning');
+                return;
+            }
             
-            if (diffHours < 1) {
-                return '< 1 hour';
-            } else if (diffHours < 24) {
-                return `${diffHours} hours`;
-            } else {
-                const days = Math.floor(diffHours / 24);
-                const hours = diffHours % 24;
-                return `${days}d ${hours}h`;
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Urutan kolom sesuai dengan tabel
+            const headers = [
+                'SITE ID', 'Alarm Source', 'Name', 'Site Type',
+                'Category VIP POI', 'First Occurred (NT)', 'MO Name', 'Source'
+            ];
+            
+            csvContent += headers.join(",") + "\r\n";
+            
+            // Add data
+            currentData.forEach(item => {
+                const row = headers.map(header => {
+                    const value = item[header] || '';
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csvContent += row.join(",") + "\r\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `vip_alarms_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('CSV exported successfully!', 'success');
+        }
+        
+        // Format date time
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr || dateTimeStr === '-') return '-';
+            
+            try {
+                const date = new Date(dateTimeStr);
+                return date.toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return dateTimeStr;
             }
         }
         
-        // Update updateLastUpdated untuk footer juga
+        // Update last updated time
         function updateLastUpdated() {
             const now = new Date();
             const formattedTime = now.toLocaleString('en-GB', {
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit',
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
+                second: '2-digit'
             });
             document.getElementById('lastUpdated').textContent = `Last updated: ${formattedTime}`;
-            document.getElementById('footerLastUpdated').textContent = `Last updated: ${formattedTime}`;
         }
         
-        // Modify loadTableData to show/hide loading
-        function loadTableData(filters = {}) {
-            showLoading();
-            google.script.run.withSuccessHandler(function(data) {
-                currentData = data;
-                renderTable(data);
-                hideLoading();
-            }).loadData(filters);
-        }
-        
-        // Initialize with loading
-        function loadPage() {
-            showLoading();
-            google.script.run.withSuccessHandler(initializePage).getStatistics();
-        }
-        
-        function initializePage(stats) {
-            loadCategories();
-            loadSources();
-            loadTableData();
-            updateLastUpdated();
-        }
-        
-        // ... SISANYA FUNGSI JAVASCRIPT TETAP SAMA SEPERTI ASLINYA ...
-        // Hanya fungsi-fungsi yang berhubungan dengan UI yang sudah diupdate di atas
-        // Fungsi lain tetap sama
-        
-        // Initialize DataTable dengan konfigurasi yang lebih baik
-        $(document).ready(function() {
-            loadPage();
-            
-            // DataTable customization
-            if ($.fn.DataTable) {
-                $.extend(true, $.fn.dataTable.defaults, {
-                    language: {
-                        search: "<i class='fas fa-search'></i> Search:",
-                        lengthMenu: "Show _MENU_ entries",
-                        info: "Showing _START_ to _END_ of _TOTAL_ alarms",
-                        infoEmpty: "No alarms to show",
-                        paginate: {
-                            first: '<i class="fas fa-angle-double-left"></i>',
-                            last: '<i class="fas fa-angle-double-right"></i>',
-                            next: '<i class="fas fa-angle-right"></i>',
-                            previous: '<i class="fas fa-angle-left"></i>'
-                        }
-                    },
-                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                    pageLength: 25,
-                    responsive: true,
-                    stateSave: true
-                });
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            // Create toast container if it doesn't exist
+            if (!document.getElementById('toastContainer')) {
+                const toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.position = 'fixed';
+                toastContainer.style.top = '20px';
+                toastContainer.style.right = '20px';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
             }
-        });
+            
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('toastContainer').innerHTML += toastHtml;
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+            
+            // Remove toast after it's hidden
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+        }
     </script>
 </body>
 </html>
