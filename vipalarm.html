@@ -5,6 +5,7 @@
 <title>VIP Alarms Dashboard</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
@@ -24,6 +25,10 @@ body{
 .card-summary{
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.08);
+  transition: transform 0.2s;
+}
+.card-summary:hover {
+  transform: translateY(-3px);
 }
 .badge-aging{
   font-size:13px;
@@ -35,9 +40,41 @@ body{
   background:#2c3e50;
   color:#fff;
   font-size:13px;
+  position: sticky;
+  top: 0;
 }
 .table tbody td{
   font-size:13px;
+}
+.status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+.site-id-cell {
+  font-weight: 600;
+  font-family: monospace;
+}
+.filter-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+.export-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: none;
+}
+.refresh-btn {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  border: none;
 }
 </style>
 </head>
@@ -45,10 +82,12 @@ body{
 
 <!-- HEADER -->
 <div class="header-bar">
-  <h5 class="m-0">VIP Alarms Dashboard</h5>
+  <h5 class="m-0"><i class="fas fa-tower-cell me-2"></i>VIP Alarms Dashboard</h5>
   <div>
-    <span id="lastUpdate">-</span>
-    <button class="btn btn-sm btn-light ms-2" onclick="loadData()">Refresh</button>
+    <span id="lastUpdate"><i class="fas fa-clock me-1"></i> Loading...</span>
+    <button class="btn btn-sm btn-light ms-2" onclick="loadData()">
+      <i class="fas fa-sync-alt me-1"></i>Refresh
+    </button>
   </div>
 </div>
 
@@ -58,203 +97,419 @@ body{
 <div class="row g-3 mb-3">
   <div class="col-md-3">
     <div class="card card-summary p-3">
-      <div>Total Alarms</div>
-      <h3 id="totalAlarm">0</h3>
+      <div class="d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-bell me-2 text-primary"></i>Total Alarms</span>
+      </div>
+      <h3 id="totalAlarm" class="mt-2">0</h3>
     </div>
   </div>
   <div class="col-md-3">
     <div class="card card-summary p-3">
-      <div>Unique Site ID</div>
-      <h3 id="uniqueSite">0</h3>
+      <div><i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Site ID</div>
+      <h3 id="uniqueSite" class="mt-2">0</h3>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3">
-      <div>&le; 1 Day</div>
-      <h4 id="aging1">0</h4>
+    <div class="card card-summary p-3" style="background-color: #e7f5ff;">
+      <div><i class="fas fa-clock me-2 text-info"></i>&le; 1 Day</div>
+      <h4 id="aging1" class="mt-2">0</h4>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3">
-      <div>&le; 3 Days</div>
-      <h4 id="aging3">0</h4>
+    <div class="card card-summary p-3" style="background-color: #fff3cd;">
+      <div><i class="fas fa-clock me-2 text-warning"></i>&le; 3 Days</div>
+      <h4 id="aging3" class="mt-2">0</h4>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3">
-      <div>&ge; 4 Days</div>
-      <h4 id="aging4">0</h4>
+    <div class="card card-summary p-3" style="background-color: #f8d7da;">
+      <div><i class="fas fa-clock me-2 text-danger"></i>&ge; 4 Days</div>
+      <h4 id="aging4" class="mt-2">0</h4>
     </div>
   </div>
 </div>
 
 <!-- FILTER -->
-<div class="card p-3 mb-3">
+<div class="card filter-card p-3 mb-3">
   <div class="row g-2">
-    <div class="col-md-3">
-      <input id="fAlarm" class="form-control" placeholder="Alarm Name">
+    <div class="col-md-2">
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-search"></i></span>
+        <input id="fAlarm" class="form-control" placeholder="Alarm Name">
+      </div>
     </div>
     <div class="col-md-2">
-      <input id="fSite" class="form-control" placeholder="Site ID">
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+        <input id="fSite" class="form-control" placeholder="Site ID">
+      </div>
     </div>
     <div class="col-md-3">
-      <input id="fCategory" class="form-control" placeholder="Category VIP POI">
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+        <input id="fCategory" class="form-control" placeholder="Category VIP POI">
+      </div>
     </div>
-    <div class="col-md-2">
-      <input id="fSource" class="form-control" placeholder="Source">
+    <div class="col-md-3">
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
+        <select id="fSource" class="form-control">
+          <option value="">All OSS</option>
+          <option value="MAE6">MAE6</option>
+          <option value="MAE7">MAE7</option>
+        </select>
+      </div>
     </div>
     <div class="col-md-2 d-flex gap-2">
-      <button class="btn btn-primary w-100" onclick="applyFilter()">Filter</button>
-      <button class="btn btn-secondary w-100" onclick="clearFilter()">Clear</button>
+      <button class="btn btn-primary w-100" onclick="applyFilter()">
+        <i class="fas fa-filter me-1"></i>Filter
+      </button>
+      <button class="btn btn-secondary w-100" onclick="clearFilter()">
+        <i class="fas fa-eraser me-1"></i>Clear
+      </button>
     </div>
   </div>
 </div>
 
 <!-- EXPORT -->
-<div class="text-end mb-2">
-  <button class="btn btn-success" onclick="exportCSV()">Export CSV</button>
+<div class="d-flex justify-content-between mb-2">
+  <div class="d-flex align-items-center">
+    <span class="badge bg-info me-2" id="filteredCount">Showing 0 of 0 records</span>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
+      <label class="form-check-label" for="autoRefresh">Auto-refresh (5 min)</label>
+    </div>
+  </div>
+  <div>
+    <button class="btn export-btn text-white" onclick="exportCSV()">
+      <i class="fas fa-file-export me-1"></i>Export CSV
+    </button>
+  </div>
 </div>
 
 <!-- TABLE -->
-<div class="table-responsive">
-<table class="table table-striped table-bordered">
+<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+<table class="table table-striped table-hover table-bordered">
 <thead>
 <tr>
-  <th onclick="sortTable('SITE ID')">Site ID</th>
-  <th onclick="sortTable('Alarm Source')">Site Name</th>
-  <th onclick="sortTable('Name')">Alarm Name</th>
-  <th onclick="sortTable('Site Type')">Site Type</th>
-  <th onclick="sortTable('Category VIP POI')">Category</th>
-   <th onclick="sortTable('Source')">OSS</th>
-  <th onclick="sortTable('First Occurred (NT)')">First Occurred</th>
-  <th onclick="sortTable('MO Name')">MO Name</th>
+  <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+  <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
+  <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+  <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
+  <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
+  <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
+  <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+  <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
 </tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody id="tableBody">
+  <tr id="loadingRow">
+    <td colspan="8" class="loading">
+      <div class="text-center">
+        <div class="spinner-border text-primary mb-2" role="status"></div>
+        <div>Loading data from Google Sheets...</div>
+      </div>
+    </td>
+  </tr>
+</tbody>
 </table>
 </div>
 
 </div>
 
 <script>
+// URL CSV dari Google Sheets
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=434029938&single=true&output=csv";
 
 let rawData = [];
 let filteredData = [];
-let sortDir = 1;
+let sortDir = {};
+let autoRefreshInterval = null;
+let autoRefreshEnabled = true;
 
-function loadData(){
-  Papa.parse(CSV_URL,{
-    download:true,
-    header:true,
-    skipEmptyLines:true,
-    complete: res => {
-      rawData = res.data;
-      filteredData = [...rawData];
-      render();
-      document.getElementById("lastUpdate").innerText =
-        "Last Update: " + new Date().toLocaleString();
+function loadData() {
+  // Show loading state
+  const loadingRow = document.getElementById("loadingRow");
+  if (loadingRow) loadingRow.style.display = "";
+  
+  document.getElementById("lastUpdate").innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading...';
+  
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(res) {
+      // Hide loading row
+      if (loadingRow) loadingRow.style.display = "none";
+      
+      if (res.data && res.data.length > 0) {
+        rawData = processData(res.data);
+        console.log(`Data loaded: ${rawData.length} records`);
+        filteredData = [...rawData];
+        render();
+      } else {
+        console.warn("No data loaded from Google Sheets");
+        showError("No data available from Google Sheets");
+      }
+      
+      const now = new Date();
+      document.getElementById("lastUpdate").innerHTML = 
+        `<i class="fas fa-clock me-1"></i> Last Update: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    },
+    error: function(err) {
+      console.error("Error loading data:", err);
+      showError("Failed to load data from Google Sheets");
+      document.getElementById("lastUpdate").innerHTML = 
+        '<i class="fas fa-exclamation-triangle me-1 text-warning"></i> Failed to load';
     }
   });
 }
 
-function render(){
+function processData(data) {
+  return data.map(item => {
+    // Calculate aging based on First Occurred time
+    const firstOccurred = item["First Occurred (NT)"];
+    let agingDays = 0;
+    
+    if (firstOccurred && firstOccurred !== "-") {
+      try {
+        const firstDate = new Date(firstOccurred);
+        const now = new Date();
+        agingDays = (now - firstDate) / (1000 * 3600 * 24);
+        agingDays = Math.max(0, agingDays);
+      } catch (e) {
+        console.warn("Error parsing date:", firstOccurred);
+      }
+    }
+    
+    return {
+      ...item,
+      _agingDays: agingDays
+    };
+  });
+}
+
+function render() {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = "";
-
-  filteredData.forEach(r=>{
-    const ossValue = r["Source"] || r["Alarm Source"] || "";
-
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center py-5">
+          <i class="fas fa-database fa-2x mb-3 text-muted"></i>
+          <div>No data found</div>
+          <small class="text-muted">Try adjusting your filters</small>
+        </td>
+      </tr>
+    `;
+    updateSummary(0, 0, 0, 0, 0);
+    return;
+  }
+  
+  // Initialize counters
+  let d1 = 0, d3 = 0, d4 = 0;
+  
+  filteredData.forEach(item => {
     const tr = document.createElement("tr");
+    
+    // Update aging counters
+    if (item._agingDays <= 1) d1++;
+    else if (item._agingDays <= 3) d3++;
+    else d4++;
+    
+    // Format timestamp for display
+    const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+    
+    // Get OSS value (prioritize Source, fallback to Alarm Source)
+    const ossValue = item["Source"] || item["Alarm Source"] || "";
+    
     tr.innerHTML = `
-      <td>${r["SITE ID"]||""}</td>
-      <td>${r["Alarm Source"]||""}</td>
-      <td>${r["Name"]||""}</td>
-      <td>${r["Site Type"]||""}</td>
-      <td>${r["Category VIP POI"]||""}</td>
-
-      <!-- ✅ NEW -->
-      <td>${ossValue}</td>
-
-      <td>${r["First Occurred (NT)"]||""}</td>
-      <td>${r["MO Name"]||""}</td>
+      <td class="site-id-cell">${item["SITE ID"] || ""}</td>
+      <td>${item["Alarm Source"] || ""}</td>
+      <td><span class="badge bg-primary">${item["Name"] || ""}</span></td>
+      <td>${item["Site Type"] || ""}</td>
+      <td><span class="badge bg-secondary">${item["Category VIP POI"] || ""}</span></td>
+      <td><span class="badge bg-dark">${ossValue}</span></td>
+      <td class="text-nowrap">${firstOccurred}</td>
+      <td>${item["MO Name"] || ""}</td>
     `;
     tbody.appendChild(tr);
   });
-
-  document.getElementById("totalAlarm").innerText = filteredData.length;
-  document.getElementById("uniqueSite").innerText =
-    new Set(filteredData.map(d=>d["SITE ID"])).size;
-
-  calculateAging();
+  
+  // Update summary
+  const total = filteredData.length;
+  const uniqueSites = new Set(filteredData.map(d => d["SITE ID"]).filter(Boolean)).size;
+  updateSummary(total, uniqueSites, d1, d3, d4);
 }
 
-
-function calculateAging(){
-  let d1=0,d3=0,d4=0;
-  const now = new Date();
-
-  filteredData.forEach(r=>{
-    const dt = new Date(r["First Occurred (NT)"]);
-    const days = (now - dt)/(1000*3600*24);
-    if(days<=1) d1++;
-    else if(days<=3) d3++;
-    else d4++;
-  });
-
-  document.getElementById("aging1").innerText = d1;
-  document.getElementById("aging3").innerText = d3;
-  document.getElementById("aging4").innerText = d4;
+function formatDateTime(datetimeStr) {
+  if (!datetimeStr || datetimeStr === "-") return "-";
+  try {
+    const date = new Date(datetimeStr);
+    if (isNaN(date.getTime())) return datetimeStr;
+    return date.toLocaleString([], { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    return datetimeStr;
+  }
 }
 
-function applyFilter(){
-  const a = fAlarm.value.toLowerCase();
-  const s = fSite.value.toLowerCase();
-  const c = fCategory.value.toLowerCase();
-  const src = fSource.value.toLowerCase();
+function updateSummary(total, unique, a1, a3, a4) {
+  document.getElementById("totalAlarm").innerText = total;
+  document.getElementById("uniqueSite").innerText = unique;
+  document.getElementById("aging1").innerText = a1;
+  document.getElementById("aging3").innerText = a3;
+  document.getElementById("aging4").innerText = a4;
+  
+  // Update filtered count
+  document.getElementById("filteredCount").innerText = 
+    `Showing ${total} of ${rawData.length} records`;
+}
 
-  filteredData = rawData.filter(r => {
-    const ossValue = (r["Source"] || r["Alarm Source"] || "").toLowerCase();
-
+function applyFilter() {
+  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
+  const siteId = document.getElementById("fSite").value.toLowerCase();
+  const category = document.getElementById("fCategory").value.toLowerCase();
+  const source = document.getElementById("fSource").value;
+  
+  filteredData = rawData.filter(item => {
+    const alarmNameVal = (item["Name"] || "").toLowerCase();
+    const siteID = (item["SITE ID"] || "").toLowerCase();
+    const categoryVal = (item["Category VIP POI"] || "").toLowerCase();
+    const ossValue = item["Source"] || item["Alarm Source"] || "";
+    
     return (
-      (!a || (r["Name"]||"").toLowerCase().includes(a)) &&
-      (!s || (r["SITE ID"]||"").toLowerCase().includes(s)) &&
-      (!c || (r["Category VIP POI"]||"").toLowerCase().includes(c)) &&
-      (!src || ossValue.includes(src))
+      (!alarmName || alarmNameVal.includes(alarmName)) &&
+      (!siteId || siteID.includes(siteId)) &&
+      (!category || categoryVal.includes(category)) &&
+      (!source || ossValue === source)
     );
   });
-
+  
   render();
 }
 
-
-function clearFilter(){
-  fAlarm.value="";
-  fSite.value="";
-  fCategory.value="";
-  fSource.value="";
+function clearFilter() {
+  document.getElementById("fAlarm").value = "";
+  document.getElementById("fSite").value = "";
+  document.getElementById("fCategory").value = "";
+  document.getElementById("fSource").value = "";
   filteredData = [...rawData];
   render();
 }
 
-function sortTable(col){
-  sortDir *= -1;
-  filteredData.sort((a,b)=>
-    (a[col]||"").localeCompare(b[col]||"") * sortDir
-  );
+function sortTable(column) {
+  if (!sortDir[column]) sortDir[column] = 1;
+  else sortDir[column] *= -1;
+  
+  const dir = sortDir[column];
+  
+  filteredData.sort((a, b) => {
+    let aVal = a[column] || "";
+    let bVal = b[column] || "";
+    
+    // Handle date columns
+    if (column.includes("First Occurred")) {
+      const aDate = aVal ? new Date(aVal).getTime() : 0;
+      const bDate = bVal ? new Date(bVal).getTime() : 0;
+      return (aDate - bDate) * dir;
+    }
+    
+    // Default string comparison
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
+  
   render();
 }
 
-function exportCSV(){
-  const csv = Papa.unparse(filteredData);
-  const blob = new Blob([csv],{type:"text/csv"});
+function exportCSV() {
+  if (filteredData.length === 0) {
+    alert("No data to export!");
+    return;
+  }
+  
+  const headers = [
+    "SITE ID", "Alarm Source", "Name", "Site Type", 
+    "Category VIP POI", "Source", "First Occurred (NT)", "MO Name"
+  ];
+  
+  const csvRows = [
+    headers.join(","),
+    ...filteredData.map(row => 
+      headers.map(header => {
+        const cell = row[header] || "";
+        const escaped = String(cell).replace(/"/g, '""');
+        return escaped.includes(",") ? `"${escaped}"` : escaped;
+      }).join(",")
+    )
+  ];
+  
+  const csvString = csvRows.join("\n");
+  const blob = new Blob([csvString], {type: "text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "vip_alarm_export.csv";
+  a.href = url;
+  a.download = `vip_alarms_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-loadData();
+function showError(message) {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" class="text-center py-5 text-danger">
+        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+        <div>${message}</div>
+        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
+          <i class="fas fa-redo me-1"></i>Retry
+        </button>
+      </td>
+    </tr>
+  `;
+}
+
+function toggleAutoRefresh() {
+  const checkbox = document.getElementById("autoRefresh");
+  autoRefreshEnabled = checkbox.checked;
+  
+  if (autoRefreshEnabled && !autoRefreshInterval) {
+    autoRefreshInterval = setInterval(loadData, 300000); // 5 minutes
+    console.log("Auto-refresh enabled");
+  } else if (!autoRefreshEnabled && autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    console.log("Auto-refresh disabled");
+  }
+}
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", function() {
+  loadData();
+  
+  // Enable auto-refresh by default
+  if (autoRefreshEnabled) {
+    autoRefreshInterval = setInterval(loadData, 300000); // 5 minutes
+  }
+  
+  // Add enter key support for filter inputs
+  const filterInputs = document.querySelectorAll('#fAlarm, #fSite, #fCategory');
+  filterInputs.forEach(input => {
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilter();
+      }
+    });
+  });
+});
 </script>
 
 </body>
