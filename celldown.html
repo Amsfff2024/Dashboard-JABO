@@ -145,34 +145,17 @@ body{
         <input id="fSite" class="form-control" placeholder="Site ID">
       </div>
     </div>
-    <div class="col-md-2">
-      <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-server"></i></span>
-        <select id="fNE" class="form-control">
-          <option value="">All NE Type</option>
-          <option value="BTS5900">BTS5900</option>
-          <option value="BTS3900">BTS3900</option>
-          <option value="BTS3012">BTS3012</option>
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-wrench"></i></span>
-        <select id="fStatus" class="form-control">
-          <option value="">All Status</option>
-          <option value="Uncleared">Uncleared</option>
-          <option value="Cleared">Cleared</option>
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
       <div class="input-group">
         <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
-        <input id="fSource" class="form-control" placeholder="Source (MAE)">
+        <select id="fSource" class="form-control">
+          <option value="">All Source</option>
+          <option value="MAE6">MAE6</option>
+          <option value="MAE7">MAE7</option>
+        </select>
       </div>
     </div>
-    <div class="col-md-2 d-flex gap-2">
+    <div class="col-md-3 d-flex gap-2">
       <button class="btn btn-primary w-100" onclick="applyFilter()">
         <i class="fas fa-filter me-1"></i>Filter
       </button>
@@ -209,8 +192,6 @@ body{
   <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Type</th>
   <th onclick="sortTable('Alarm Count')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Count</th>
   <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-  <th onclick="sortTable('Clearance Status')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Status</th>
-  <th onclick="sortTable('NE Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>NE Type</th>
   <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Source</th>
   <th onclick="sortTable('Updated At')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Updated At</th>
   <th class="text-nowrap">Aging</th>
@@ -218,7 +199,7 @@ body{
 </thead>
 <tbody id="tableBody">
   <tr id="loadingRow">
-    <td colspan="10" class="loading">
+    <td colspan="8" class="loading">
       <div class="text-center">
         <div class="spinner-border text-primary mb-2" role="status"></div>
         <div>Loading data from Google Sheets...</div>
@@ -317,7 +298,7 @@ function render() {
   if (filteredData.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" class="text-center py-5">
+        <td colspan="8" class="text-center py-5">
           <i class="fas fa-database fa-2x mb-3 text-muted"></i>
           <div>No data found</div>
           <small class="text-muted">Try adjusting your filters</small>
@@ -343,20 +324,12 @@ function render() {
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
     const updatedAt = formatDateTime(item["Updated At"]);
     
-    // Determine status badge color
-    const status = item["Clearance Status"] || "Unknown";
-    let statusBadgeClass = "bg-secondary";
-    if (status === "Uncleared") statusBadgeClass = "bg-danger";
-    else if (status === "Cleared") statusBadgeClass = "bg-success";
-    
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
       <td>${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-primary">${item["Name"] || "CELL UNAVAILABLE"}</span></td>
       <td class="text-center"><span class="badge bg-info">${item["Alarm Count"] || "0"}</span></td>
       <td class="text-nowrap">${firstOccurred}</td>
-      <td><span class="badge ${statusBadgeClass} status-badge">${status}</span></td>
-      <td>${item["NE Type"] || ""}</td>
       <td><span class="badge bg-dark">${item["Source"] || ""}</span></td>
       <td class="text-nowrap">${updatedAt}</td>
       <td>${getAgingBadge(item._agingDays)}</td>
@@ -420,23 +393,17 @@ function updateSummary(total, unique, a1, a3, a4) {
 function applyFilter() {
   const siteName = document.getElementById("fAlarm").value.toLowerCase();
   const siteId = document.getElementById("fSite").value.toLowerCase();
-  const neType = document.getElementById("fNE").value;
-  const status = document.getElementById("fStatus").value;
-  const source = document.getElementById("fSource").value.toLowerCase();
+  const source = document.getElementById("fSource").value;
   
   filteredData = rawData.filter(item => {
     const alarmSource = (item["Alarm Source"] || "").toLowerCase();
     const siteID = (item["SITE ID"] || "").toLowerCase();
-    const itemNE = item["NE Type"] || "";
-    const itemStatus = item["Clearance Status"] || "";
-    const itemSource = (item["Source"] || "").toLowerCase();
+    const itemSource = item["Source"] || "";
     
     return (
       (!siteName || alarmSource.includes(siteName)) &&
       (!siteId || siteID.includes(siteId)) &&
-      (!neType || itemNE === neType) &&
-      (!status || itemStatus === status) &&
-      (!source || itemSource.includes(source))
+      (!source || itemSource === source)
     );
   });
   
@@ -446,8 +413,6 @@ function applyFilter() {
 function clearFilter() {
   document.getElementById("fAlarm").value = "";
   document.getElementById("fSite").value = "";
-  document.getElementById("fNE").value = "";
-  document.getElementById("fStatus").value = "";
   document.getElementById("fSource").value = "";
   filteredData = [...rawData];
   render();
@@ -492,8 +457,7 @@ function exportCSV() {
   
   const headers = [
     "SITE ID", "Alarm Source", "Name", "Alarm Count", 
-    "First Occurred (NT)", "Cleared On (NT)", "NE Type", 
-    "MO Name", "Clearance Status", "Source", "Updated At"
+    "First Occurred (NT)", "Source", "Updated At"
   ];
   
   const csvRows = [
@@ -523,7 +487,7 @@ function showError(message) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = `
     <tr>
-      <td colspan="10" class="text-center py-5 text-danger">
+      <td colspan="8" class="text-center py-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
         <div>${message}</div>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
@@ -558,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   
   // Add enter key support for filter inputs
-  const filterInputs = document.querySelectorAll('#fAlarm, #fSite, #fSource');
+  const filterInputs = document.querySelectorAll('#fAlarm, #fSite');
   filterInputs.forEach(input => {
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
