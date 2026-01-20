@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIP Alarms Dashboard Pro</title>
+
+<!-- CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --dark-bg: #0f172a;
+  --card-bg: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+/* Header dengan Glass Effect */
+.header-bar {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+/* Summary Cards dengan Animasi */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary-color);
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Filter Section Modern */
+.filter-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-input .form-control {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.filter-input .form-control:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  color: var(--text-primary);
+}
+
+.filter-input .input-group-text {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-right: none;
+}
+
+/* Modern Table */
+.table-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-modern {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.table-modern thead th {
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.table-modern thead th:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+}
+
+.table-modern tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.table-modern tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-modern td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+/* Badge Modern */
+.badge-modern {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-major { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-minor { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-warning { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+/* Button Modern */
+.btn-modern {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary-modern {
+  background: linear-gradient(135deg, var(--primary-color), #2563eb);
+  color: white;
+}
+
+.btn-primary-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Animasi Loading */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+  }
+  
+  .filter-input {
+    min-width: 100%;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+</style>
+</head>
+<body>
+
+<!-- Modern Header -->
+<header class="header-bar">
+  <div class="logo">
+    <div class="logo-icon">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div>
+      <h4 class="mb-0">VIP Alarms Monitoring</h4>
+      <small class="text-muted">Real-time Network Dashboard</small>
+    </div>
+  </div>
+  
+  <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
+      <div class="status-indicator"></div>
+      <span id="lastUpdate">Loading...</span>
+    </div>
+    <button class="btn btn-primary-modern btn-modern" onclick="loadData()">
+      <i class="fas fa-sync-alt"></i> Refresh
+    </button>
+  </div>
+</header>
+
+<div class="container-fluid py-4 px-3 px-md-4">
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="card-icon">
+      <i class="fas fa-bell"></i>
+    </div>
+    <h6 class="text-uppercase text-muted mb-2">Total Alarms</h6>
+    <div class="card-value" id="totalAlarm">0</div>
+    <small class="text-muted">Active alarms in system</small>
+  </div>
+  
+  <div class="summary-card">
+    <div class="card-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+      <i class="fas fa-map-marker-alt"></i>
+    </div>
+    <h6 class="text-uppercase text-muted mb-2">Unique Sites</h6>
+    <div class="card-value" id="uniqueSite">0</div>
+    <small class="text-muted">Affected locations</small>
+  </div>
+  
+  <div class="summary-card">
+    <div class="card-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">
+      <i class="fas fa-clock"></i>
+    </div>
+    <h6 class="text-uppercase text-muted mb-2">≤ 1 Day</h6>
+    <div class="card-value" id="aging1">0</div>
+    <small class="text-muted">Recently detected</small>
+  </div>
+  
+  <div class="summary-card">
+    <div class="card-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+      <i class="fas fa-hourglass-half"></i>
+    </div>
+    <h6 class="text-uppercase text-muted mb-2">≤ 3 Days</h6>
+    <div class="card-value" id="aging3">0</div>
+    <small class="text-muted">Medium priority</small>
+  </div>
+  
+  <div class="summary-card">
+    <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h6 class="text-uppercase text-muted mb-2">≥ 4 Days</h6>
+    <div class="card-value" id="aging4">0</div>
+    <small class="text-muted">Critical attention needed</small>
+  </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="filter-input">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input id="fAlarm" class="form-control" placeholder="Search alarm...">
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2">
+      <div class="filter-input">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+          <input id="fSite" class="form-control" placeholder="Site ID">
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2">
+      <div class="filter-input">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-tag"></i></span>
+          <input id="fCategory" class="form-control" placeholder="Category">
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="filter-input">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-server"></i></span>
+          <select id="fSource" class="form-control">
+            <option value="">All OSS</option>
+            <option value="MAE6">MAE6</option>
+            <option value="MAE7">MAE7</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-primary-modern btn-modern flex-grow-1" onclick="applyFilter()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+      <button class="btn btn-outline-light btn-modern" onclick="clearFilter()">
+        <i class="fas fa-eraser"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex align-items-center gap-3">
+    <span class="badge bg-primary rounded-pill" id="filteredCount">0 records</span>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="autoRefresh" checked 
+             style="width: 3em; height: 1.5em;" onclick="toggleAutoRefresh()">
+      <label class="form-check-label" for="autoRefresh">Auto-refresh (5 min)</label>
+    </div>
+  </div>
+  
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-light btn-modern" onclick="exportCSV()">
+      <i class="fas fa-download"></i> Export
+    </button>
+    <button class="btn btn-primary-modern btn-modern" onclick="toggleView()">
+      <i class="fas fa-columns"></i> Toggle View
+    </button>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+  <div class="table-responsive" style="max-height: 500px;">
+    <table class="table table-modern table-hover">
+      <thead>
+        <tr>
+          <th onclick="sortTable('SITE ID')">Site ID <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('Alarm Source')">Site Name <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('Name')">Alarm <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('Site Type')">Type <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('Category VIP POI')">Category <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('Source')">OSS <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('First Occurred (NT)')">First Occurred <i class="fas fa-sort ms-1"></i></th>
+          <th onclick="sortTable('MO Name')">MO Name <i class="fas fa-sort ms-1"></i></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr id="loadingRow">
+          <td colspan="8" class="text-center py-5">
+            <div class="d-flex flex-column align-items-center">
+              <div class="spinner-border text-primary mb-3" role="status"></div>
+              <div>Loading alarm data...</div>
+              <small class="text-muted">Fetching from Google Sheets</small>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="mt-4 text-center text-muted">
+  <small>
+    <i class="fas fa-cogs me-1"></i>
+    VIP Alarms Monitoring System v2.0 • 
+    <span id="currentTime"></span> • 
+    Auto-refresh: <span id="refreshStatus">Enabled</span>
+  </small>
+</footer>
+
+</div>
+
+<script>
+// JavaScript code tetap sama dengan yang sebelumnya
+// (gunakan script dari versi terakhir yang sudah Anda buat)
+// Hanya tambahkan fungsi toggleView() jika ingin fitur view berbeda
+
+function toggleView() {
+  // Fitur untuk toggle antara table view dan card view
+  alert('Toggle View feature would be implemented here!');
+}
+
+// Update current time
+function updateTime() {
+  const now = new Date();
+  document.getElementById('currentTime').textContent = 
+    now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+
+</body>
+</html>
