@@ -70,7 +70,7 @@
             background-color: #fd7e14;
             color: white;
         }
-        .chart-container {
+        .summary-card {
             background: white;
             border-radius: 10px;
             padding: 1.25rem;
@@ -90,13 +90,6 @@
             background-color: #fff3cd;
             font-weight: 600;
         }
-        .summary-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.25rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            height: 100%;
-        }
         .site-breakdown {
             max-height: 350px;
             overflow-y: auto;
@@ -108,6 +101,14 @@
             font-size: 0.75rem;
             padding: 3px 8px;
             border-radius: 10px;
+        }
+        .time-cell {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .duration-badge {
+            min-width: 70px;
+            text-align: center;
         }
     </style>
 </head>
@@ -329,24 +330,24 @@
                             <table class="table table-hover mb-0" id="detailedAlarmTable">
                                 <thead>
                                     <tr>
-                                        <th class="cursor-pointer" onclick="sortTable('time')">
-                                            Time <i class="fas fa-sort ms-1"></i>
-                                        </th>
                                         <th class="cursor-pointer" onclick="sortTable('siteId')">
                                             Site ID <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer" onclick="sortTable('alarmSource')">
+                                            Alarm Source <i class="fas fa-sort ms-1"></i>
                                         </th>
                                         <th class="cursor-pointer" onclick="sortTable('alarmName')">
                                             Alarm Name <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th>Alarm Source</th>
-                                        <th class="cursor-pointer" onclick="sortTable('category')">
-                                            Category <i class="fas fa-sort ms-1"></i>
+                                        <th class="cursor-pointer" onclick="sortTable('timeFull')">
+                                            Time <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th>NE Type</th>
                                         <th class="cursor-pointer" onclick="sortTable('duration')">
                                             Duration <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th>Priority</th>
+                                        <th class="cursor-pointer" onclick="sortTable('priority')">
+                                            Priority <i class="fas fa-sort ms-1"></i>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailedAlarmTableBody">
@@ -385,7 +386,7 @@
         let filteredAlarmData = [];     // Data setelah difilter
         let alarmCountByType = {};      // Hitungan per jenis alarm
         let siteCountData = {};         // Hitungan per site ID
-        let currentSort = { column: 'time', direction: 'desc' }; // Pengurutan tabel
+        let currentSort = { column: 'timeFull', direction: 'desc' }; // Pengurutan tabel (default: time descending)
         let autoRefreshInterval = null; // Interval auto-refresh
         let refreshCountdown = 60;      // Hitung mundur auto-refresh
         let currentSearchSiteId = '';   // Pencarian Site ID saat ini
@@ -448,19 +449,38 @@
             rawData.forEach(row => {
                 if (!row['Name'] || !row['SITE ID']) return; // Skip baris kosong
                 
-                // Hitung durasi alarm (dalam menit)
+                // Ambil waktu dari kolom 'First Occurred (NT)'
                 const firstOccurred = row['First Occurred (NT)'] || '';
-                let durationMinutes = 0;
+                
+                // Format waktu untuk display: DD/MM/YYYY HH:mm:ss
+                let formattedTime = 'N/A';
+                let dateObj = null;
                 
                 if (firstOccurred && firstOccurred !== '-') {
                     try {
-                        const firstDate = new Date(firstOccurred);
-                        const now = new Date();
-                        durationMinutes = Math.floor((now - firstDate) / (1000 * 60));
-                        durationMinutes = Math.max(0, durationMinutes);
+                        dateObj = new Date(firstOccurred);
+                        if (!isNaN(dateObj.getTime())) {
+                            // Format: DD/MM/YYYY HH:mm:ss
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const year = dateObj.getFullYear();
+                            const hours = String(dateObj.getHours()).padStart(2, '0');
+                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                            const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+                            
+                            formattedTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                        }
                     } catch (e) {
                         console.warn('Error parsing date:', firstOccurred);
                     }
+                }
+                
+                // Hitung durasi alarm (dalam menit)
+                let durationMinutes = 0;
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                    const now = new Date();
+                    durationMinutes = Math.floor((now - dateObj) / (1000 * 60));
+                    durationMinutes = Math.max(0, durationMinutes);
                 }
                 
                 // Tentukan prioritas berdasarkan jenis alarm
@@ -470,27 +490,19 @@
                     priority = 'P1';
                 }
                 
-                // Tentukan apakah site VIP
+                // Tentukan apakah site VIP (untuk highlight)
                 const isVip = row['Category VIP POI'] && 
                              (row['Category VIP POI'].includes('Golden') || 
                               row['Category VIP POI'].includes('VIP'));
                 
-                // Format waktu untuk tampilan
-                const timeStr = firstOccurred ? 
-                    firstOccurred.split(' ')[1]?.substring(0, 5) || 'N/A' : 
-                    'N/A';
-                
                 // Simpan data yang diproses
                 const processedRow = {
                     raw: row, // Simpan data asli
-                    time: timeStr,
-                    timeFull: firstOccurred,
                     siteId: row['SITE ID'] || 'N/A',
-                    alarmName: alarmName,
                     alarmSource: row['Alarm Source'] || 'N/A',
-                    category: row['Category VIP POI'] || 'Regular',
-                    neType: row['NE Type'] || 'N/A',
-                    siteType: row['Site Type'] || 'N/A',
+                    alarmName: alarmName,
+                    timeFull: firstOccurred, // Untuk sorting
+                    timeDisplay: formattedTime, // Untuk display format DD/MM/YYYY HH:mm:ss
                     duration: durationMinutes,
                     priority: priority,
                     isVip: isVip,
@@ -583,7 +595,7 @@
             const tableBody = document.getElementById('detailedAlarmTableBody');
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center py-5 text-danger">
+                    <td colspan="6" class="text-center py-5 text-danger">
                         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
                         <div>${message}</div>
                         <button class="btn btn-sm btn-outline-primary mt-2" onclick="fetchCSVData()">
@@ -732,7 +744,7 @@
             if (filteredAlarmData.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="6" class="text-center py-5">
                             <i class="fas fa-search fa-2x mb-3 text-muted"></i>
                             <div>No alarms found matching your criteria</div>
                             <small class="text-muted">Try adjusting your search filters</small>
@@ -751,40 +763,38 @@
                 // Tentukan class baris untuk VIP
                 const rowClass = alarm.isVip ? 'vip-row' : '';
                 
-                // Format durasi
-                let durationText = `${alarm.duration}m`;
-                if (alarm.duration >= 60) {
+                // Format durasi dengan warna berbeda berdasarkan lama durasi
+                let durationText = '';
+                let durationBadgeClass = 'bg-info';
+                
+                if (alarm.duration >= 1440) { // Lebih dari 1 hari (24 jam * 60 menit)
+                    const days = Math.floor(alarm.duration / 1440);
+                    const hours = Math.floor((alarm.duration % 1440) / 60);
+                    durationText = `${days}d ${hours}h`;
+                    durationBadgeClass = 'bg-danger';
+                } else if (alarm.duration >= 60) { // Lebih dari 1 jam
                     const hours = Math.floor(alarm.duration / 60);
                     const mins = alarm.duration % 60;
                     durationText = `${hours}h ${mins}m`;
-                }
-                
-                // Tentukan warna badge durasi
-                let durationBadgeClass = 'bg-info';
-                if (alarm.duration > 120) {
-                    durationBadgeClass = 'bg-danger';
-                } else if (alarm.duration > 30) {
-                    durationBadgeClass = 'bg-warning';
+                    durationBadgeClass = alarm.duration > 120 ? 'bg-danger' : 'bg-warning';
+                } else { // Kurang dari 1 jam
+                    durationText = `${alarm.duration}m`;
+                    durationBadgeClass = alarm.duration > 30 ? 'bg-warning' : 'bg-info';
                 }
                 
                 // Highlight teks pencarian
                 const highlightedSiteId = highlightSearchText(alarm.siteId, 'siteId');
                 const highlightedAlarmName = highlightSearchText(alarm.alarmName, 'alarmName');
+                const highlightedAlarmSource = highlightSearchText(alarm.alarmSource, 'alarmSource');
                 
                 tableHTML += `
                     <tr class="${rowClass}">
-                        <td class="text-nowrap">${alarm.time}</td>
                         <td class="fw-semibold">${highlightedSiteId}</td>
+                        <td>${highlightedAlarmSource}</td>
                         <td>${highlightedAlarmName}</td>
-                        <td class="small">${alarm.alarmSource}</td>
+                        <td class="time-cell">${alarm.timeDisplay}</td>
                         <td>
-                            ${alarm.category === 'Regular' || !alarm.category ? 
-                                '<span class="badge bg-secondary">Regular</span>' : 
-                                `<span class="badge bg-warning text-dark">${alarm.category}</span>`}
-                        </td>
-                        <td class="small">${alarm.neType}</td>
-                        <td>
-                            <span class="badge ${durationBadgeClass}">
+                            <span class="badge ${durationBadgeClass} duration-badge">
                                 ${durationText}
                             </span>
                         </td>
@@ -801,13 +811,16 @@
         }
 
         function highlightSearchText(text, filterType) {
-            if (!text) return text;
+            if (!text || text === 'N/A') return text;
             
             let searchTerm = '';
             if (filterType === 'siteId' && currentSearchSiteId) {
                 searchTerm = currentSearchSiteId;
             } else if (filterType === 'alarmName' && currentSearchAlarmName) {
                 searchTerm = currentSearchAlarmName;
+            } else if (filterType === 'alarmSource' && (currentSearchSiteId || currentSearchAlarmName)) {
+                // Untuk alarm source, kita highlight jika ada pencarian
+                searchTerm = currentSearchSiteId || currentSearchAlarmName;
             }
             
             if (!searchTerm) return text;
@@ -861,11 +874,12 @@
                 
                 // Tentukan kolom berdasarkan teks header
                 let column = '';
-                if (header.textContent.includes('Time')) column = 'time';
-                else if (header.textContent.includes('Site ID')) column = 'siteId';
+                if (header.textContent.includes('Site ID')) column = 'siteId';
+                else if (header.textContent.includes('Alarm Source')) column = 'alarmSource';
                 else if (header.textContent.includes('Alarm Name')) column = 'alarmName';
-                else if (header.textContent.includes('Category')) column = 'category';
+                else if (header.textContent.includes('Time')) column = 'timeFull';
                 else if (header.textContent.includes('Duration')) column = 'duration';
+                else if (header.textContent.includes('Priority')) column = 'priority';
                 
                 if (column === currentSort.column) {
                     icon.className = currentSort.direction === 'asc' ? 
@@ -879,25 +893,30 @@
                 let aValue, bValue;
                 
                 switch (currentSort.column) {
-                    case 'time':
-                        aValue = a.timeFull || '';
-                        bValue = b.timeFull || '';
-                        break;
                     case 'siteId':
                         aValue = a.siteId || '';
                         bValue = b.siteId || '';
+                        break;
+                    case 'alarmSource':
+                        aValue = a.alarmSource || '';
+                        bValue = b.alarmSource || '';
                         break;
                     case 'alarmName':
                         aValue = a.alarmName || '';
                         bValue = b.alarmName || '';
                         break;
-                    case 'category':
-                        aValue = a.category || '';
-                        bValue = b.category || '';
+                    case 'timeFull':
+                        aValue = a.timeFull || '';
+                        bValue = b.timeFull || '';
                         break;
                     case 'duration':
                         aValue = a.duration;
                         bValue = b.duration;
+                        break;
+                    case 'priority':
+                        // Urutkan P1 sebelum P2
+                        aValue = a.priority === 'P1' ? 0 : 1;
+                        bValue = b.priority === 'P1' ? 0 : 1;
                         break;
                     default:
                         aValue = a.timeFull || '';
@@ -1001,10 +1020,9 @@
                 return;
             }
             
-            // Siapkan header CSV
+            // Siapkan header CSV sesuai urutan baru
             const headers = [
-                'Time', 'Site ID', 'Alarm Name', 'Alarm Source', 
-                'Category', 'NE Type', 'Duration (min)', 'Priority', 'Site Type'
+                'Site ID', 'Alarm Source', 'Alarm Name', 'Time', 'Duration', 'Priority'
             ];
             
             // Siapkan data baris
@@ -1012,15 +1030,12 @@
                 headers.join(','),
                 ...filteredAlarmData.map(alarm => {
                     return [
-                        alarm.timeFull,
                         alarm.siteId,
+                        `"${alarm.alarmSource.replace(/"/g, '""')}"`,
                         `"${alarm.alarmName.replace(/"/g, '""')}"`,
-                        alarm.alarmSource,
-                        alarm.category,
-                        alarm.neType,
+                        alarm.timeDisplay,
                         alarm.duration,
-                        alarm.priority,
-                        alarm.siteType
+                        alarm.priority
                     ].join(',');
                 })
             ];
