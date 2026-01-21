@@ -8,8 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- PapaParse untuk parsing CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -91,6 +89,25 @@
         .search-highlight {
             background-color: #fff3cd;
             font-weight: 600;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            height: 100%;
+        }
+        .site-breakdown {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .progress {
+            height: 8px;
+        }
+        .alarm-type-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -233,36 +250,53 @@
             </div>
         </div>
 
-        <!-- Charts and Alarm Count Table Row -->
+        <!-- Alarm Summary and Count Table Row -->
         <div class="row mb-4">
-            <!-- Alarm Trend Chart -->
-            <div class="col-lg-8 mb-4">
-                <div class="chart-container">
-                    <h6 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Alarm Trend (Last 4 Hours)</h6>
-                    <canvas id="alarmTrendChart" height="250"></canvas>
+            <!-- Site Breakdown Summary -->
+            <div class="col-lg-5 mb-4">
+                <div class="summary-card">
+                    <h6 class="mb-3"><i class="fas fa-building me-2 text-primary"></i>Top Affected Sites</h6>
+                    <div class="site-breakdown">
+                        <table class="table table-sm table-borderless mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="small">Site ID</th>
+                                    <th class="small text-end">Alarms</th>
+                                    <th class="small" style="width: 100px;">Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody id="siteBreakdownBody">
+                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+            
             <!-- Alarm Count Table -->
-            <div class="col-lg-4 mb-4">
-                <div class="chart-container">
+            <div class="col-lg-7 mb-4">
+                <div class="summary-card">
                     <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
-                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <div class="table-responsive">
                         <table class="table table-sm table-hover mb-0">
                             <thead class="small">
                                 <tr>
                                     <th>Alarm Type</th>
                                     <th class="text-end">Count</th>
                                     <th class="text-end">%</th>
+                                    <th style="width: 120px;">Distribution</th>
+                                    <th>Priority</th>
                                 </tr>
                             </thead>
                             <tbody id="alarmCountTableBody">
-                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                                <tr><td colspan="5" class="text-center py-4">Loading data...</td></tr>
                             </tbody>
                             <tfoot class="small table-light">
                                 <tr id="alarmCountTableFooter">
                                     <td><strong>Total</strong></td>
                                     <td class="text-end"><strong>0</strong></td>
                                     <td class="text-end"><strong>100%</strong></td>
+                                    <td colspan="2"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -350,10 +384,10 @@
         let allAlarmData = [];          // Semua data asli dari CSV
         let filteredAlarmData = [];     // Data setelah difilter
         let alarmCountByType = {};      // Hitungan per jenis alarm
+        let siteCountData = {};         // Hitungan per site ID
         let currentSort = { column: 'time', direction: 'desc' }; // Pengurutan tabel
         let autoRefreshInterval = null; // Interval auto-refresh
         let refreshCountdown = 60;      // Hitung mundur auto-refresh
-        let trendChart = null;          // Objek chart tren
         let currentSearchSiteId = '';   // Pencarian Site ID saat ini
         let currentSearchAlarmName = ''; // Pencarian Alarm Name saat ini
 
@@ -368,9 +402,6 @@
             
             // Ambil data CSV saat pertama kali load
             fetchCSVData();
-            
-            // Inisialisasi chart kosong
-            initializeTrendChart();
         });
 
         // ==================== FUNGSI DATA ====================
@@ -411,6 +442,7 @@
             // Reset data
             allAlarmData = [];
             alarmCountByType = {};
+            siteCountData = {};
             
             // Proses setiap baris data
             rawData.forEach(row => {
@@ -473,15 +505,22 @@
                 } else {
                     alarmCountByType[alarmName] = 1;
                 }
+                
+                // Hitung per site ID untuk breakdown
+                const siteId = row['SITE ID'] || 'N/A';
+                if (siteCountData[siteId]) {
+                    siteCountData[siteId]++;
+                } else {
+                    siteCountData[siteId] = 1;
+                }
             });
             
             console.log(`Processed ${allAlarmData.length} alarm records`);
+            console.log(`Found ${Object.keys(alarmCountByType).length} alarm types`);
+            console.log(`Found ${Object.keys(siteCountData).length} unique sites`);
             
             // Terapkan filter dan render
             applyFilters();
-            
-            // Update chart tren
-            updateTrendChart();
         }
 
         // ==================== FUNGSI FILTER & PENCARIAN ====================
@@ -515,6 +554,7 @@
             // Update UI dengan data yang sudah difilter
             updateSummaryKPIs();
             updateAlarmCountTable();
+            updateSiteBreakdown();
             renderDetailedTable();
             updateTableCountBadge();
         }
@@ -581,13 +621,17 @@
             const tableFooter = document.getElementById('alarmCountTableFooter');
             
             if (Object.keys(alarmCountByType).length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No alarm data available</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No alarm data available</td></tr>';
                 return;
             }
             
             // Konversi objek ke array dan urutkan berdasarkan jumlah (descending)
             const alarmTypesArray = Object.entries(alarmCountByType)
-                .map(([name, count]) => ({ name, count }))
+                .map(([name, count]) => ({ 
+                    name, 
+                    count,
+                    priority: name.includes('CELL UNAVAILABLE') || name.includes('X2 INTERFACE') ? 'P1' : 'P2'
+                }))
                 .sort((a, b) => b.count - a.count);
             
             const totalAlarms = alarmTypesArray.reduce((sum, item) => sum + item.count, 0);
@@ -596,11 +640,32 @@
             let tableHTML = '';
             alarmTypesArray.forEach(item => {
                 const percentage = totalAlarms > 0 ? ((item.count / totalAlarms) * 100).toFixed(1) : '0.0';
+                const barWidth = totalAlarms > 0 ? (item.count / totalAlarms * 100) : 0;
+                
+                // Tentukan warna progress bar berdasarkan prioritas
+                let progressBarClass = item.priority === 'P1' ? 'bg-danger' : 'bg-warning';
+                
                 tableHTML += `
                     <tr>
                         <td class="small">${highlightSearchText(item.name, 'alarmName')}</td>
                         <td class="text-end fw-semibold">${item.count}</td>
                         <td class="text-end text-muted">${percentage}%</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar ${progressBarClass}" 
+                                     role="progressbar" 
+                                     style="width: ${barWidth}%" 
+                                     aria-valuenow="${barWidth}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="alarm-type-badge badge-priority-${item.priority}">
+                                ${item.priority}
+                            </span>
+                        </td>
                     </tr>
                 `;
             });
@@ -610,7 +675,55 @@
                 <td><strong>Total</strong></td>
                 <td class="text-end"><strong>${totalAlarms}</strong></td>
                 <td class="text-end"><strong>100%</strong></td>
+                <td colspan="2"></td>
             `;
+        }
+
+        function updateSiteBreakdown() {
+            const tableBody = document.getElementById('siteBreakdownBody');
+            
+            if (Object.keys(siteCountData).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No site data available</td></tr>';
+                return;
+            }
+            
+            // Konversi objek ke array dan urutkan berdasarkan jumlah (descending)
+            const siteArray = Object.entries(siteCountData)
+                .map(([siteId, count]) => ({ siteId, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10); // Ambil 10 site teratas
+            
+            const maxCount = siteArray.length > 0 ? Math.max(...siteArray.map(s => s.count)) : 1;
+            
+            // Render baris tabel
+            let tableHTML = '';
+            siteArray.forEach(site => {
+                const barWidth = maxCount > 0 ? (site.count / maxCount * 100) : 0;
+                const isSearchMatch = currentSearchSiteId && site.siteId.toLowerCase().includes(currentSearchSiteId);
+                const siteIdDisplay = isSearchMatch ? 
+                    `<span class="search-highlight">${site.siteId}</span>` : 
+                    site.siteId;
+                
+                tableHTML += `
+                    <tr>
+                        <td class="small fw-semibold">${siteIdDisplay}</td>
+                        <td class="text-end small">${site.count}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" 
+                                     role="progressbar" 
+                                     style="width: ${barWidth}%" 
+                                     aria-valuenow="${barWidth}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
         }
 
         function renderDetailedTable() {
@@ -646,6 +759,14 @@
                     durationText = `${hours}h ${mins}m`;
                 }
                 
+                // Tentukan warna badge durasi
+                let durationBadgeClass = 'bg-info';
+                if (alarm.duration > 120) {
+                    durationBadgeClass = 'bg-danger';
+                } else if (alarm.duration > 30) {
+                    durationBadgeClass = 'bg-warning';
+                }
+                
                 // Highlight teks pencarian
                 const highlightedSiteId = highlightSearchText(alarm.siteId, 'siteId');
                 const highlightedAlarmName = highlightSearchText(alarm.alarmName, 'alarmName');
@@ -663,7 +784,7 @@
                         </td>
                         <td class="small">${alarm.neType}</td>
                         <td>
-                            <span class="badge ${alarm.duration > 120 ? 'bg-danger' : alarm.duration > 30 ? 'bg-warning' : 'bg-info'}">
+                            <span class="badge ${durationBadgeClass}">
                                 ${durationText}
                             </span>
                         </td>
@@ -792,71 +913,6 @@
                     return multiplier * (aValue - bValue);
                 }
             });
-        }
-
-        // ==================== FUNGSI CHART ====================
-        function initializeTrendChart() {
-            const ctx = document.getElementById('alarmTrendChart').getContext('2d');
-            
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['13:00', '14:00', '14:30', '14:45', '15:00'],
-                    datasets: [
-                        {
-                            label: 'CELL UNAVAILABLE',
-                            data: [3, 2, 11, 3, 0],
-                            borderColor: '#dc3545',
-                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'X2 INTERFACE',
-                            data: [1, 1, 6, 1, 0],
-                            borderColor: '#fd7e14',
-                            backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'RF/BBU Issues',
-                            data: [2, 1, 3, 1, 0],
-                            borderColor: '#17a2b8',
-                            backgroundColor: 'rgba(23, 162, 184, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Alarms'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateTrendChart() {
-            // Di sini Anda bisa menambahkan logika untuk update chart dengan data real
-            // Untuk contoh ini, chart tetap menggunakan data statis
-            console.log('Trend chart would update with real data here.');
         }
 
         // ==================== FUNGSI WAKTU & AUTO-REFRESH ====================
@@ -988,6 +1044,7 @@
             console.log('All Alarm Data:', allAlarmData);
             console.log('Filtered Alarm Data:', filteredAlarmData);
             console.log('Alarm Count By Type:', alarmCountByType);
+            console.log('Site Count Data:', siteCountData);
             console.log('Current Sort:', currentSort);
             alert(`Data logged to console. Total: ${allAlarmData.length}, Filtered: ${filteredAlarmData.length}`);
         };
