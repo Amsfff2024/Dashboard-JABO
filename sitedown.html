@@ -109,7 +109,7 @@ body{
 
 <!-- SUMMARY ROW -->
 <div class="row g-3 mb-3">
-  <div class="col-md-3">
+  <div class="col-md-4">
     <div class="card card-summary p-3">
       <div class="d-flex justify-content-between align-items-center">
         <span><i class="fas fa-bell me-2 text-danger"></i>Total Site Down Alarms</span>
@@ -117,25 +117,13 @@ body{
       <h3 id="totalAlarm" class="mt-2">0</h3>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4">
     <div class="card card-summary p-3">
       <div><i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Sites</div>
       <h3 id="uniqueSite" class="mt-2">0</h3>
     </div>
   </div>
-  <div class="col-md-2">
-    <div class="card card-summary p-3" style="background-color: #f8d7da;">
-      <div><i class="fas fa-skull-crossbones me-2 text-danger"></i>Fully Down</div>
-      <h4 id="fullyDown" class="mt-2">0</h4>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card card-summary p-3" style="background-color: #fff3cd;">
-      <div><i class="fas fa-exclamation-circle me-2 text-warning"></i>Partial Down</div>
-      <h4 id="partialDown" class="mt-2">0</h4>
-    </div>
-  </div>
-  <div class="col-md-2">
+  <div class="col-md-4">
     <div class="card card-summary p-3" style="background-color: #d1ecf1;">
       <div><i class="fas fa-clock me-2 text-info"></i>Aging > 2 Days</div>
       <h4 id="agingCount" class="mt-2">0</h4>
@@ -146,26 +134,16 @@ body{
 <!-- FILTER -->
 <div class="card filter-card p-3 mb-3">
   <div class="row g-2">
-    <div class="col-md-2">
+    <div class="col-md-3">
       <div class="input-group">
         <span class="input-group-text"><i class="fas fa-search"></i></span>
         <input id="fAlarm" class="form-control" placeholder="Alarm Name">
       </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
       <div class="input-group">
         <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
         <input id="fSite" class="form-control" placeholder="Site ID">
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-server"></i></span>
-        <select id="fDownStatus" class="form-control">
-          <option value="">All Down Status</option>
-          <option value="Fully Down">Fully Down</option>
-          <option value="Partial Down">Partial Down</option>
-        </select>
       </div>
     </div>
     <div class="col-md-3">
@@ -179,17 +157,7 @@ body{
         </select>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-flag"></i></span>
-        <select id="fClearance" class="form-control">
-          <option value="">All Status</option>
-          <option value="Uncleared">Uncleared</option>
-          <option value="Cleared">Cleared</option>
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2 d-flex gap-2 mt-2">
+    <div class="col-md-3 d-flex gap-2">
       <button class="btn btn-primary w-100" onclick="applyFilter()">
         <i class="fas fa-filter me-1"></i>Filter
       </button>
@@ -221,20 +189,18 @@ body{
 <table class="table table-striped table-hover table-bordered">
 <thead>
 <tr>
-  <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
-  <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
-  <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
   <th onclick="sortTable('SiteID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-  <th onclick="sortTable('Down')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Down Status</th>
-  <th onclick="sortTable('Remark')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Remark</th>
   <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
+  <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+  <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+  <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
   <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS Source</th>
   <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
 </tr>
 </thead>
 <tbody id="tableBody">
   <tr id="loadingRow">
-    <td colspan="9" class="loading">
+    <td colspan="7" class="loading">
       <div class="text-center">
         <div class="spinner-border text-danger mb-2" role="status"></div>
         <div>Loading site down data from Google Sheets...</div>
@@ -402,40 +368,28 @@ function render() {
   if (filteredData.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center py-5">
+        <td colspan="7" class="text-center py-5">
           <i class="fas fa-database fa-2x mb-3 text-muted"></i>
           <div>No site down data found</div>
           <small class="text-muted">Try adjusting your filters</small>
         </td>
       </tr>
     `;
-    updateSummary(0, 0, 0, 0, 0);
+    updateSummary(0, 0, 0);
     return;
   }
   
   // Initialize counters
-  let fullyDown = 0, partialDown = 0, aging2Days = 0;
+  let aging2Days = 0;
   
   filteredData.forEach(item => {
     const tr = document.createElement("tr");
     
     // Update counters
-    const downStatus = item["Down"] || "";
-    if (downStatus === "Fully Down") fullyDown++;
-    else if (downStatus === "Partial Down") partialDown++;
-    
     if (item._agingDays > 2) aging2Days++;
     
     // Format timestamp for display
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
-    
-    // Determine badge class for Down status
-    let downBadgeClass = "";
-    if (downStatus === "Fully Down") {
-      downBadgeClass = "badge-down-fully";
-    } else if (downStatus === "Partial Down") {
-      downBadgeClass = "badge-down-partial";
-    }
     
     // Create aging badge
     let agingBadge = "";
@@ -445,22 +399,12 @@ function render() {
       agingBadge = "-";
     }
     
-    // Create Down status badge
-    let downBadge = "";
-    if (downStatus) {
-      downBadge = `<span class="badge badge-down ${downBadgeClass}">${downStatus}</span>`;
-    } else {
-      downBadge = "-";
-    }
-    
     tr.innerHTML = `
-      <td><span class="badge bg-danger">${item["Name"] || ""}</span></td>
-      <td>${item["Alarm Source"] || ""}</td>
-      <td class="text-nowrap">${firstOccurred}</td>
       <td class="site-id-cell">${item["SiteID"] || ""}</td>
-      <td class="text-center">${downBadge}</td>
-      <td>${item["Remark"] || "-"}</td>
       <td>${item["MO Name"] || ""}</td>
+      <td><span class="badge bg-danger">${item["Name"] || ""}</span></td>
+      <td class="text-nowrap">${firstOccurred}</td>
+      <td>${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-dark">${item["Source"] || ""}</span></td>
       <td class="text-center">${agingBadge}</td>
     `;
@@ -470,7 +414,7 @@ function render() {
   // Update summary
   const total = filteredData.length;
   const uniqueSites = new Set(filteredData.map(d => d["SiteID"]).filter(Boolean)).size;
-  updateSummary(total, uniqueSites, fullyDown, partialDown, aging2Days);
+  updateSummary(total, uniqueSites, aging2Days);
 }
 
 function formatDateTime(datetimeStr) {
@@ -490,11 +434,9 @@ function formatDateTime(datetimeStr) {
   }
 }
 
-function updateSummary(total, unique, fully, partial, aging) {
+function updateSummary(total, unique, aging) {
   document.getElementById("totalAlarm").innerText = total;
   document.getElementById("uniqueSite").innerText = unique;
-  document.getElementById("fullyDown").innerText = fully;
-  document.getElementById("partialDown").innerText = partial;
   document.getElementById("agingCount").innerText = aging;
   
   // Update filtered count
@@ -505,23 +447,17 @@ function updateSummary(total, unique, fully, partial, aging) {
 function applyFilter() {
   const alarmName = document.getElementById("fAlarm").value.toLowerCase();
   const siteId = document.getElementById("fSite").value.toLowerCase();
-  const downStatus = document.getElementById("fDownStatus").value;
   const source = document.getElementById("fSource").value;
-  const clearance = document.getElementById("fClearance").value;
   
   filteredData = rawData.filter(item => {
     const alarmNameVal = (item["Name"] || "").toLowerCase();
     const siteID = (item["SiteID"] || "").toLowerCase();
-    const downStatusVal = item["Down"] || "";
     const sourceVal = item["Source"] || "";
-    const clearanceVal = item["Clearance Status"] || "";
     
     return (
       (!alarmName || alarmNameVal.includes(alarmName)) &&
       (!siteId || siteID.includes(siteId)) &&
-      (!downStatus || downStatusVal === downStatus) &&
-      (!source || sourceVal === source) &&
-      (!clearance || clearanceVal === clearance)
+      (!source || sourceVal === source)
     );
   });
   
@@ -531,9 +467,7 @@ function applyFilter() {
 function clearFilter() {
   document.getElementById("fAlarm").value = "";
   document.getElementById("fSite").value = "";
-  document.getElementById("fDownStatus").value = "";
   document.getElementById("fSource").value = "";
-  document.getElementById("fClearance").value = "";
   filteredData = [...rawData];
   render();
 }
@@ -574,8 +508,8 @@ function exportCSV() {
   }
   
   const headers = [
-    "Name", "Alarm Source", "First Occurred (NT)", "SiteID", 
-    "Down", "Remark", "MO Name", "Source", "Aging"
+    "SiteID", "MO Name", "Name", "First Occurred (NT)", 
+    "Alarm Source", "Source", "Aging"
   ];
   
   const csvRows = [
@@ -610,7 +544,7 @@ function showError(message) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = `
     <tr>
-      <td colspan="9" class="text-center py-5 text-danger">
+      <td colspan="7" class="text-center py-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
         <div>${message}</div>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
