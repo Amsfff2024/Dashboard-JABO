@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Alarm Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse untuk parsing CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <style>
+        :root {
+            --critical-red: #dc3545;
+            --warning-orange: #fd7e14;
+            --normal-green: #28a745;
+            --info-blue: #17a2b8;
+            --vip-gold: #ffc107;
+            --dark-blue: #2c3e50;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .executive-header {
+            background: linear-gradient(135deg, var(--dark-blue), #1a252f);
+            color: white;
+            padding: 1rem 0;
+            border-bottom: 4px solid var(--critical-red);
+        }
+        .kpi-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .table thead th {
+            background-color: var(--dark-blue);
+            color: white;
+            font-weight: 600;
+            border: none;
+            position: sticky;
+            top: 0;
+        }
+        .vip-row {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        .badge-priority-P1 {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-priority-P2 {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            height: 100%;
+        }
+        #loadingSpinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        .search-highlight {
+            background-color: #fff3cd;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="executive-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Executive Alarm Dashboard</h1>
+                    <p class="small mb-0 opacity-75">Real-time Network Health Monitoring</p>
+                </div>
+                <div class="text-end">
+                    <div class="small mb-1"><i class="fas fa-clock me-1"></i> <span id="currentTime">Loading...</span></div>
+                    <span class="badge bg-danger" id="dashboardStatus">
+                        <i class="fas fa-circle me-1"></i> Loading Data...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container py-4">
+        <!-- Search and Filter Row -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card kpi-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Alarms</h6>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                    <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID (e.g., 13CKR0564)" onkeyup="applyFilters()">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="fas fa-bell"></i></span>
+                                    <input type="text" class="form-control" id="searchAlarmName" placeholder="Search by Alarm Name (e.g., CELL UNAVAILABLE)" onkeyup="applyFilters()">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
+                                    <i class="fas fa-eraser me-1"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted" id="searchResultsText">Start typing to filter alarms. Matching text will be highlighted.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card kpi-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-title"><i class="fas fa-sync-alt me-2"></i>Data Control</h6>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
+                                <i class="fas fa-redo me-1"></i> Refresh Data
+                            </button>
+                            <div class="form-check form-switch d-flex align-items-center">
+                                <input class="form-check-input me-2" type="checkbox" id="autoRefreshToggle" checked>
+                                <label class="form-check-label small" for="autoRefreshToggle">Auto (60s)</label>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2" id="dataInfo">No data loaded.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Summary Row -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-danger border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">TOTAL ALARMS</h6>
+                                <div class="kpi-value text-danger" id="kpiTotalAlarms">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Active uncleared alarms</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">AFFECTED SITES</h6>
+                                <div class="kpi-value text-warning" id="kpiAffectedSites">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-map-marker-alt fa-2x text-warning opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Unique site IDs with alarms</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-info border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">ALARM CATEGORIES</h6>
+                                <div class="kpi-value text-info" id="kpiAlarmCategories">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-list fa-2x text-info opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Different types of alarms</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">VIP SITES</h6>
+                                <div class="kpi-value text-success" id="kpiVipSites">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-crown fa-2x text-success opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Sites with VIP/POI category</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Alarm Count Table Row -->
+        <div class="row mb-4">
+            <!-- Alarm Trend Chart -->
+            <div class="col-lg-8 mb-4">
+                <div class="chart-container">
+                    <h6 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Alarm Trend (Last 4 Hours)</h6>
+                    <canvas id="alarmTrendChart" height="250"></canvas>
+                </div>
+            </div>
+            <!-- Alarm Count Table -->
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
+                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="small">
+                                <tr>
+                                    <th>Alarm Type</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alarmCountTableBody">
+                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                            </tbody>
+                            <tfoot class="small table-light">
+                                <tr id="alarmCountTableFooter">
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end"><strong>0</strong></td>
+                                    <td class="text-end"><strong>100%</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Alarm Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detailed Active Alarms</h6>
+                        <div>
+                            <span class="badge bg-secondary me-2" id="tableCountBadge">Showing 0 alarms</span>
+                            <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-download me-1"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="loadingSpinner">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status"></div>
+                                <p>Loading alarm data from CSV...</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive" id="alarmTableContainer" style="display: none;">
+                            <table class="table table-hover mb-0" id="detailedAlarmTable">
+                                <thead>
+                                    <tr>
+                                        <th class="cursor-pointer" onclick="sortTable('time')">
+                                            Time <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer" onclick="sortTable('siteId')">
+                                            Site ID <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer" onclick="sortTable('alarmName')">
+                                            Alarm Name <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th>Alarm Source</th>
+                                        <th class="cursor-pointer" onclick="sortTable('category')">
+                                            Category <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th>NE Type</th>
+                                        <th class="cursor-pointer" onclick="sortTable('duration')">
+                                            Duration <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedAlarmTableBody">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="text-center small text-muted">
+                    <p class="mb-1">
+                        <i class="fas fa-database me-1"></i> Data Source: Google Sheets CSV | 
+                        <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span> |
+                        <i class="fas fa-redo me-1 ms-3"></i> Next Auto-Refresh: <span id="nextRefreshTime">-</span>
+                    </p>
+                    <p class="mb-0">Dashboard refreshes automatically every 60 seconds. Click "Refresh Data" to update manually.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // ==================== KONFIGURASI ====================
+        // GANTI URL INI DENGAN LINK CSV ANDA YANG SEBENARNYA
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=964625429&single=true&output=csv";
+
+        // ==================== VARIABEL GLOBAL ====================
+        let allAlarmData = [];          // Semua data asli dari CSV
+        let filteredAlarmData = [];     // Data setelah difilter
+        let alarmCountByType = {};      // Hitungan per jenis alarm
+        let currentSort = { column: 'time', direction: 'desc' }; // Pengurutan tabel
+        let autoRefreshInterval = null; // Interval auto-refresh
+        let refreshCountdown = 60;      // Hitung mundur auto-refresh
+        let trendChart = null;          // Objek chart tren
+        let currentSearchSiteId = '';   // Pencarian Site ID saat ini
+        let currentSearchAlarmName = ''; // Pencarian Alarm Name saat ini
+
+        // ==================== FUNGSI INISIALISASI ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initializing...');
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000); // Update jam setiap detik
+            
+            // Setup auto-refresh toggle
+            document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
+            
+            // Ambil data CSV saat pertama kali load
+            fetchCSVData();
+            
+            // Inisialisasi chart kosong
+            initializeTrendChart();
+        });
+
+        // ==================== FUNGSI DATA ====================
+        function fetchCSVData() {
+            console.log('Fetching CSV data from:', CSV_URL);
+            showLoading(true);
+            updateDashboardStatus('loading', 'Fetching data...');
+            
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    console.log('CSV parsing complete. Rows:', results.data.length);
+                    
+                    if (results.data && results.data.length > 0) {
+                        processAlarmData(results.data);
+                        updateDashboardStatus('success', 'Data loaded successfully');
+                    } else {
+                        console.warn('No data found in CSV');
+                        showError('No data found in the CSV file.');
+                        updateDashboardStatus('error', 'No data found');
+                    }
+                    showLoading(false);
+                    updateLastUpdatedTime();
+                    resetAutoRefreshCountdown();
+                },
+                error: function(error) {
+                    console.error('Error fetching CSV:', error);
+                    showError('Failed to load data from CSV. Please check the URL.');
+                    updateDashboardStatus('error', 'Failed to load data');
+                    showLoading(false);
+                }
+            });
+        }
+
+        function processAlarmData(rawData) {
+            // Reset data
+            allAlarmData = [];
+            alarmCountByType = {};
+            
+            // Proses setiap baris data
+            rawData.forEach(row => {
+                if (!row['Name'] || !row['SITE ID']) return; // Skip baris kosong
+                
+                // Hitung durasi alarm (dalam menit)
+                const firstOccurred = row['First Occurred (NT)'] || '';
+                let durationMinutes = 0;
+                
+                if (firstOccurred && firstOccurred !== '-') {
+                    try {
+                        const firstDate = new Date(firstOccurred);
+                        const now = new Date();
+                        durationMinutes = Math.floor((now - firstDate) / (1000 * 60));
+                        durationMinutes = Math.max(0, durationMinutes);
+                    } catch (e) {
+                        console.warn('Error parsing date:', firstOccurred);
+                    }
+                }
+                
+                // Tentukan prioritas berdasarkan jenis alarm
+                let priority = 'P2';
+                const alarmName = row['Name'] || '';
+                if (alarmName.includes('CELL UNAVAILABLE') || alarmName.includes('X2 INTERFACE')) {
+                    priority = 'P1';
+                }
+                
+                // Tentukan apakah site VIP
+                const isVip = row['Category VIP POI'] && 
+                             (row['Category VIP POI'].includes('Golden') || 
+                              row['Category VIP POI'].includes('VIP'));
+                
+                // Format waktu untuk tampilan
+                const timeStr = firstOccurred ? 
+                    firstOccurred.split(' ')[1]?.substring(0, 5) || 'N/A' : 
+                    'N/A';
+                
+                // Simpan data yang diproses
+                const processedRow = {
+                    raw: row, // Simpan data asli
+                    time: timeStr,
+                    timeFull: firstOccurred,
+                    siteId: row['SITE ID'] || 'N/A',
+                    alarmName: alarmName,
+                    alarmSource: row['Alarm Source'] || 'N/A',
+                    category: row['Category VIP POI'] || 'Regular',
+                    neType: row['NE Type'] || 'N/A',
+                    siteType: row['Site Type'] || 'N/A',
+                    duration: durationMinutes,
+                    priority: priority,
+                    isVip: isVip,
+                    cleared: row['Cleared On (NT)'] && row['Cleared On (NT)'] !== '-'
+                };
+                
+                allAlarmData.push(processedRow);
+                
+                // Hitung per jenis alarm untuk tabel ringkasan
+                if (alarmCountByType[alarmName]) {
+                    alarmCountByType[alarmName]++;
+                } else {
+                    alarmCountByType[alarmName] = 1;
+                }
+            });
+            
+            console.log(`Processed ${allAlarmData.length} alarm records`);
+            
+            // Terapkan filter dan render
+            applyFilters();
+            
+            // Update chart tren
+            updateTrendChart();
+        }
+
+        // ==================== FUNGSI FILTER & PENCARIAN ====================
+        function applyFilters() {
+            currentSearchSiteId = document.getElementById('searchSiteId').value.toLowerCase().trim();
+            currentSearchAlarmName = document.getElementById('searchAlarmName').value.toLowerCase().trim();
+            
+            console.log(`Applying filters - Site: "${currentSearchSiteId}", Alarm: "${currentSearchAlarmName}"`);
+            
+            // Filter data berdasarkan pencarian
+            filteredAlarmData = allAlarmData.filter(alarm => {
+                const siteIdMatch = !currentSearchSiteId || 
+                    alarm.siteId.toLowerCase().includes(currentSearchSiteId);
+                
+                const alarmNameMatch = !currentSearchAlarmName || 
+                    alarm.alarmName.toLowerCase().includes(currentSearchAlarmName);
+                
+                return siteIdMatch && alarmNameMatch;
+            });
+            
+            // Update teks hasil pencarian
+            const resultsText = document.getElementById('searchResultsText');
+            if (currentSearchSiteId || currentSearchAlarmName) {
+                resultsText.textContent = `Found ${filteredAlarmData.length} alarms matching your search.`;
+                resultsText.className = 'text-success fw-semibold';
+            } else {
+                resultsText.textContent = 'Start typing to filter alarms. Matching text will be highlighted.';
+                resultsText.className = 'text-muted';
+            }
+            
+            // Update UI dengan data yang sudah difilter
+            updateSummaryKPIs();
+            updateAlarmCountTable();
+            renderDetailedTable();
+            updateTableCountBadge();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            applyFilters();
+        }
+
+        // ==================== FUNGSI UI ====================
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const tableContainer = document.getElementById('alarmTableContainer');
+            
+            if (show) {
+                spinner.style.display = 'flex';
+                tableContainer.style.display = 'none';
+            } else {
+                spinner.style.display = 'none';
+                tableContainer.style.display = 'block';
+            }
+        }
+
+        function showError(message) {
+            const tableBody = document.getElementById('detailedAlarmTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <div>${message}</div>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="fetchCSVData()">
+                            <i class="fas fa-redo me-1"></i> Try Again
+                        </button>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('alarmTableContainer').style.display = 'block';
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        function updateSummaryKPIs() {
+            // Hitung metrik dari data yang sudah difilter
+            const totalAlarms = filteredAlarmData.length;
+            const uniqueSites = new Set(filteredAlarmData.map(a => a.siteId)).size;
+            const uniqueAlarmTypes = new Set(filteredAlarmData.map(a => a.alarmName)).size;
+            const vipSites = filteredAlarmData.filter(a => a.isVip).length;
+            
+            // Update tampilan KPI
+            document.getElementById('kpiTotalAlarms').textContent = totalAlarms.toLocaleString();
+            document.getElementById('kpiAffectedSites').textContent = uniqueSites.toLocaleString();
+            document.getElementById('kpiAlarmCategories').textContent = uniqueAlarmTypes.toLocaleString();
+            document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
+            
+            // Update data info
+            document.getElementById('dataInfo').innerHTML = `
+                <i class="fas fa-check-circle text-success me-1"></i>
+                Loaded ${allAlarmData.length} total alarms, ${filteredAlarmData.length} filtered
+            `;
+        }
+
+        function updateAlarmCountTable() {
+            const tableBody = document.getElementById('alarmCountTableBody');
+            const tableFooter = document.getElementById('alarmCountTableFooter');
+            
+            if (Object.keys(alarmCountByType).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No alarm data available</td></tr>';
+                return;
+            }
+            
+            // Konversi objek ke array dan urutkan berdasarkan jumlah (descending)
+            const alarmTypesArray = Object.entries(alarmCountByType)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count);
+            
+            const totalAlarms = alarmTypesArray.reduce((sum, item) => sum + item.count, 0);
+            
+            // Render baris tabel
+            let tableHTML = '';
+            alarmTypesArray.forEach(item => {
+                const percentage = totalAlarms > 0 ? ((item.count / totalAlarms) * 100).toFixed(1) : '0.0';
+                tableHTML += `
+                    <tr>
+                        <td class="small">${highlightSearchText(item.name, 'alarmName')}</td>
+                        <td class="text-end fw-semibold">${item.count}</td>
+                        <td class="text-end text-muted">${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
+            tableFooter.innerHTML = `
+                <td><strong>Total</strong></td>
+                <td class="text-end"><strong>${totalAlarms}</strong></td>
+                <td class="text-end"><strong>100%</strong></td>
+            `;
+        }
+
+        function renderDetailedTable() {
+            const tableBody = document.getElementById('detailedAlarmTableBody');
+            
+            if (filteredAlarmData.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="fas fa-search fa-2x mb-3 text-muted"></i>
+                            <div>No alarms found matching your criteria</div>
+                            <small class="text-muted">Try adjusting your search filters</small>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Urutkan data terlebih dahulu
+            sortFilteredData();
+            
+            // Render setiap baris alarm
+            let tableHTML = '';
+            filteredAlarmData.forEach(alarm => {
+                // Tentukan class baris untuk VIP
+                const rowClass = alarm.isVip ? 'vip-row' : '';
+                
+                // Format durasi
+                let durationText = `${alarm.duration}m`;
+                if (alarm.duration >= 60) {
+                    const hours = Math.floor(alarm.duration / 60);
+                    const mins = alarm.duration % 60;
+                    durationText = `${hours}h ${mins}m`;
+                }
+                
+                // Highlight teks pencarian
+                const highlightedSiteId = highlightSearchText(alarm.siteId, 'siteId');
+                const highlightedAlarmName = highlightSearchText(alarm.alarmName, 'alarmName');
+                
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td class="text-nowrap">${alarm.time}</td>
+                        <td class="fw-semibold">${highlightedSiteId}</td>
+                        <td>${highlightedAlarmName}</td>
+                        <td class="small">${alarm.alarmSource}</td>
+                        <td>
+                            ${alarm.category === 'Regular' || !alarm.category ? 
+                                '<span class="badge bg-secondary">Regular</span>' : 
+                                `<span class="badge bg-warning text-dark">${alarm.category}</span>`}
+                        </td>
+                        <td class="small">${alarm.neType}</td>
+                        <td>
+                            <span class="badge ${alarm.duration > 120 ? 'bg-danger' : alarm.duration > 30 ? 'bg-warning' : 'bg-info'}">
+                                ${durationText}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-priority-${alarm.priority}">
+                                ${alarm.priority}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
+        }
+
+        function highlightSearchText(text, filterType) {
+            if (!text) return text;
+            
+            let searchTerm = '';
+            if (filterType === 'siteId' && currentSearchSiteId) {
+                searchTerm = currentSearchSiteId;
+            } else if (filterType === 'alarmName' && currentSearchAlarmName) {
+                searchTerm = currentSearchAlarmName;
+            }
+            
+            if (!searchTerm) return text;
+            
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function updateTableCountBadge() {
+            const badge = document.getElementById('tableCountBadge');
+            badge.textContent = `Showing ${filteredAlarmData.length} of ${allAlarmData.length} alarms`;
+            
+            // Update warna badge berdasarkan jumlah
+            if (filteredAlarmData.length === 0) {
+                badge.className = 'badge bg-secondary';
+            } else if (filteredAlarmData.length === allAlarmData.length) {
+                badge.className = 'badge bg-success';
+            } else {
+                badge.className = 'badge bg-primary';
+            }
+        }
+
+        // ==================== FUNGSI PENGURUTAN TABEL ====================
+        function sortTable(column) {
+            // Toggle arah pengurutan jika kolom yang sama diklik
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc'; // Default descending
+            }
+            
+            // Update UI untuk menunjukkan kolom yang sedang diurutkan
+            updateSortIndicators();
+            
+            // Render ulang tabel dengan data yang sudah diurutkan
+            renderDetailedTable();
+        }
+
+        function updateSortIndicators() {
+            // Reset semua indikator
+            document.querySelectorAll('#detailedAlarmTable thead th i').forEach(icon => {
+                icon.className = 'fas fa-sort ms-1 text-muted';
+            });
+            
+            // Set indikator untuk kolom yang aktif
+            const headers = document.querySelectorAll('#detailedAlarmTable thead th');
+            headers.forEach((header, index) => {
+                const icon = header.querySelector('i');
+                if (!icon) return;
+                
+                // Tentukan kolom berdasarkan teks header
+                let column = '';
+                if (header.textContent.includes('Time')) column = 'time';
+                else if (header.textContent.includes('Site ID')) column = 'siteId';
+                else if (header.textContent.includes('Alarm Name')) column = 'alarmName';
+                else if (header.textContent.includes('Category')) column = 'category';
+                else if (header.textContent.includes('Duration')) column = 'duration';
+                
+                if (column === currentSort.column) {
+                    icon.className = currentSort.direction === 'asc' ? 
+                        'fas fa-sort-up ms-1' : 'fas fa-sort-down ms-1';
+                }
+            });
+        }
+
+        function sortFilteredData() {
+            filteredAlarmData.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch (currentSort.column) {
+                    case 'time':
+                        aValue = a.timeFull || '';
+                        bValue = b.timeFull || '';
+                        break;
+                    case 'siteId':
+                        aValue = a.siteId || '';
+                        bValue = b.siteId || '';
+                        break;
+                    case 'alarmName':
+                        aValue = a.alarmName || '';
+                        bValue = b.alarmName || '';
+                        break;
+                    case 'category':
+                        aValue = a.category || '';
+                        bValue = b.category || '';
+                        break;
+                    case 'duration':
+                        aValue = a.duration;
+                        bValue = b.duration;
+                        break;
+                    default:
+                        aValue = a.timeFull || '';
+                        bValue = b.timeFull || '';
+                }
+                
+                // Untuk pengurutan ascending/descending
+                const multiplier = currentSort.direction === 'asc' ? 1 : -1;
+                
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return multiplier * aValue.localeCompare(bValue);
+                } else {
+                    return multiplier * (aValue - bValue);
+                }
+            });
+        }
+
+        // ==================== FUNGSI CHART ====================
+        function initializeTrendChart() {
+            const ctx = document.getElementById('alarmTrendChart').getContext('2d');
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['13:00', '14:00', '14:30', '14:45', '15:00'],
+                    datasets: [
+                        {
+                            label: 'CELL UNAVAILABLE',
+                            data: [3, 2, 11, 3, 0],
+                            borderColor: '#dc3545',
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'X2 INTERFACE',
+                            data: [1, 1, 6, 1, 0],
+                            borderColor: '#fd7e14',
+                            backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'RF/BBU Issues',
+                            data: [2, 1, 3, 1, 0],
+                            borderColor: '#17a2b8',
+                            backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Alarms'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTrendChart() {
+            // Di sini Anda bisa menambahkan logika untuk update chart dengan data real
+            // Untuk contoh ini, chart tetap menggunakan data statis
+            console.log('Trend chart would update with real data here.');
+        }
+
+        // ==================== FUNGSI WAKTU & AUTO-REFRESH ====================
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+            document.getElementById('lastUpdatedTime').textContent = timeString;
+        }
+
+        function resetAutoRefreshCountdown() {
+            refreshCountdown = 60;
+            updateNextRefreshTime();
+        }
+
+        function updateNextRefreshTime() {
+            document.getElementById('nextRefreshTime').textContent = `${refreshCountdown}s`;
+        }
+
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            
+            if (toggle.checked) {
+                // Start auto-refresh interval
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                
+                autoRefreshInterval = setInterval(() => {
+                    refreshCountdown--;
+                    updateNextRefreshTime();
+                    
+                    if (refreshCountdown <= 0) {
+                        fetchCSVData();
+                    }
+                }, 1000);
+                
+                console.log('Auto-refresh enabled');
+            } else {
+                // Stop auto-refresh
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                document.getElementById('nextRefreshTime').textContent = 'Off';
+                console.log('Auto-refresh disabled');
+            }
+        }
+
+        function updateDashboardStatus(status, message) {
+            const statusBadge = document.getElementById('dashboardStatus');
+            
+            switch(status) {
+                case 'loading':
+                    statusBadge.className = 'badge bg-warning';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                case 'success':
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                case 'error':
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                default:
+                    statusBadge.className = 'badge bg-secondary';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+            }
+        }
+
+        // ==================== FUNGSI EKSPOR ====================
+        function exportToCSV() {
+            if (filteredAlarmData.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            // Siapkan header CSV
+            const headers = [
+                'Time', 'Site ID', 'Alarm Name', 'Alarm Source', 
+                'Category', 'NE Type', 'Duration (min)', 'Priority', 'Site Type'
+            ];
+            
+            // Siapkan data baris
+            const csvRows = [
+                headers.join(','),
+                ...filteredAlarmData.map(alarm => {
+                    return [
+                        alarm.timeFull,
+                        alarm.siteId,
+                        `"${alarm.alarmName.replace(/"/g, '""')}"`,
+                        alarm.alarmSource,
+                        alarm.category,
+                        alarm.neType,
+                        alarm.duration,
+                        alarm.priority,
+                        alarm.siteType
+                    ].join(',');
+                })
+            ];
+            
+            // Buat file CSV
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `alarm_dashboard_export_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== FUNGSI BANTUAN ====================
+        // Fungsi untuk debugging: tampilkan data di console
+        window.debugData = function() {
+            console.log('All Alarm Data:', allAlarmData);
+            console.log('Filtered Alarm Data:', filteredAlarmData);
+            console.log('Alarm Count By Type:', alarmCountByType);
+            console.log('Current Sort:', currentSort);
+            alert(`Data logged to console. Total: ${allAlarmData.length}, Filtered: ${filteredAlarmData.length}`);
+        };
+
+        // Ekspos fungsi penting ke global scope untuk debugging
+        window.fetchCSVData = fetchCSVData;
+        window.applyFilters = applyFilters;
+        window.clearFilters = clearFilters;
+        window.sortTable = sortTable;
+        window.exportToCSV = exportToCSV;
+    </script>
+
+    <!-- Bootstrap JS (optional, for some components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
