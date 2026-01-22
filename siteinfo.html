@@ -172,12 +172,13 @@
         .table th:nth-child(1) { width: 10%; }
         .table th:nth-child(2) { width: 20%; }
         .table th:nth-child(3) { width: 8%; }
-        .table th:nth-child(4) { width: 8%; }
-        .table th:nth-child(5) { width: 15%; }
-        .table th:nth-child(6) { width: 10%; }
+        .table th:nth-child(4) { width: 6%; }
+        .table th:nth-child(5) { width: 10%; }
+        .table th:nth-child(6) { width: 8%; }
         .table th:nth-child(7) { width: 12%; }
-        .table th:nth-child(8) { width: 8%; }
-        .table th:nth-child(9) { width: 9%; }
+        .table th:nth-child(8) { width: 10%; }
+        .table th:nth-child(9) { width: 10%; }
+        .table th:nth-child(10) { width: 6%; }
         .search-site-highlight {
             background-color: rgba(255, 0, 0, 0.1);
             font-weight: bold;
@@ -216,6 +217,66 @@
             font-size: 0.75rem;
             color: #6c757d;
             margin-top: 5px;
+        }
+        .nearest-sites-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        .nearest-sites-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nearest-sites-list li:last-child {
+            border-bottom: none;
+        }
+        .site-distance {
+            font-size: 0.75rem;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .nearest-site-id {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .nearest-site-name {
+            font-size: 0.8rem;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+        .nearest-sites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .marker-label {
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            text-align: center;
+            padding: 2px 4px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        .marker-label-red {
+            background-color: rgba(255, 0, 0, 0.7);
+        }
+        .marker-label-blue {
+            background-color: rgba(0, 123, 255, 0.7);
+        }
+        .marker-label-gray {
+            background-color: rgba(108, 117, 125, 0.7);
         }
     </style>
 </head>
@@ -268,33 +329,40 @@
                     <div class="card-body">
                         <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search Site Information</h6>
                         <div class="row g-2">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="input-group input-group-sm search-input-group">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
                                 </div>
                                 <div class="search-info">Enter Site ID to search and show 5km radius</div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="input-group input-group-sm search-input-group">
                                     <span class="input-group-text"><i class="fas fa-tower-cell"></i></span>
                                     <input type="text" class="form-control" id="searchSiteName" placeholder="Search by Site Name">
                                 </div>
                                 <div class="search-info">Enter Site Name for general search</div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm search-input-group">
+                                    <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
+                                    <input type="text" class="form-control" id="searchEnodebId" placeholder="Search by Enodeb ID">
+                                </div>
+                                <div class="search-info">Enter Enodeb ID to search</div>
+                            </div>
+                            <div class="col-md-1">
                                 <button class="btn btn-sm btn-success w-100" onclick="applyFilters()">
                                     <i class="fas fa-search me-1"></i> Search
                                 </button>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
                                     <i class="fas fa-eraser me-1"></i> Clear
                                 </button>
                             </div>
                         </div>
                         <div class="row g-2 mt-2">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="filterNetworkType">
                                     <option value="">All Network Types</option>
                                     <option value="2G">2G</option>
@@ -304,14 +372,22 @@
                                     <option value="2G_4G_5G">2G_4G_5G</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="filterRegion">
                                     <option value="">All Regions</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="filterCluster">
                                     <option value="">All Clusters</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="filterSiteType">
+                                    <option value="">All Site Types</option>
+                                    <option value="VIP_Macro">VIP Macro</option>
+                                    <option value="Macro">Macro</option>
+                                    <option value="Micro">Micro</option>
                                 </select>
                             </div>
                         </div>
@@ -391,7 +467,7 @@
             </div>
         </div>
 
-        <!-- Map and Summary Row (Tampil setelah pencarian) -->
+        <!-- Map and Nearest Sites Row (Tampil setelah pencarian) -->
         <div class="row mb-4" id="resultsContainer" style="display: none;">
             <!-- Map -->
             <div class="col-lg-8 mb-4">
@@ -414,39 +490,37 @@
                 </div>
             </div>
             
-            <!-- Site Breakdown Summary -->
+            <!-- Nearest Sites -->
             <div class="col-lg-4 mb-4">
                 <div class="summary-card">
-                    <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-info"></i>Search Results Distribution</h6>
+                    <div class="nearest-sites-header">
+                        <h6 class="mb-0"><i class="fas fa-location-arrow me-2 text-info"></i>10 Nearest Sites</h6>
+                        <span class="badge bg-info" id="nearestSitesCount">0 sites</span>
+                    </div>
                     <div class="site-breakdown">
-                        <table class="table table-sm table-borderless mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="small">Network Type</th>
-                                    <th class="small text-end">Sites</th>
-                                    <th class="small" style="width: 100px;">%</th>
-                                </tr>
-                            </thead>
-                            <tbody id="networkBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4">No search results</td></tr>
-                            </tbody>
-                        </table>
+                        <ul class="nearest-sites-list" id="nearestSitesList">
+                            <li class="text-center py-4 text-muted">No nearest sites data</li>
+                        </ul>
                     </div>
                     <hr>
-                    <h6 class="mb-3 mt-3"><i class="fas fa-map-marker-alt me-2 text-success"></i>Region Distribution</h6>
-                    <div class="site-breakdown">
-                        <table class="table table-sm table-borderless mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="small">Region</th>
-                                    <th class="small text-end">Sites</th>
-                                    <th class="small" style="width: 100px;">%</th>
-                                </tr>
-                            </thead>
-                            <tbody id="regionBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4">No search results</td></tr>
-                            </tbody>
-                        </table>
+                    <h6 class="mb-3 mt-3"><i class="fas fa-info-circle me-2 text-success"></i>Search Summary</h6>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Total Results:</span>
+                            <span class="fw-semibold" id="totalResultsCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Searched Site:</span>
+                            <span class="fw-semibold" id="searchedSiteInfo">Not found</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Sites in 5km Radius:</span>
+                            <span class="fw-semibold" id="radiusSitesCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>VIP Sites Found:</span>
+                            <span class="fw-semibold" id="vipSitesCount">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -471,13 +545,13 @@
                                     <tr>
                                         <th>Site ID</th>
                                         <th>Site Name</th>
+                                        <th>Enodeb ID</th>
+                                        <th>TAC</th>
                                         <th>Network Type</th>
                                         <th>Site Type</th>
                                         <th>Category VIP POI</th>
                                         <th>Region</th>
                                         <th>Micro Cluster</th>
-                                        <th>Enodeb ID</th>
-                                        <th>TAC</th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailedSiteTableBody">
@@ -550,7 +624,9 @@
         let circleLayer = null;
         let searchedSite = null;
         let sitesWithinRadius = [];
+        let nearestSites = [];
         let hasSearched = false;
+        let labelLayers = [];
 
         // ==================== FUNGSI INISIALISASI ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -572,6 +648,10 @@
             });
             
             document.getElementById('searchSiteName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') applyFilters();
+            });
+            
+            document.getElementById('searchEnodebId').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') applyFilters();
             });
         }
@@ -613,9 +693,10 @@
         function processSiteData(rawData) {
             allSiteData = [];
             
-            // Get all unique regions and clusters for filter dropdowns
+            // Get all unique regions, clusters, and site types for filter dropdowns
             const regions = new Set();
             const clusters = new Set();
+            const siteTypes = new Set();
             
             rawData.forEach(site => {
                 // Clean and validate data
@@ -647,13 +728,17 @@
                     longitude = parseFloat(lngStr);
                 }
                 
-                // Add to regions and clusters sets for filter
+                // Add to filter sets
                 if (cleanedSite["Region"]) {
                     regions.add(cleanedSite["Region"]);
                 }
                 
                 if (cleanedSite["Micro Cluster"]) {
                     clusters.add(cleanedSite["Micro Cluster"]);
+                }
+                
+                if (cleanedSite["Site Type"]) {
+                    siteTypes.add(cleanedSite["Site Type"]);
                 }
                 
                 // Add processed site to data
@@ -675,7 +760,7 @@
             console.log(`Processed ${allSiteData.length} site records`);
             
             // Update filter dropdowns
-            updateFilterDropdowns(Array.from(regions), Array.from(clusters));
+            updateFilterDropdowns(Array.from(regions), Array.from(clusters), Array.from(siteTypes));
             
             // Update KPI with total data
             updateKPIs();
@@ -684,7 +769,7 @@
             document.getElementById('totalSitesCount').textContent = allSiteData.length;
         }
 
-        function updateFilterDropdowns(regions, clusters) {
+        function updateFilterDropdowns(regions, clusters, siteTypes) {
             // Update region filter
             const regionSelect = document.getElementById('filterRegion');
             regionSelect.innerHTML = '<option value="">All Regions</option>';
@@ -712,6 +797,20 @@
                     clusterSelect.appendChild(option);
                 }
             });
+            
+            // Update site type filter
+            const siteTypeSelect = document.getElementById('filterSiteType');
+            siteTypeSelect.innerHTML = '<option value="">All Site Types</option>';
+            
+            siteTypesArray = Array.from(siteTypes).sort();
+            siteTypesArray.forEach(siteType => {
+                if (siteType && siteType.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = siteType;
+                    option.textContent = siteType;
+                    siteTypeSelect.appendChild(option);
+                }
+            });
         }
 
         function getNetworkClass(networkType) {
@@ -728,15 +827,16 @@
             
             const searchSiteId = document.getElementById('searchSiteId').value.trim();
             const searchSiteName = document.getElementById('searchSiteName').value.trim();
+            const searchEnodebId = document.getElementById('searchEnodebId').value.trim();
             const filterNetworkType = document.getElementById('filterNetworkType').value;
             const filterRegion = document.getElementById('filterRegion').value;
             const filterCluster = document.getElementById('filterCluster').value;
+            const filterSiteType = document.getElementById('filterSiteType').value;
             
-            // Reset radius data
+            // Reset data
             searchedSite = null;
             sitesWithinRadius = [];
-            
-            // Reset filtered data
+            nearestSites = [];
             filteredSiteData = [];
             
             // Apply filters
@@ -760,6 +860,14 @@
                 if (searchSiteName && match) {
                     const siteName = site["Site Name"] || '';
                     if (!siteName.toLowerCase().includes(searchSiteName.toLowerCase())) {
+                        match = false;
+                    }
+                }
+                
+                // Enodeb ID search
+                if (searchEnodebId && match) {
+                    const enodebId = site["Enodeb ID"] || '';
+                    if (!enodebId.toLowerCase().includes(searchEnodebId.toLowerCase())) {
                         match = false;
                     }
                 }
@@ -796,6 +904,14 @@
                     }
                 }
                 
+                // Site Type filter
+                if (filterSiteType && match) {
+                    const siteType = site["Site Type"] || '';
+                    if (siteType !== filterSiteType) {
+                        match = false;
+                    }
+                }
+                
                 if (match) {
                     filteredSiteData.push(site);
                 }
@@ -803,10 +919,12 @@
             
             console.log(`Found ${filteredSiteData.length} matching sites`);
             
-            // Jika ada searched site dengan koordinat valid, cari site dalam radius 5km
+            // Jika ada searched site dengan koordinat valid, cari site dalam radius 5km dan 10 site terdekat
             if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"]) {
                 findSitesWithinRadius(searchedSite, 5); // 5 km radius
+                findNearestSites(searchedSite, 10); // 10 site terdekat
                 console.log(`Found ${sitesWithinRadius.length} sites within 5km radius`);
+                console.log(`Found ${nearestSites.length} nearest sites`);
             }
             
             // Tandai bahwa sudah ada pencarian
@@ -837,8 +955,37 @@
                 
                 return distance <= radiusKm;
             });
+        }
+
+        function findNearestSites(centerSite, count) {
+            if (!centerSite["Y_LATITUDE"] || !centerSite["X_LONGITUDE"]) return;
             
-            console.log(`Found ${sitesWithinRadius.length} sites within ${radiusKm}km radius`);
+            const centerLat = centerSite["Y_LATITUDE"];
+            const centerLng = centerSite["X_LONGITUDE"];
+            
+            // Hitung jarak untuk semua site
+            const sitesWithDistance = allSiteData.map(site => {
+                let distance = Infinity;
+                
+                if (site["Site ID"] !== centerSite["Site ID"] && 
+                    site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
+                    distance = calculateDistance(
+                        centerLat, centerLng,
+                        site["Y_LATITUDE"], site["X_LONGITUDE"]
+                    );
+                }
+                
+                return {
+                    ...site,
+                    distance: distance
+                };
+            });
+            
+            // Urutkan berdasarkan jarak terdekat
+            sitesWithDistance.sort((a, b) => a.distance - b.distance);
+            
+            // Ambil 10 site terdekat
+            nearestSites = sitesWithDistance.slice(0, count).filter(site => site.distance < Infinity);
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -863,14 +1010,17 @@
             
             document.getElementById('searchSiteId').value = '';
             document.getElementById('searchSiteName').value = '';
+            document.getElementById('searchEnodebId').value = '';
             document.getElementById('filterNetworkType').value = '';
             document.getElementById('filterRegion').value = '';
             document.getElementById('filterCluster').value = '';
+            document.getElementById('filterSiteType').value = '';
             
             // Reset ke keadaan awal
             hasSearched = false;
             searchedSite = null;
             sitesWithinRadius = [];
+            nearestSites = [];
             filteredSiteData = [];
             
             // Sembunyikan hasil pencarian
@@ -890,6 +1040,7 @@
                 map = null;
                 markers = [];
                 circleLayer = null;
+                labelLayers = [];
             }
             
             console.log("Filters cleared");
@@ -928,8 +1079,11 @@
                 // Update map dengan hasil pencarian
                 updateMapWithSearchResults();
                 
-                // Update breakdown tables
-                updateBreakdownTables();
+                // Update nearest sites list
+                updateNearestSitesList();
+                
+                // Update search summary
+                updateSearchSummary();
                 
                 // Update results table
                 updateResultsTable();
@@ -953,6 +1107,7 @@
                     map = null;
                     markers = [];
                     circleLayer = null;
+                    labelLayers = [];
                 }
                 
                 console.log("No search results found");
@@ -970,9 +1125,12 @@
                 }).addTo(map);
                 console.log("Map initialized");
             } else {
-                // Clear existing markers dan circle
+                // Clear existing markers, labels, dan circle
                 markers.forEach(marker => marker.removeFrom(map));
                 markers = [];
+                
+                labelLayers.forEach(label => label.removeFrom(map));
+                labelLayers = [];
                 
                 if (circleLayer) {
                     circleLayer.removeFrom(map);
@@ -994,9 +1152,7 @@
                 // Marker merah untuk searched site
                 const redIcon = L.divIcon({
                     className: 'searched-site-marker',
-                    html: `<div style="background-color: #ff0000; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;">
-                              <i class="fas fa-search" style="color: white; font-size: 10px;"></i>
-                           </div>`,
+                    html: `<div style="background-color: #ff0000; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.7);"></div>`,
                     iconSize: [24, 24],
                     iconAnchor: [12, 12]
                 });
@@ -1017,6 +1173,19 @@
                 markers.push(marker);
                 bounds.push([lat, lng]);
                 markerCount++;
+                
+                // Tambahkan label Site ID untuk searched site
+                const searchedLabel = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'site-label',
+                        html: `<div class="marker-label marker-label-red">${searchedSite["Site ID"]}</div>`,
+                        iconSize: [60, 20],
+                        iconAnchor: [30, 20]
+                    }),
+                    zIndexOffset: 1000
+                }).addTo(map);
+                
+                labelLayers.push(searchedLabel);
                 
                 // Tambahkan circle 5km radius
                 circleLayer = L.circle([lat, lng], {
@@ -1059,6 +1228,19 @@
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
                         markerCount++;
+                        
+                        // Tambahkan label Site ID untuk site dalam radius
+                        const radiusLabel = L.marker([siteLat, siteLng], {
+                            icon: L.divIcon({
+                                className: 'site-label',
+                                html: `<div class="marker-label marker-label-blue">${site["Site ID"]}</div>`,
+                                iconSize: [60, 20],
+                                iconAnchor: [30, 20]
+                            }),
+                            zIndexOffset: 900
+                        }).addTo(map);
+                        
+                        labelLayers.push(radiusLabel);
                     }
                 });
                 
@@ -1097,6 +1279,19 @@
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
                         markerCount++;
+                        
+                        // Tambahkan label Site ID untuk site lainnya
+                        const defaultLabel = L.marker([siteLat, siteLng], {
+                            icon: L.divIcon({
+                                className: 'site-label',
+                                html: `<div class="marker-label marker-label-gray">${site["Site ID"]}</div>`,
+                                iconSize: [60, 20],
+                                iconAnchor: [30, 20]
+                            }),
+                            zIndexOffset: 800
+                        }).addTo(map);
+                        
+                        labelLayers.push(defaultLabel);
                     }
                 });
             } else {
@@ -1129,6 +1324,19 @@
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
                         markerCount++;
+                        
+                        // Tambahkan label Site ID untuk semua site
+                        const siteLabel = L.marker([siteLat, siteLng], {
+                            icon: L.divIcon({
+                                className: 'site-label',
+                                html: `<div class="marker-label marker-label-red">${site["Site ID"]}</div>`,
+                                iconSize: [60, 20],
+                                iconAnchor: [30, 20]
+                            }),
+                            zIndexOffset: 900
+                        }).addTo(map);
+                        
+                        labelLayers.push(siteLabel);
                     }
                 });
             }
@@ -1140,6 +1348,51 @@
                 map.fitBounds(bounds, { padding: [50, 50] });
                 console.log("Map fitted to bounds");
             }
+        }
+
+        function updateNearestSitesList() {
+            const nearestList = document.getElementById('nearestSitesList');
+            const nearestCount = document.getElementById('nearestSitesCount');
+            
+            if (nearestSites.length > 0) {
+                let html = '';
+                
+                nearestSites.forEach((site, index) => {
+                    html += `
+                        <li>
+                            <div>
+                                <div class="nearest-site-id">${site["Site ID"] || 'N/A'}</div>
+                                <div class="nearest-site-name">${site["Site Name"] || 'N/A'}</div>
+                            </div>
+                            <div class="site-distance">${site.distance.toFixed(2)} km</div>
+                        </li>
+                    `;
+                });
+                
+                nearestList.innerHTML = html;
+                nearestCount.textContent = `${nearestSites.length} sites`;
+            } else if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"]) {
+                nearestList.innerHTML = '<li class="text-center py-4 text-muted">No other sites found with coordinates</li>';
+                nearestCount.textContent = '0 sites';
+            } else {
+                nearestList.innerHTML = '<li class="text-center py-4 text-muted">Search a site with coordinates to see nearest sites</li>';
+                nearestCount.textContent = '0 sites';
+            }
+        }
+
+        function updateSearchSummary() {
+            document.getElementById('totalResultsCount').textContent = filteredSiteData.length;
+            
+            if (searchedSite) {
+                document.getElementById('searchedSiteInfo').textContent = searchedSite["Site ID"];
+            } else {
+                document.getElementById('searchedSiteInfo').textContent = 'Not found';
+            }
+            
+            document.getElementById('radiusSitesCount').textContent = sitesWithinRadius.length;
+            
+            const vipCount = filteredSiteData.filter(site => site.isVIP).length;
+            document.getElementById('vipSitesCount').textContent = vipCount;
         }
 
         function focusOnSite(siteId) {
@@ -1155,64 +1408,6 @@
                     }
                 });
             }
-        }
-
-        function updateBreakdownTables() {
-            const totalSites = filteredSiteData.length;
-            
-            // Network type breakdown
-            const networkBody = document.getElementById('networkBreakdownBody');
-            const networkStats = {};
-            
-            filteredSiteData.forEach(site => {
-                const netType = site["Network Type"] || 'Unknown';
-                networkStats[netType] = (networkStats[netType] || 0) + 1;
-            });
-            
-            let networkHTML = '';
-            const sortedNetworks = Object.entries(networkStats)
-                .sort((a, b) => b[1] - a[1]);
-            
-            sortedNetworks.forEach(([netType, count]) => {
-                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(1) : '0.0';
-                const badgeClass = getNetworkClass(netType);
-                const displayName = netType.split(' ')[0] || netType;
-                networkHTML += `
-                    <tr>
-                        <td class="small"><span class="badge ${badgeClass}">${displayName}</span></td>
-                        <td class="text-end fw-semibold">${count}</td>
-                        <td class="text-end text-muted">${percentage}%</td>
-                    </tr>
-                `;
-            });
-            
-            networkBody.innerHTML = networkHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
-            
-            // Region breakdown
-            const regionBody = document.getElementById('regionBreakdownBody');
-            const regionStats = {};
-            
-            filteredSiteData.forEach(site => {
-                const region = site["Region"] || 'Unknown';
-                regionStats[region] = (regionStats[region] || 0) + 1;
-            });
-            
-            let regionHTML = '';
-            const sortedRegions = Object.entries(regionStats)
-                .sort((a, b) => b[1] - a[1]);
-            
-            sortedRegions.forEach(([region, count]) => {
-                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(1) : '0.0';
-                regionHTML += `
-                    <tr>
-                        <td class="small">${region}</td>
-                        <td class="text-end fw-semibold">${count}</td>
-                        <td class="text-end text-muted">${percentage}%</td>
-                    </tr>
-                `;
-            });
-            
-            regionBody.innerHTML = regionHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
         }
 
         function updateResultsTable() {
@@ -1259,13 +1454,13 @@
                     <tr class="${rowClass}">
                         <td class="fw-semibold">${site["Site ID"] || 'N/A'}${distanceInfo}</td>
                         <td>${site["Site Name"] || 'N/A'}</td>
+                        <td>${enodebId}</td>
+                        <td>${tac}</td>
                         <td><span class="badge ${networkClass}">${networkType}</span></td>
                         <td><span class="badge ${siteTypeClass}">${siteType}</span></td>
                         <td>${vipCategory}</td>
                         <td>${region}</td>
                         <td>${microCluster}</td>
-                        <td>${enodebId}</td>
-                        <td>${tac}</td>
                     </tr>
                 `;
             });
@@ -1355,15 +1550,27 @@
                 return;
             }
             
-            // Get headers (excluding processed fields)
-            const firstSite = filteredSiteData[0];
-            const headers = Object.keys(firstSite).filter(key => 
-                !['isVIP', 'has5G', 'networkClass'].includes(key)
-            );
+            // Urutan kolom sesuai permintaan
+            const headers = [
+                "Site ID", 
+                "Site Name", 
+                "Enodeb ID", 
+                "TAC", 
+                "Network Type", 
+                "Site Type", 
+                "Category VIP POI", 
+                "Region", 
+                "Micro Cluster"
+            ];
             
             // Add distance column if searched site exists
             const exportData = filteredSiteData.map(site => {
-                const siteData = { ...site };
+                const siteData = {};
+                
+                // Map data sesuai urutan headers
+                headers.forEach(header => {
+                    siteData[header] = site[header] || '';
+                });
                 
                 // Add distance info if applicable
                 if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"] &&
@@ -1415,8 +1622,9 @@
             console.log('Filtered Site Data:', filteredSiteData);
             console.log('Searched Site:', searchedSite);
             console.log('Sites within 5km:', sitesWithinRadius);
+            console.log('Nearest Sites:', nearestSites);
             console.log('Has Searched:', hasSearched);
-            alert(`Total sites: ${allSiteData.length}, Search results: ${filteredSiteData.length}, Sites within 5km: ${sitesWithinRadius.length}`);
+            alert(`Total sites: ${allSiteData.length}, Search results: ${filteredSiteData.length}, Sites within 5km: ${sitesWithinRadius.length}, Nearest sites: ${nearestSites.length}`);
         };
 
         // Ekspos fungsi penting
