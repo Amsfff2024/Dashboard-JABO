@@ -212,6 +212,11 @@
         .search-input-group {
             margin-bottom: 10px;
         }
+        .search-info {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -268,13 +273,14 @@
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
                                 </div>
-                                <small class="text-muted">Enter Site ID to search and show 5km radius</small>
+                                <div class="search-info">Enter Site ID to search and show 5km radius</div>
                             </div>
                             <div class="col-md-4">
                                 <div class="input-group input-group-sm search-input-group">
                                     <span class="input-group-text"><i class="fas fa-tower-cell"></i></span>
                                     <input type="text" class="form-control" id="searchSiteName" placeholder="Search by Site Name">
                                 </div>
+                                <div class="search-info">Enter Site Name for general search</div>
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-sm btn-success w-100" onclick="applyFilters()">
@@ -308,6 +314,9 @@
                                     <option value="">All Clusters</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted" id="searchResultsText">Enter search criteria to find sites</small>
                         </div>
                     </div>
                 </div>
@@ -678,8 +687,11 @@
         function updateFilterDropdowns(regions, clusters) {
             // Update region filter
             const regionSelect = document.getElementById('filterRegion');
-            regions.sort().forEach(region => {
-                if (region) {
+            regionSelect.innerHTML = '<option value="">All Regions</option>';
+            
+            regionsArray = Array.from(regions).sort();
+            regionsArray.forEach(region => {
+                if (region && region.trim() !== '') {
                     const option = document.createElement('option');
                     option.value = region;
                     option.textContent = region;
@@ -689,8 +701,11 @@
             
             // Update cluster filter
             const clusterSelect = document.getElementById('filterCluster');
-            clusters.sort().forEach(cluster => {
-                if (cluster) {
+            clusterSelect.innerHTML = '<option value="">All Clusters</option>';
+            
+            clustersArray = Array.from(clusters).sort();
+            clustersArray.forEach(cluster => {
+                if (cluster && cluster.trim() !== '') {
                     const option = document.createElement('option');
                     option.value = cluster;
                     option.textContent = cluster;
@@ -709,8 +724,10 @@
 
         // ==================== FUNGSI FILTER & PENCARIAN ====================
         function applyFilters() {
+            console.log("Applying filters...");
+            
             const searchSiteId = document.getElementById('searchSiteId').value.trim();
-            const searchSiteName = document.getElementById('searchSiteName').value.toLowerCase().trim();
+            const searchSiteName = document.getElementById('searchSiteName').value.trim();
             const filterNetworkType = document.getElementById('filterNetworkType').value;
             const filterRegion = document.getElementById('filterRegion').value;
             const filterCluster = document.getElementById('filterCluster').value;
@@ -719,59 +736,77 @@
             searchedSite = null;
             sitesWithinRadius = [];
             
-            filteredSiteData = allSiteData.filter(site => {
-                // Site ID search (exact match or partial if no exact match)
+            // Reset filtered data
+            filteredSiteData = [];
+            
+            // Apply filters
+            allSiteData.forEach(site => {
+                let match = true;
+                
+                // Site ID search
                 if (searchSiteId) {
-                    const siteIdMatch = site["Site ID"] && site["Site ID"].toLowerCase().includes(searchSiteId.toLowerCase());
-                    if (!siteIdMatch) return false;
-                    
-                    // Jika ada exact match, simpan sebagai searched site
-                    if (site["Site ID"].toLowerCase() === searchSiteId.toLowerCase()) {
-                        searchedSite = site;
+                    const siteId = site["Site ID"] || '';
+                    if (!siteId.toLowerCase().includes(searchSiteId.toLowerCase())) {
+                        match = false;
+                    } else {
+                        // Jika exact match, simpan sebagai searched site
+                        if (siteId.toLowerCase() === searchSiteId.toLowerCase()) {
+                            searchedSite = site;
+                        }
                     }
                 }
                 
                 // Site Name search
-                if (searchSiteName && site["Site Name"] && !site["Site Name"].toLowerCase().includes(searchSiteName)) {
-                    return false;
+                if (searchSiteName && match) {
+                    const siteName = site["Site Name"] || '';
+                    if (!siteName.toLowerCase().includes(searchSiteName.toLowerCase())) {
+                        match = false;
+                    }
                 }
                 
                 // Network Type filter
-                if (filterNetworkType) {
+                if (filterNetworkType && match) {
                     const netType = site["Network Type"] || '';
                     if (filterNetworkType === "5G" && !netType.includes("5G")) {
-                        return false;
-                    }
-                    if (filterNetworkType === "4G" && !netType.includes("4G")) {
-                        return false;
-                    }
-                    if (filterNetworkType === "2G" && !netType.includes("2G")) {
-                        return false;
-                    }
-                    if (filterNetworkType === "2G_4G" && !netType.includes("2G_4G")) {
-                        return false;
-                    }
-                    if (filterNetworkType === "2G_4G_5G" && !netType.includes("2G_4G_5G")) {
-                        return false;
+                        match = false;
+                    } else if (filterNetworkType === "4G" && !netType.includes("4G")) {
+                        match = false;
+                    } else if (filterNetworkType === "2G" && !netType.includes("2G")) {
+                        match = false;
+                    } else if (filterNetworkType === "2G_4G" && !netType.includes("2G_4G")) {
+                        match = false;
+                    } else if (filterNetworkType === "2G_4G_5G" && !netType.includes("2G_4G_5G")) {
+                        match = false;
                     }
                 }
                 
                 // Region filter
-                if (filterRegion && site["Region"] !== filterRegion) {
-                    return false;
+                if (filterRegion && match) {
+                    const region = site["Region"] || '';
+                    if (region !== filterRegion) {
+                        match = false;
+                    }
                 }
                 
                 // Cluster filter
-                if (filterCluster && site["Micro Cluster"] !== filterCluster) {
-                    return false;
+                if (filterCluster && match) {
+                    const cluster = site["Micro Cluster"] || '';
+                    if (cluster !== filterCluster) {
+                        match = false;
+                    }
                 }
                 
-                return true;
+                if (match) {
+                    filteredSiteData.push(site);
+                }
             });
+            
+            console.log(`Found ${filteredSiteData.length} matching sites`);
             
             // Jika ada searched site dengan koordinat valid, cari site dalam radius 5km
             if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"]) {
                 findSitesWithinRadius(searchedSite, 5); // 5 km radius
+                console.log(`Found ${sitesWithinRadius.length} sites within 5km radius`);
             }
             
             // Tandai bahwa sudah ada pencarian
@@ -824,6 +859,8 @@
         }
 
         function clearFilters() {
+            console.log("Clearing filters...");
+            
             document.getElementById('searchSiteId').value = '';
             document.getElementById('searchSiteName').value = '';
             document.getElementById('filterNetworkType').value = '';
@@ -834,11 +871,13 @@
             hasSearched = false;
             searchedSite = null;
             sitesWithinRadius = [];
+            filteredSiteData = [];
             
             // Sembunyikan hasil pencarian
             document.getElementById('resultsContainer').style.display = 'none';
             document.getElementById('searchResultsTable').style.display = 'none';
             document.getElementById('initialStateMessage').style.display = 'block';
+            document.getElementById('noResultsMessage').style.display = 'none';
             document.getElementById('mapLegend').style.display = 'none';
             
             // Update search results text
@@ -852,12 +891,16 @@
                 markers = [];
                 circleLayer = null;
             }
+            
+            console.log("Filters cleared");
         }
 
         // ==================== FUNGSI UPDATE UI HASIL PENCARIAN ====================
         function updateSearchResults() {
             const filteredCount = filteredSiteData.length;
             const totalCount = allSiteData.length;
+            
+            console.log(`Updating search results: ${filteredCount} of ${totalCount} sites`);
             
             // Tampilkan atau sembunyikan container hasil
             if (filteredCount > 0) {
@@ -890,6 +933,8 @@
                 
                 // Update results table
                 updateResultsTable();
+                
+                console.log("Search results displayed successfully");
             } else {
                 // Tampilkan pesan tidak ada hasil
                 document.getElementById('resultsContainer').style.display = 'none';
@@ -909,16 +954,21 @@
                     markers = [];
                     circleLayer = null;
                 }
+                
+                console.log("No search results found");
             }
         }
 
         function updateMapWithSearchResults() {
+            console.log("Updating map with search results...");
+            
             // Inisialisasi map jika belum ada
             if (!map) {
                 map = L.map('map').setView([-6.12, 106.67], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
+                console.log("Map initialized");
             } else {
                 // Clear existing markers dan circle
                 markers.forEach(marker => marker.removeFrom(map));
@@ -928,14 +978,18 @@
                     circleLayer.removeFrom(map);
                     circleLayer = null;
                 }
+                console.log("Existing map cleared");
             }
             
             const bounds = [];
+            let markerCount = 0;
             
             // 1. Tambahkan searched site (jika ada) dengan warna merah
             if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"]) {
                 const lat = searchedSite["Y_LATITUDE"];
                 const lng = searchedSite["X_LONGITUDE"];
+                
+                console.log(`Adding searched site: ${searchedSite["Site ID"]} at ${lat}, ${lng}`);
                 
                 // Marker merah untuk searched site
                 const redIcon = L.divIcon({
@@ -962,6 +1016,7 @@
                 
                 markers.push(marker);
                 bounds.push([lat, lng]);
+                markerCount++;
                 
                 // Tambahkan circle 5km radius
                 circleLayer = L.circle([lat, lng], {
@@ -970,6 +1025,7 @@
                     fillOpacity: 0.1,
                     radius: 5000 // 5km dalam meter
                 }).addTo(map);
+                console.log("5km radius circle added");
                 
                 // Tambahkan sites dalam radius 5km dengan warna biru
                 sitesWithinRadius.forEach(site => {
@@ -1002,8 +1058,11 @@
                         
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
+                        markerCount++;
                     }
                 });
+                
+                console.log(`Added ${sitesWithinRadius.length} sites within 5km radius`);
                 
                 // Tambahkan site lainnya dari filteredData (tidak dalam radius) dengan warna default
                 filteredSiteData.forEach(site => {
@@ -1037,10 +1096,13 @@
                         
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
+                        markerCount++;
                     }
                 });
             } else {
                 // Jika tidak ada searched site dengan koordinat, tampilkan semua filtered sites dengan warna default
+                console.log("No searched site with coordinates, showing all filtered sites");
+                
                 filteredSiteData.forEach(site => {
                     if (site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
                         const siteLat = site["Y_LATITUDE"];
@@ -1066,15 +1128,17 @@
                         
                         markers.push(siteMarker);
                         bounds.push([siteLat, siteLng]);
+                        markerCount++;
                     }
                 });
             }
             
-            console.log(`Added ${markers.length} markers from search results`);
+            console.log(`Added total ${markerCount} markers to map`);
             
             // Fit map to show all markers if there are any
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50] });
+                console.log("Map fitted to bounds");
             }
         }
 
@@ -1207,6 +1271,7 @@
             });
             
             tableBody.innerHTML = tableHTML;
+            console.log(`Updated table with ${filteredSiteData.length} rows`);
         }
 
         function updateKPIs() {
@@ -1219,6 +1284,8 @@
             document.getElementById('kpi5GSites').textContent = sites5G.toLocaleString();
             document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
             document.getElementById('kpiClusters').textContent = uniqueClusters.toLocaleString();
+            
+            console.log(`KPI updated: Total=${totalSites}, 5G=${sites5G}, VIP=${vipSites}, Clusters=${uniqueClusters}`);
         }
 
         // ==================== FUNGSI LOADING & STATUS ====================
