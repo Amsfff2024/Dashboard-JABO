@@ -259,7 +259,7 @@ h1, h2, h3, h4, h5, h6 {
 .horizontal-sidebar {
   display: flex;
   gap: 24px;
-  height: 400px;
+  height: 600px; /* DIUBAH dari 400px menjadi 600px */
   margin-bottom: 24px;
 }
 .horizontal-sidebar > .filter-card,
@@ -316,6 +316,14 @@ h1, h2, h3, h4, h5, h6 {
 .last-update-date {
   font-size: 12px;
   opacity: 0.9;
+}
+/* Tambahan untuk form fields yang lebih tinggi */
+.filter-fields .mb-3 {
+  margin-bottom: 20px !important;
+}
+.filter-fields input, 
+.filter-fields select {
+  height: 46px;
 }
 </style>
 </head>
@@ -387,7 +395,7 @@ h1, h2, h3, h4, h5, h6 {
   </div>
 </div>
 
-<!-- FILTER AND DISTRIBUTION ROW (SEJAJAR KESAMPING) -->
+<!-- FILTER AND DISTRIBUTION ROW (SEJAJAR KESAMPING - 600px TINGGI) -->
 <div class="row mb-4 flex-grow-0">
   <div class="col-12">
     <div class="horizontal-sidebar">
