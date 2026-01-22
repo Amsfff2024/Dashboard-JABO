@@ -135,14 +135,14 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
-        /* SUMMARY CARDS */
+        /* SUMMARY CARDS - TINGGI 900px */
         .summary-card {
             background: white;
             border-radius: 16px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             padding: 1.5rem;
             border: none;
-            height: 600px; /* FIXED HEIGHT */
+            height: 900px; /* DIUBAH MENJADI 900px */
             display: flex;
             flex-direction: column;
         }
@@ -272,10 +272,11 @@
             font-weight: 600;
         }
         
-        /* SITE BREAKDOWN - NO SCROLL */
+        /* SITE BREAKDOWN - DENGAN SCROLL UNTUK TINGGI 900px */
         .site-breakdown, .vip-breakdown {
-            overflow: hidden; /* NO SCROLL */
+            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
             flex: 1;
+            max-height: 380px; /* BATASI TINGGI MAX UNTUK SCROLL */
         }
         
         .site-breakdown table,
@@ -290,7 +291,7 @@
             font-size: 14px;
         }
         
-        /* MAIN TABLE CONTAINER */
+        /* MAIN TABLE CONTAINER - TINGGI 900px */
         .main-table-container {
             background: white;
             border-radius: 16px;
@@ -298,7 +299,7 @@
             border: none;
             overflow: hidden;
             flex: 1;
-            height: 600px; /* FIXED HEIGHT */
+            height: 900px; /* DIUBAH MENJADI 900px */
             display: flex;
             flex-direction: column;
         }
@@ -362,7 +363,11 @@
             .summary-card,
             .main-table-container {
                 height: auto;
-                min-height: 400px;
+                min-height: 600px;
+            }
+            
+            .site-breakdown, .vip-breakdown {
+                max-height: none;
             }
         }
         
@@ -432,6 +437,18 @@
         
         .col-distribution {
             width: 100px;
+        }
+        
+        /* ALARM COUNT TABLE - DENGAN SCROLL UNTUK TINGGI 900px */
+        .alarm-count-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 780px; /* SISAKAN RUANG UNTUK HEADER */
+        }
+        
+        /* STYLING UNTUK TABEL DETAIL ALARM */
+        .detailed-alarm-table {
+            max-height: 780px;
         }
     </style>
 </head>
@@ -594,7 +611,7 @@
                         </div>
                     </div>
                     
-                    <!-- VIP SITES TABLE - TANPA SCROLL & TANPA KOLOM % -->
+                    <!-- VIP SITES TABLE - DENGAN SCROLL -->
                     <div class="vip-sites-section">
                         <h7 class="mb-2"><i class="fas fa-crown me-2 vip-title-icon"></i>VIP Sites with Alarms</h7>
                         <div class="vip-breakdown">
@@ -619,7 +636,7 @@
             <div class="col-lg-7 mb-4">
                 <div class="summary-card">
                     <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
-                    <div class="table-responsive" style="flex: 1; overflow: auto;">
+                    <div class="alarm-count-container">
                         <table class="table table-sm table-hover mb-0">
                             <thead>
                                 <tr>
@@ -662,7 +679,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="main-table-wrapper">
+                    <div class="main-table-wrapper detailed-alarm-table">
                         <div id="loadingSpinner">
                             <div class="text-center">
                                 <div class="spinner-border text-primary mb-3" role="status"></div>
@@ -952,7 +969,7 @@
             const totalAlarms = filteredAlarmData.length;
             const sortedAlarms = Object.entries(alarmCounts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 15);
+                .slice(0, 30); // TAMPILKAN LEBIH BANYAK BARIS UNTUK TINGGI 900px
             
             tbody.innerHTML = '';
             
@@ -998,14 +1015,14 @@
             
             const sortedSites = Object.entries(siteCounts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
+                .slice(0, 20); // TAMPILKAN LEBIH BANYAK SITE UNTUK TINGGI 900px
             
             const totalSites = sortedSites.reduce((sum, [_, count]) => sum + count, 0);
             
             tbody.innerHTML = '';
             
             sortedSites.forEach(([siteId, count]) => {
-                const percentage = ((count / totalSites) * 100).toFixed(0);
+                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(0) : 0;
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -1040,7 +1057,7 @@
             
             const vipSitesArray = Object.values(vipSites)
                 .sort((a, b) => b.count - a.count)
-                .slice(0, 5);
+                .slice(0, 15); // TAMPILKAN LEBIH BANYAK VIP SITES UNTUK TINGGI 900px
             
             if (vipSitesArray.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3" style="font-family: var(--font-inter);">No VIP sites with alarms</td></tr>';
