@@ -277,11 +277,18 @@
             font-weight: 600;
         }
         
-        /* SITE BREAKDOWN - DENGAN SCROLL UNTUK TINGGI 1000px */
-        .site-breakdown, .vip-breakdown {
+        /* SITE BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
+        .site-breakdown {
             overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
             flex: 1;
-            max-height: 450px; /* DITINGKATKAN UNTUK 1000px */
+            max-height: 300px; /* TINGGI UNTUK 10 BARIS */
+        }
+        
+        /* VIP BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
+        .vip-breakdown {
+            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
+            flex: 1;
+            max-height: 250px; /* TINGGI UNTUK 10 BARIS */
         }
         
         .site-breakdown table,
@@ -405,6 +412,9 @@
             margin-top: 2rem;
             padding-top: 1.5rem;
             border-top: 2px solid #ffc107;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .vip-sites-section h7 {
@@ -428,6 +438,8 @@
         .top-sites-section {
             margin-bottom: 1.5rem;
             flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         /* TABLE FIXED LAYOUT */
@@ -501,6 +513,15 @@
             z-index: 1000;
             max-width: 400px;
             word-wrap: break-word;
+        }
+        
+        /* INFO TEXT UNTUK FREEZE PANE */
+        .freeze-pane-info {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: center;
+            font-family: var(--font-inter);
         }
     </style>
 </head>
@@ -644,14 +665,14 @@
             <!-- Site Breakdown Summary (Now with VIP Sites) -->
             <div class="col-lg-5 mb-4">
                 <div class="summary-card">
-                    <!-- TOP AFFECTED SITES SECTION -->
+                    <!-- TOP AFFECTED SITES SECTION - 10 BARIS + SCROLL -->
                     <div class="top-sites-section">
                         <h6 class="mb-3"><i class="fas fa-building me-2 table-title-icon"></i>Top Affected Sites</h6>
                         <div class="site-breakdown">
                             <table class="table table-sm table-borderless mb-0 table-fixed-layout">
                                 <thead>
                                     <tr>
-                                        <th class="small col-site-id" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Site ID</th>
                                         <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 70px;">Alarms</th>
                                         <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Distribution</th>
                                     </tr>
@@ -661,9 +682,12 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="freeze-pane-info">
+                            <i class="fas fa-info-circle me-1"></i> Showing top 10 sites. Scroll for more.
+                        </div>
                     </div>
                     
-                    <!-- VIP SITES TABLE - DENGAN SCROLL -->
+                    <!-- VIP SITES TABLE - 10 BARIS + SCROLL -->
                     <div class="vip-sites-section">
                         <h7 class="mb-2"><i class="fas fa-crown me-2 vip-title-icon"></i>VIP Sites with Alarms</h7>
                         <div class="vip-breakdown">
@@ -679,6 +703,9 @@
                                     <tr><td colspan="3" class="text-center py-3" style="font-family: var(--font-inter);">Loading VIP sites...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="freeze-pane-info">
+                            <i class="fas fa-info-circle me-1"></i> Showing top 10 VIP sites. Scroll for more.
                         </div>
                     </div>
                 </div>
@@ -1078,14 +1105,14 @@
             });
             
             const sortedSites = Object.entries(siteCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 30); // TAMPILKAN LEBIH BANYAK SITE UNTUK TINGGI 1000px
+                .sort((a, b) => b[1] - a[1]);
             
             const totalSites = sortedSites.reduce((sum, [_, count]) => sum + count, 0);
             
             tbody.innerHTML = '';
             
-            sortedSites.forEach(([siteId, count]) => {
+            // HANYA TAMPILKAN 10 BARIS PERTAMA
+            sortedSites.slice(0, 10).forEach(([siteId, count]) => {
                 const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(0) : 0;
                 
                 const row = document.createElement('tr');
@@ -1100,6 +1127,18 @@
                 `;
                 tbody.appendChild(row);
             });
+            
+            // TAMBAHKAN INFORMASI JUMLAH TOTAL SITE
+            const totalUniqueSites = Object.keys(siteCounts).length;
+            if (totalUniqueSites > 10) {
+                const infoRow = document.createElement('tr');
+                infoRow.innerHTML = `
+                    <td colspan="3" class="small text-center py-2" style="font-family: var(--font-inter); color: #6c757d;">
+                        <i class="fas fa-ellipsis-h me-1"></i> ${totalUniqueSites - 10} more sites available (scroll to see all)
+                    </td>
+                `;
+                tbody.appendChild(infoRow);
+            }
         }
 
         function updateVIPSitesTable() {
@@ -1120,8 +1159,7 @@
                 }, {});
             
             const vipSitesArray = Object.values(vipSites)
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 25); // TAMPILKAN LEBIH BANYAK VIP SITES UNTUK TINGGI 1000px
+                .sort((a, b) => b.count - a.count);
             
             if (vipSitesArray.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3" style="font-family: var(--font-inter);">No VIP sites with alarms</td></tr>';
@@ -1130,7 +1168,8 @@
             
             tbody.innerHTML = '';
             
-            vipSitesArray.forEach(site => {
+            // HANYA TAMPILKAN 10 BARIS PERTAMA
+            vipSitesArray.slice(0, 10).forEach(site => {
                 // Potong teks nama site jika terlalu panjang
                 const displaySiteName = site.siteName.length > 25 ? 
                     `<span class="text-expandable" onclick="showFullText(this, '${site.siteName.replace(/'/g, "\\'")}')">${site.siteName.substring(0, 22)}...</span>` :
@@ -1147,6 +1186,19 @@
                 `;
                 tbody.appendChild(row);
             });
+            
+            // TAMBAHKAN INFORMASI JUMLAH TOTAL VIP SITE
+            const totalVIPSites = vipSitesArray.length;
+            if (totalVIPSites > 10) {
+                const infoRow = document.createElement('tr');
+                infoRow.className = 'vip-row';
+                infoRow.innerHTML = `
+                    <td colspan="3" class="small text-center py-2" style="font-family: var(--font-inter); color: #6c757d;">
+                        <i class="fas fa-ellipsis-h me-1"></i> ${totalVIPSites - 10} more VIP sites available (scroll to see all)
+                    </td>
+                `;
+                tbody.appendChild(infoRow);
+            }
         }
 
         function updateDetailedAlarmTable() {
