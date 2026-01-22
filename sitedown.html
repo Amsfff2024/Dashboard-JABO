@@ -116,45 +116,15 @@ body {
   gap: 2px;
 }
 
-/* UPDATED HEADER - GRADASI MERAH YANG LEBIH BAGUS */
+/* HEADER - SAMA SEPERTI JABO DASHBOARD */
 .header-bar {
-  background: linear-gradient(135deg, 
-    #8b0000 0%,      /* Dark Red - untuk depth */
-    #dc143c 25%,     /* Crimson */
-    #dc3545 50%,     /* Bootstrap Red - tetap dominan */
-    #c82333 75%,     /* Darker Red */
-    #a71e2a 100%     /* Very Dark Red */
-  );
+  background: linear-gradient(135deg, #1a2980, #26d0ce);
   color: #fff;
   padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Tambahkan efek shine di header */
-.header-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  animation: shine 3s infinite;
-}
-
-@keyframes shine {
-  0% { left: -100%; }
-  100% { left: 200%; }
 }
 
 .card-summary {
@@ -163,24 +133,12 @@ body {
   transition: all 0.3s ease;
   border: none;
   overflow: hidden;
+  /* HAPUS BORDER LEFT */
 }
 
 .card-summary:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,.15);
-}
-
-/* Card khusus untuk Site Down - sedikit merah */
-.card-summary:nth-child(1) {
-  border-left: 4px solid #dc3545;
-}
-
-.card-summary:nth-child(2) {
-  border-left: 4px solid #28a745;
-}
-
-.card-summary:nth-child(3) {
-  border-left: 4px solid #17a2b8;
 }
 
 .site-id-cell {
@@ -195,7 +153,6 @@ body {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border: none;
-  border-top: 4px solid #dc3545; /* Tambahkan border merah di atas filter */
 }
 
 .loading {
@@ -208,9 +165,9 @@ body {
   font-family: var(--font-inter);
 }
 
-/* Export button dengan gradasi merah */
+/* Export button dengan gradasi hijau seperti JABO dashboard */
 .export-btn {
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: linear-gradient(135deg, #10b981, #34d399);
   border: none;
   font-weight: 600;
   border-radius: 10px;
@@ -218,9 +175,9 @@ body {
 }
 
 .export-btn:hover {
-  background: linear-gradient(135deg, #c82333, #a71e2a);
+  background: linear-gradient(135deg, #0da271, #2bbd88);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .main-table-container {
@@ -257,9 +214,9 @@ body {
   background-color: #f1f5f9;
 }
 
-/* Button primary dengan gradasi merah */
+/* Button primary dengan gradasi biru seperti JABO dashboard */
 .btn-primary {
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   border: none;
   font-weight: 600;
   border-radius: 10px;
@@ -267,7 +224,7 @@ body {
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #6c757d, #495057);
+  background: linear-gradient(135deg, #64748b, #475569);
   border: none;
   font-weight: 600;
   border-radius: 10px;
@@ -279,7 +236,7 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-#totalAlarm, #uniqueSite, #agingCount {
+#totalAlarm, #uniqueSite, #agingCount, #aging1Day {
   font-family: var(--font-plus-jakarta);
   font-weight: 800;
   color: #1e293b;
@@ -340,11 +297,6 @@ body {
   #lastUpdate {
     font-size: 12px;
   }
-  
-  /* Hentikan animasi shine di mobile untuk performance */
-  .header-bar::before {
-    display: none;
-  }
 }
 
 /* Additional spacing */
@@ -369,32 +321,11 @@ body {
 .table tbody td {
   vertical-align: middle;
 }
-
-/* Badge merah untuk site down */
-.badge.bg-danger {
-  background: linear-gradient(135deg, #dc3545, #c82333) !important;
-  border: none;
-}
-
-/* Tambahkan sedikit efek glow pada loading spinner */
-.spinner-border.text-danger {
-  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
-}
-
-/* Animation untuk refresh button */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.btn-light:active i.fa-sync-alt {
-  animation: spin 0.5s linear;
-}
 </style>
 </head>
 <body>
 
-<!-- HEADER dengan gradasi merah -->
+<!-- HEADER dengan gradasi biru seperti JABO dashboard -->
 <div class="header-bar">
   <h5 class="m-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">
     <i class="fas fa-exclamation-triangle me-2"></i>Site Down Alarms Dashboard
@@ -414,9 +345,10 @@ body {
 
 <div class="container-fluid p-4 dashboard-content">
 
-<!-- SUMMARY ROW -->
+<!-- SUMMARY ROW - 4 KOLOM -->
 <div class="row g-4 mb-4">
-  <div class="col-md-4">
+  <!-- Total Site Down Alarms -->
+  <div class="col-md-3">
     <div class="card card-summary p-4">
       <div class="d-flex justify-content-between align-items-center">
         <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
@@ -426,7 +358,9 @@ body {
       <h3 id="totalAlarm" class="mt-3">0</h3>
     </div>
   </div>
-  <div class="col-md-4">
+  
+  <!-- Unique Sites -->
+  <div class="col-md-3">
     <div class="card card-summary p-4">
       <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
         <i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Sites
@@ -434,10 +368,22 @@ body {
       <h3 id="uniqueSite" class="mt-3">0</h3>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="card card-summary p-4" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb);">
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #0c5460;">
-        <i class="fas fa-clock me-2 text-info"></i>Aging > 2 Days
+  
+  <!-- Aging < 1 Day (NEW) -->
+  <div class="col-md-3">
+    <div class="card card-summary p-4" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb);">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #1565c0;">
+        <i class="fas fa-clock me-2"></i>Aging &lt; 1 Day
+      </div>
+      <h4 id="aging1Day" class="mt-3">0</h4>
+    </div>
+  </div>
+  
+  <!-- Aging > 2 Days -->
+  <div class="col-md-3">
+    <div class="card card-summary p-4" style="background: linear-gradient(135deg, #fce4ec, #f8bbd9);">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #ad1457;">
+        <i class="fas fa-clock me-2"></i>Aging &gt; 2 Days
       </div>
       <h4 id="agingCount" class="mt-3">0</h4>
     </div>
@@ -633,7 +579,7 @@ function processData(data) {
           const hours = Math.floor((agingDays - days) * 24);
           agingText = `${days}d ${hours}h`;
           
-          if (agingDays <= 1) {
+          if (agingDays < 1) {
             agingClass = "aging-badge-1";
           } else if (agingDays <= 2) {
             agingClass = "aging-badge-2";
@@ -717,18 +663,24 @@ function render() {
         </td>
       </tr>
     `;
-    updateSummary(0, 0, 0);
+    updateSummary(0, 0, 0, 0);
     return;
   }
   
   // Initialize counters
+  let aging1Day = 0;
   let aging2Days = 0;
   
   filteredData.forEach(item => {
     const tr = document.createElement("tr");
     
     // Update counters
-    if (item._agingDays > 2) aging2Days++;
+    if (item._agingDays < 1) {
+      aging1Day++;
+    }
+    if (item._agingDays > 2) {
+      aging2Days++;
+    }
     
     // Format timestamp for display
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
@@ -756,7 +708,7 @@ function render() {
   // Update summary
   const total = filteredData.length;
   const uniqueSites = new Set(filteredData.map(d => d["SiteID"]).filter(Boolean)).size;
-  updateSummary(total, uniqueSites, aging2Days);
+  updateSummary(total, uniqueSites, aging1Day, aging2Days);
 }
 
 function formatDateTime(datetimeStr) {
@@ -776,10 +728,11 @@ function formatDateTime(datetimeStr) {
   }
 }
 
-function updateSummary(total, unique, aging) {
+function updateSummary(total, unique, aging1Day, aging2Days) {
   document.getElementById("totalAlarm").innerText = total;
   document.getElementById("uniqueSite").innerText = unique;
-  document.getElementById("agingCount").innerText = aging;
+  document.getElementById("aging1Day").innerText = aging1Day;
+  document.getElementById("agingCount").innerText = aging2Days;
   
   // Update filtered count
   document.getElementById("filteredCount").innerText = 
