@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <!-- PapaParse untuk parsing CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     
     <style>
         :root {
@@ -138,6 +140,22 @@
         .marker-nokia { background-color: var(--nokia-blue); }
         .marker-ericsson { background-color: var(--ericsson-blue); }
         .marker-zte { background-color: var(--zte-green); }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
     </style>
 </head>
 <body>
@@ -161,6 +179,36 @@
 
     <!-- Main Container -->
     <div class="container py-4">
+        <!-- Data Control Row -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card kpi-card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="card-title mb-0"><i class="fas fa-database me-2"></i>Data Source Control</h6>
+                                <small class="text-muted" id="dataSourceInfo">Loading data source information...</small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
+                                        <i class="fas fa-redo me-1"></i> Refresh Data
+                                    </button>
+                                    <div class="form-check form-switch d-flex align-items-center">
+                                        <input class="form-check-input me-2" type="checkbox" id="autoRefreshToggle" checked>
+                                        <label class="form-check-label small" for="autoRefreshToggle">Auto (30s)</label>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="showSampleData()">
+                                        <i class="fas fa-eye me-1"></i> Sample
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Search and Filter Row -->
         <div class="row mb-4">
             <div class="col-md-6">
@@ -204,7 +252,6 @@
                             <div class="col-md-4">
                                 <select class="form-select form-select-sm" id="filterRegion">
                                     <option value="">All Regions</option>
-                                    <option value="OUTER JAKARTA">OUTER JAKARTA</option>
                                 </select>
                             </div>
                         </div>
@@ -230,7 +277,7 @@
                             </button>
                         </div>
                         <div class="mt-2">
-                            <small class="text-muted" id="searchResultsText">Showing <span id="siteCount">0</span> sites</small>
+                            <small class="text-muted" id="searchResultsText">Loading data...</small>
                         </div>
                     </div>
                 </div>
@@ -424,6 +471,16 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading site data from CSV...</p>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -433,8 +490,12 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
-        // ==================== DATA SAMPLE ====================
-        const siteData = [
+        // ==================== KONFIGURASI ====================
+        // URL CSV dari Google Sheets Anda
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=1983955719&single=true&output=csv";
+        
+        // Data sample untuk fallback
+        const SAMPLE_DATA = [
             {
                 "Site ID": "11TGR0158",
                 "Site Name": "VIP_GEDUNG_OPERASI_EP",
@@ -482,70 +543,6 @@
                 "Micro Cluster": "MC-KARAWACI",
                 "Enodeb ID": "311284",
                 "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGR0286",
-                "Site Name": "VIP_BENDA1_ST",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.685,
-                "Y_LATITUDE": -6.10906,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-KARAWACI",
-                "Enodeb ID": "312669",
-                "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGN0577",
-                "Site Name": "VIP_TELUK_NAGA_TGN2_ST",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G (GSM_LTE)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.6515,
-                "Y_LATITUDE": -6.10287,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-SEPATAN",
-                "Enodeb ID": "312992",
-                "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGN0569",
-                "Site Name": "VIP_RAWARENGAS_EP",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.6465,
-                "Y_LATITUDE": -6.10803,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-SEPATAN",
-                "Enodeb ID": "310163",
-                "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGN0593",
-                "Site Name": "VIP_BELIMBING_TGN_PL",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.6685,
-                "Y_LATITUDE": -6.09836,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-SEPATAN",
-                "Enodeb ID": "313782",
-                "TAC": "30172"
             }
         ];
 
@@ -557,6 +554,8 @@
         let dataTable;
         let vendorStats = {};
         let networkStats = {};
+        let autoRefreshInterval = null;
+        let refreshCountdown = 30;
 
         // ==================== FUNGSI INISIALISASI ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -564,20 +563,20 @@
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
             
+            // Setup auto-refresh toggle
+            document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
+            
             // Initialize DataTables
             initializeDataTable();
             
             // Initialize map
             initializeMap();
             
-            // Process data
-            processSiteData();
+            // Fetch data from CSV
+            fetchCSVData();
             
             // Setup event listeners
             setupEventListeners();
-            
-            // Update UI
-            updateDashboard();
         });
 
         function initializeDataTable() {
@@ -599,46 +598,6 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-        }
-
-        function processSiteData() {
-            allSiteData = siteData.map(site => {
-                return {
-                    ...site,
-                    isVIP: site["Category VIP POI"] && site["Category VIP POI"].includes("Airport Route"),
-                    has5G: site["Network Type"] && site["Network Type"].includes("5G"),
-                    vendorClass: `vendor-${site.Vendor.toLowerCase()}`,
-                    networkClass: getNetworkClass(site["Network Type"])
-                };
-            });
-            
-            filteredSiteData = [...allSiteData];
-            
-            // Calculate statistics
-            calculateStatistics();
-        }
-
-        function getNetworkClass(networkType) {
-            if (!networkType) return 'badge-2g';
-            if (networkType.includes("5G")) return 'badge-5g';
-            if (networkType.includes("4G")) return 'badge-4g';
-            return 'badge-2g';
-        }
-
-        function calculateStatistics() {
-            // Vendor statistics
-            vendorStats = {};
-            allSiteData.forEach(site => {
-                const vendor = site.Vendor || 'Unknown';
-                vendorStats[vendor] = (vendorStats[vendor] || 0) + 1;
-            });
-            
-            // Network type statistics
-            networkStats = {};
-            allSiteData.forEach(site => {
-                const netType = site["Network Type"] || 'Unknown';
-                networkStats[netType] = (networkStats[netType] || 0) + 1;
-            });
         }
 
         function setupEventListeners() {
@@ -679,6 +638,165 @@
             document.getElementById('showZTE').addEventListener('change', updateMapMarkers);
         }
 
+        // ==================== FUNGSI DATA CSV ====================
+        function fetchCSVData() {
+            console.log('Fetching CSV data from:', CSV_URL);
+            showLoading(true);
+            updateDashboardStatus('loading', 'Fetching data...');
+            
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    console.log('CSV parsing complete. Rows:', results.data.length);
+                    
+                    if (results.data && results.data.length > 0) {
+                        processSiteData(results.data);
+                        updateDashboardStatus('success', 'Data loaded successfully');
+                        updateDataSourceInfo(`Loaded ${results.data.length} sites from CSV`);
+                    } else {
+                        console.warn('No data found in CSV, using sample data');
+                        processSiteData(SAMPLE_DATA);
+                        updateDashboardStatus('warning', 'Using sample data');
+                        updateDataSourceInfo('Using sample data - CSV was empty');
+                    }
+                    showLoading(false);
+                    updateLastUpdatedTime();
+                    resetAutoRefreshCountdown();
+                },
+                error: function(error) {
+                    console.error('Error fetching CSV:', error);
+                    console.log('Using sample data instead');
+                    processSiteData(SAMPLE_DATA);
+                    updateDashboardStatus('warning', 'Using sample data');
+                    updateDataSourceInfo('Using sample data - CSV load failed');
+                    showLoading(false);
+                    updateLastUpdatedTime();
+                }
+            });
+        }
+
+        function processSiteData(rawData) {
+            allSiteData = [];
+            vendorStats = {};
+            networkStats = {};
+            
+            // Get all unique regions for filter dropdown
+            const regions = new Set();
+            
+            rawData.forEach(site => {
+                // Clean and validate data
+                const cleanedSite = {};
+                
+                // Process each column
+                Object.keys(site).forEach(key => {
+                    const value = site[key] ? site[key].toString().trim() : '';
+                    
+                    // Clean column names (remove extra spaces, etc.)
+                    const cleanKey = key.trim();
+                    cleanedSite[cleanKey] = value;
+                });
+                
+                // Ensure we have required fields
+                if (!cleanedSite["Site ID"] && !cleanedSite["Site Name"]) {
+                    console.warn('Skipping row without Site ID or Site Name:', cleanedSite);
+                    return;
+                }
+                
+                // Parse coordinates
+                let latitude = null;
+                let longitude = null;
+                
+                if (cleanedSite["Y_LATITUDE"]) {
+                    const latStr = cleanedSite["Y_LATITUDE"].toString().replace(',', '.');
+                    latitude = parseFloat(latStr);
+                }
+                
+                if (cleanedSite["X_LONGITUDE"]) {
+                    const lngStr = cleanedSite["X_LONGITUDE"].toString().replace(',', '.');
+                    longitude = parseFloat(lngStr);
+                }
+                
+                // Add to regions set for filter
+                if (cleanedSite["Region"]) {
+                    regions.add(cleanedSite["Region"]);
+                }
+                
+                // Add processed site to data
+                const processedSite = {
+                    ...cleanedSite,
+                    "Y_LATITUDE": latitude,
+                    "X_LONGITUDE": longitude,
+                    isVIP: cleanedSite["Category VIP POI"] && 
+                          (cleanedSite["Category VIP POI"].includes("VIP") || 
+                           cleanedSite["Category VIP POI"].includes("Airport") ||
+                           cleanedSite["Category VIP POI"].includes("POI")),
+                    has5G: cleanedSite["Network Type"] && cleanedSite["Network Type"].includes("5G"),
+                    vendorClass: `vendor-${(cleanedSite["Vendor"] || 'unknown').toLowerCase()}`,
+                    networkClass: getNetworkClass(cleanedSite["Network Type"])
+                };
+                
+                allSiteData.push(processedSite);
+                
+                // Update statistics
+                const vendor = cleanedSite["Vendor"] || 'Unknown';
+                vendorStats[vendor] = (vendorStats[vendor] || 0) + 1;
+                
+                const netType = cleanedSite["Network Type"] || 'Unknown';
+                networkStats[netType] = (networkStats[netType] || 0) + 1;
+            });
+            
+            console.log(`Processed ${allSiteData.length} site records`);
+            console.log(`Found ${Object.keys(vendorStats).length} vendors`);
+            console.log(`Found ${Object.keys(networkStats).length} network types`);
+            
+            // Update region filter dropdown
+            updateRegionFilter(Array.from(regions));
+            
+            // Reset filtered data to all data
+            filteredSiteData = [...allSiteData];
+            
+            // Update UI
+            updateDashboard();
+        }
+
+        function updateRegionFilter(regions) {
+            const regionSelect = document.getElementById('filterRegion');
+            const currentValue = regionSelect.value;
+            
+            // Clear existing options except first
+            while (regionSelect.options.length > 1) {
+                regionSelect.remove(1);
+            }
+            
+            // Sort regions alphabetically
+            regions.sort();
+            
+            // Add new options
+            regions.forEach(region => {
+                if (region) { // Skip empty regions
+                    const option = document.createElement('option');
+                    option.value = region;
+                    option.textContent = region;
+                    regionSelect.appendChild(option);
+                }
+            });
+            
+            // Restore previous selection if it still exists
+            if (currentValue && Array.from(regionSelect.options).some(opt => opt.value === currentValue)) {
+                regionSelect.value = currentValue;
+            }
+        }
+
+        function getNetworkClass(networkType) {
+            if (!networkType) return 'badge-2g';
+            if (networkType.includes("5G")) return 'badge-5g';
+            if (networkType.includes("4G")) return 'badge-4g';
+            if (networkType.includes("2G")) return 'badge-2g';
+            return 'badge-2g';
+        }
+
         // ==================== FUNGSI FILTER ====================
         function applyFilters() {
             const searchSiteId = document.getElementById('searchSiteId').value.toLowerCase();
@@ -689,41 +807,42 @@
             
             filteredSiteData = allSiteData.filter(site => {
                 // Site ID search
-                if (searchSiteId && !site["Site ID"].toLowerCase().includes(searchSiteId)) {
+                if (searchSiteId && site["Site ID"] && !site["Site ID"].toLowerCase().includes(searchSiteId)) {
                     return false;
                 }
                 
                 // Site Name search
-                if (searchSiteName && !site["Site Name"].toLowerCase().includes(searchSiteName)) {
+                if (searchSiteName && site["Site Name"] && !site["Site Name"].toLowerCase().includes(searchSiteName)) {
                     return false;
                 }
                 
                 // Vendor filter
-                if (filterVendor && site.Vendor !== filterVendor) {
+                if (filterVendor && site["Vendor"] !== filterVendor) {
                     return false;
                 }
                 
                 // Network Type filter
                 if (filterNetworkType) {
-                    if (filterNetworkType === "5G" && !site["Network Type"].includes("5G")) {
+                    const netType = site["Network Type"] || '';
+                    if (filterNetworkType === "5G" && !netType.includes("5G")) {
                         return false;
                     }
-                    if (filterNetworkType === "4G" && !site["Network Type"].includes("4G")) {
+                    if (filterNetworkType === "4G" && !netType.includes("4G")) {
                         return false;
                     }
-                    if (filterNetworkType === "2G" && !site["Network Type"].includes("2G")) {
+                    if (filterNetworkType === "2G" && !netType.includes("2G")) {
                         return false;
                     }
-                    if (filterNetworkType === "2G_4G" && site["Network Type"] !== "2G_4G (GSM_LTE)") {
+                    if (filterNetworkType === "2G_4G" && !netType.includes("2G_4G")) {
                         return false;
                     }
-                    if (filterNetworkType === "2G_4G_5G" && site["Network Type"] !== "2G_4G_5G (GL_NR)") {
+                    if (filterNetworkType === "2G_4G_5G" && !netType.includes("2G_4G_5G")) {
                         return false;
                     }
                 }
                 
                 // Region filter
-                if (filterRegion && site.Region !== filterRegion) {
+                if (filterRegion && site["Region"] !== filterRegion) {
                     return false;
                 }
                 
@@ -766,12 +885,12 @@
             const totalSites = filteredSiteData.length;
             const sites5G = filteredSiteData.filter(site => site.has5G).length;
             const vipSites = filteredSiteData.filter(site => site.isVIP).length;
-            const uniqueClusters = new Set(filteredSiteData.map(site => site["Micro Cluster"])).size;
+            const uniqueClusters = new Set(filteredSiteData.map(site => site["Micro Cluster"]).filter(Boolean)).size;
             
-            document.getElementById('kpiTotalSites').textContent = totalSites;
-            document.getElementById('kpi5GSites').textContent = sites5G;
-            document.getElementById('kpiVipSites').textContent = vipSites;
-            document.getElementById('kpiClusters').textContent = uniqueClusters;
+            document.getElementById('kpiTotalSites').textContent = totalSites.toLocaleString();
+            document.getElementById('kpi5GSites').textContent = sites5G.toLocaleString();
+            document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
+            document.getElementById('kpiClusters').textContent = uniqueClusters.toLocaleString();
         }
 
         function updateDataTable() {
@@ -780,17 +899,31 @@
             
             // Add new data
             filteredSiteData.forEach(site => {
+                const vendor = site["Vendor"] || 'Unknown';
+                const networkType = site["Network Type"] || 'Unknown';
+                const siteType = site["Site Type"] || 'Unknown';
+                const region = site["Region"] || 'N/A';
+                const microCluster = site["Micro Cluster"] || 'N/A';
+                const enodebId = site["Enodeb ID"] || 'N/A';
+                const tac = site["TAC"] || 'N/A';
+                const vipCategory = site["Category VIP POI"] || 'N/A';
+                
+                const vendorClass = vendor.toLowerCase();
+                const networkClass = getNetworkClass(networkType);
+                const siteTypeClass = siteType.includes("VIP") ? "badge-vip" : 
+                                    siteType.includes("Micro") ? "badge-micro" : "badge-macro";
+                
                 const row = [
-                    site["Site ID"],
-                    site["Site Name"],
-                    `<span class="badge badge-${site.Vendor.toLowerCase()}">${site.Vendor}</span>`,
-                    `<span class="badge ${getNetworkClass(site["Network Type"])}">${site["Network Type"]}</span>`,
-                    `<span class="badge ${site["Site Type"] === "VIP_Macro" ? "badge-vip" : "badge-macro"}">${site["Site Type"]}</span>`,
-                    site["Category VIP POI"],
-                    site.Region,
-                    site["Micro Cluster"],
-                    site["Enodeb ID"],
-                    site.TAC
+                    site["Site ID"] || 'N/A',
+                    site["Site Name"] || 'N/A',
+                    `<span class="badge badge-${vendorClass}">${vendor}</span>`,
+                    `<span class="badge ${networkClass}">${networkType}</span>`,
+                    `<span class="badge ${siteTypeClass}">${siteType}</span>`,
+                    vipCategory,
+                    region,
+                    microCluster,
+                    enodebId,
+                    tac
                 ];
                 
                 dataTable.row.add(row);
@@ -800,11 +933,13 @@
             dataTable.draw();
             
             // Add VIP row highlighting
-            $('#detailedSiteTable tbody tr').each(function(index) {
-                if (filteredSiteData[index] && filteredSiteData[index].isVIP) {
-                    $(this).addClass('vip-row');
-                }
-            });
+            setTimeout(() => {
+                $('#detailedSiteTable tbody tr').each(function(index) {
+                    if (filteredSiteData[index] && filteredSiteData[index].isVIP) {
+                        $(this).addClass('vip-row');
+                    }
+                });
+            }, 100);
         }
 
         function updateMapMarkers() {
@@ -818,15 +953,19 @@
             const showEricsson = document.getElementById('showEricsson').checked;
             const showZTE = document.getElementById('showZTE').checked;
             
+            // Count sites with coordinates
+            let sitesWithCoords = 0;
+            
             // Add markers for filtered sites
             filteredSiteData.forEach(site => {
                 // Check if vendor should be shown
                 let shouldShow = false;
-                switch(site.Vendor) {
-                    case 'Huawei': shouldShow = showHuawei; break;
-                    case 'Nokia': shouldShow = showNokia; break;
-                    case 'Ericsson': shouldShow = showEricsson; break;
-                    case 'ZTE': shouldShow = showZTE; break;
+                const vendor = site["Vendor"] || '';
+                switch(vendor.toLowerCase()) {
+                    case 'huawei': shouldShow = showHuawei; break;
+                    case 'nokia': shouldShow = showNokia; break;
+                    case 'ericsson': shouldShow = showEricsson; break;
+                    case 'zte': shouldShow = showZTE; break;
                     default: shouldShow = true;
                 }
                 
@@ -835,20 +974,34 @@
                 const lat = site["Y_LATITUDE"];
                 const lng = site["X_LONGITUDE"];
                 
-                if (lat && lng) {
+                // Check if coordinates are valid
+                if (lat && lng && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                    sitesWithCoords++;
+                    
                     // Determine marker color based on vendor
                     let markerColor = 'blue';
-                    switch(site.Vendor) {
-                        case 'Huawei': markerColor = 'red'; break;
-                        case 'Nokia': markerColor = 'blue'; break;
-                        case 'Ericsson': markerColor = 'darkblue'; break;
-                        case 'ZTE': markerColor = 'green'; break;
+                    switch(vendor.toLowerCase()) {
+                        case 'huawei': markerColor = 'red'; break;
+                        case 'nokia': markerColor = 'blue'; break;
+                        case 'ericsson': markerColor = 'darkblue'; break;
+                        case 'zte': markerColor = 'green'; break;
+                        default: markerColor = 'gray';
+                    }
+                    
+                    // Determine icon based on site type
+                    let iconHtml = '';
+                    if (site.isVIP) {
+                        iconHtml = `<div style="background-color: ${markerColor}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid gold; box-shadow: 0 0 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                      <i class="fas fa-crown" style="color: white; font-size: 10px;"></i>
+                                   </div>`;
+                    } else {
+                        iconHtml = `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`;
                     }
                     
                     // Create custom icon
                     const icon = L.divIcon({
                         className: 'custom-marker',
-                        html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                        html: iconHtml,
                         iconSize: [24, 24],
                         iconAnchor: [12, 12]
                     });
@@ -856,12 +1009,12 @@
                     const marker = L.marker([lat, lng], { icon: icon })
                         .addTo(map)
                         .bindPopup(`
-                            <strong>${site["Site Name"]}</strong><br>
+                            <strong>${site["Site Name"] || site["Site ID"]}</strong><br>
                             <small>${site["Site ID"]}</small><br>
-                            Vendor: ${site.Vendor}<br>
-                            Network: ${site["Network Type"]}<br>
-                            Type: ${site["Site Type"]}<br>
-                            Cluster: ${site["Micro Cluster"]}<br>
+                            Vendor: ${vendor}<br>
+                            Network: ${site["Network Type"] || 'N/A'}<br>
+                            Type: ${site["Site Type"] || 'N/A'}<br>
+                            Cluster: ${site["Micro Cluster"] || 'N/A'}<br>
                             <button class="btn btn-sm btn-primary mt-1" onclick="focusOnSite('${site["Site ID"]}')">
                                 View Details
                             </button>
@@ -871,10 +1024,15 @@
                 }
             });
             
+            console.log(`Added ${sitesWithCoords} markers with valid coordinates`);
+            
             // Fit map to show all markers if there are any
             if (markers.length > 0) {
                 const group = new L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.1));
+            } else {
+                // Default to Jakarta if no markers
+                map.setView([-6.12, 106.67], 12);
             }
         }
 
@@ -902,11 +1060,15 @@
             const currentVendorStats = {};
             
             filteredSiteData.forEach(site => {
-                const vendor = site.Vendor || 'Unknown';
+                const vendor = site["Vendor"] || 'Unknown';
                 currentVendorStats[vendor] = (currentVendorStats[vendor] || 0) + 1;
             });
             
-            Object.entries(currentVendorStats).forEach(([vendor, count]) => {
+            // Sort vendors by count (descending)
+            const sortedVendors = Object.entries(currentVendorStats)
+                .sort((a, b) => b[1] - a[1]);
+            
+            sortedVendors.forEach(([vendor, count]) => {
                 const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
                 vendorHTML += `
                     <tr>
@@ -930,12 +1092,17 @@
                 currentNetworkStats[netType] = (currentNetworkStats[netType] || 0) + 1;
             });
             
-            Object.entries(currentNetworkStats).forEach(([netType, count]) => {
+            // Sort network types by count (descending)
+            const sortedNetworks = Object.entries(currentNetworkStats)
+                .sort((a, b) => b[1] - a[1]);
+            
+            sortedNetworks.forEach(([netType, count]) => {
                 const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
                 const badgeClass = getNetworkClass(netType);
+                const displayName = netType.split(' ')[0] || netType;
                 networkHTML += `
                     <tr>
-                        <td class="small"><span class="badge ${badgeClass}">${netType.split(' ')[0]}</span></td>
+                        <td class="small"><span class="badge ${badgeClass}">${displayName}</span></td>
                         <td class="text-end fw-semibold">${count}</td>
                         <td class="text-end text-muted">${percentage}%</td>
                     </tr>
@@ -946,19 +1113,62 @@
         }
 
         function updateSiteCount() {
-            document.getElementById('siteCount').textContent = filteredSiteData.length;
+            const totalSites = allSiteData.length;
+            const filteredSites = filteredSiteData.length;
+            document.getElementById('siteCount').textContent = filteredSites.toLocaleString();
+            
             const resultsText = document.getElementById('searchResultsText');
             
-            if (filteredSiteData.length < allSiteData.length) {
-                resultsText.innerHTML = `Showing <span class="fw-semibold">${filteredSiteData.length}</span> of <span class="fw-semibold">${allSiteData.length}</span> sites`;
+            if (filteredSites < totalSites) {
+                resultsText.innerHTML = `Showing <span class="fw-semibold">${filteredSites.toLocaleString()}</span> of <span class="fw-semibold">${totalSites.toLocaleString()}</span> sites`;
                 resultsText.className = 'text-success fw-semibold';
             } else {
-                resultsText.innerHTML = `Showing all <span class="fw-semibold">${allSiteData.length}</span> sites`;
+                resultsText.innerHTML = `Showing all <span class="fw-semibold">${totalSites.toLocaleString()}</span> sites`;
                 resultsText.className = 'text-muted';
             }
         }
 
-        // ==================== FUNGSI WAKTU ====================
+        // ==================== FUNGSI LOADING & STATUS ====================
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function updateDashboardStatus(status, message) {
+            const statusBadge = document.getElementById('dashboardStatus');
+            
+            switch(status) {
+                case 'loading':
+                    statusBadge.className = 'badge bg-warning';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                case 'success':
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                case 'warning':
+                    statusBadge.className = 'badge bg-warning';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                case 'error':
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    break;
+                default:
+                    statusBadge.className = 'badge bg-secondary';
+                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+            }
+        }
+
+        function updateDataSourceInfo(message) {
+            document.getElementById('dataSourceInfo').textContent = message;
+        }
+
+        // ==================== FUNGSI WAKTU & AUTO-REFRESH ====================
         function updateCurrentTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { 
@@ -978,6 +1188,36 @@
             document.getElementById('lastUpdatedTime').textContent = timeString;
         }
 
+        function resetAutoRefreshCountdown() {
+            refreshCountdown = 30;
+        }
+
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            
+            if (toggle.checked) {
+                // Start auto-refresh interval
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                
+                autoRefreshInterval = setInterval(() => {
+                    refreshCountdown--;
+                    
+                    if (refreshCountdown <= 0) {
+                        fetchCSVData();
+                    }
+                }, 1000);
+                
+                console.log('Auto-refresh enabled (30 seconds)');
+            } else {
+                // Stop auto-refresh
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                console.log('Auto-refresh disabled');
+            }
+        }
+
         // ==================== FUNGSI EKSPOR ====================
         function exportToCSV() {
             if (filteredSiteData.length === 0) {
@@ -985,8 +1225,9 @@
                 return;
             }
             
-            // Get headers from first object
-            const headers = Object.keys(filteredSiteData[0]).filter(key => 
+            // Get headers from first object (excluding processed fields)
+            const firstSite = filteredSiteData[0];
+            const headers = Object.keys(firstSite).filter(key => 
                 !['isVIP', 'has5G', 'vendorClass', 'networkClass'].includes(key)
             );
             
@@ -995,9 +1236,9 @@
                 headers.join(','),
                 ...filteredSiteData.map(site => {
                     return headers.map(header => {
-                        const value = site[header];
+                        const value = site[header] || '';
                         // Escape quotes and wrap in quotes if contains comma
-                        const escaped = ('' + value).replace(/"/g, '""');
+                        const escaped = value.toString().replace(/"/g, '""');
                         return escaped.includes(',') ? `"${escaped}"` : escaped;
                     }).join(',');
                 })
@@ -1016,6 +1257,13 @@
         }
 
         // ==================== FUNGSI BANTUAN ====================
+        function showSampleData() {
+            processSiteData(SAMPLE_DATA);
+            updateDashboardStatus('info', 'Showing sample data');
+            updateDataSourceInfo('Showing sample data');
+            alert('Now showing sample data. Click "Refresh Data" to load from CSV again.');
+        }
+
         window.debugData = function() {
             console.log('All Site Data:', allSiteData);
             console.log('Filtered Site Data:', filteredSiteData);
@@ -1024,8 +1272,13 @@
             alert(`Data logged to console. Total sites: ${allSiteData.length}`);
         };
 
-        // Initialize
-        updateLastUpdatedTime();
+        // Ekspos fungsi penting untuk debugging
+        window.fetchCSVData = fetchCSVData;
+        window.applyFilters = applyFilters;
+        window.clearFilters = clearFilters;
+        window.exportToCSV = exportToCSV;
+        window.focusOnSite = focusOnSite;
+        window.showSampleData = showSampleData;
     </script>
 
     <!-- Bootstrap JS -->
