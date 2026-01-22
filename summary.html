@@ -272,13 +272,9 @@
         
         /* SITE BREAKDOWN */
         .site-breakdown, .vip-breakdown {
-            max-height: 250px;
+            max-height: 200px;
             overflow-y: auto;
             margin-bottom: 10px;
-        }
-        
-        .vip-breakdown {
-            max-height: 200px;
         }
         
         /* FORM SWITCH */
@@ -355,10 +351,10 @@
             min-height: calc(100vh - 80px);
         }
         
-        /* VIP SITES SECTION */
+        /* VIP SITES SECTION - DITURUNKAN POSISINYA */
         .vip-sites-section {
-            margin-top: 1rem;
-            padding-top: 1rem;
+            margin-top: 2rem; /* DITAMBAHKAN MARGIN ATAS */
+            padding-top: 1.5rem; /* DITAMBAHKAN PADDING ATAS */
             border-top: 2px solid #ffc107;
         }
         
@@ -367,6 +363,7 @@
             font-weight: 700;
             font-size: 14px;
             color: #996500;
+            margin-bottom: 1rem; /* DITAMBAHKAN MARGIN BAWAH */
         }
         
         /* TAB HEADER ICONS */
@@ -376,6 +373,16 @@
         
         .vip-title-icon {
             color: #ffc107;
+        }
+        
+        /* SPACING UNTUK TOP AFFECTED SITES */
+        .top-sites-section {
+            margin-bottom: 1.5rem; /* JARAK DENGAN VIP SITES */
+        }
+        
+        /* HEIGHT ADJUSTMENT */
+        .summary-card {
+            min-height: 500px; /* MEMASTIKAN CUKUP TINGGI */
         }
     </style>
 </head>
@@ -519,23 +526,26 @@
             <!-- Site Breakdown Summary (Now with VIP Sites) -->
             <div class="col-lg-5 mb-4">
                 <div class="summary-card">
-                    <h6 class="mb-3"><i class="fas fa-building me-2 table-title-icon"></i>Top Affected Sites</h6>
-                    <div class="site-breakdown">
-                        <table class="table table-sm table-borderless mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
-                                    <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Alarms</th>
-                                    <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Distribution</th>
-                                </tr>
-                            </thead>
-                            <tbody id="siteBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
-                            </tbody>
-                        </table>
+                    <!-- TOP AFFECTED SITES SECTION -->
+                    <div class="top-sites-section">
+                        <h6 class="mb-3"><i class="fas fa-building me-2 table-title-icon"></i>Top Affected Sites</h6>
+                        <div class="site-breakdown">
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
+                                        <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Alarms</th>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="siteBreakdownBody">
+                                    <tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     
-                    <!-- VIP SITES TABLE - NEW ADDITION -->
+                    <!-- VIP SITES TABLE - DITURUNKAN POSISINYA -->
                     <div class="vip-sites-section">
                         <h7 class="mb-2"><i class="fas fa-crown me-2 vip-title-icon"></i>VIP Sites with Alarms</h7>
                         <div class="vip-breakdown">
