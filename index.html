@@ -106,8 +106,7 @@ body {
 
 .sidebar.collapsed .title span,
 .sidebar.collapsed a span,
-.sidebar.collapsed .footer,
-.sidebar.collapsed .badge {
+.sidebar.collapsed .footer {
   display: none;
 }
 
@@ -442,31 +441,6 @@ input:checked + .slider:before {
   transform: translateX(28px);
 }
 
-/* Badge for notifications */
-.badge {
-  background: linear-gradient(90deg, #ff4757, #ff6b81);
-  color: white;
-  border-radius: 20px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-left: auto;
-  font-family: var(--font-body);
-  letter-spacing: 0.02em;
-  box-shadow: 0 3px 8px rgba(255, 71, 87, 0.3);
-  min-width: 24px;
-  text-align: center;
-}
-
-.sidebar.collapsed .badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  font-size: 0.65rem;
-  padding: 3px 6px;
-  min-width: 18px;
-}
-
 /* Animation for page transitions */
 @keyframes fadeIn {
   from { 
@@ -592,19 +566,16 @@ input:checked + .slider:before {
       <a class="active" onclick="loadPage(this,'vipalarm.html')">
         <i class="bi bi-bell-fill"></i>
         <span>VIP ALARM</span>
-        <span class="badge">3</span>
       </a>
 
       <a onclick="loadPage(this,'celldown.html')">
         <i class="bi bi-wifi-off"></i>
         <span>CELL DOWN</span>
-        <span class="badge">12</span>
       </a>
 
       <a onclick="loadPage(this,'sitedown.html')">
         <i class="bi bi-diagram-3-fill"></i>
         <span>SITE DOWN</span>
-        <span class="badge">5</span>
       </a>
 
       <a onclick="loadPage(this,'summary.html')">
@@ -615,11 +586,6 @@ input:checked + .slider:before {
       <a onclick="loadPage(this,'siteinfo.html')">
         <i class="bi bi-info-circle-fill"></i>
         <span>SITE INFO</span>
-      </a>
-      
-      <a onclick="loadPage(this,'settings.html')">
-        <i class="bi bi-gear-fill"></i>
-        <span>SETTINGS</span>
       </a>
     </div>
     
@@ -773,45 +739,6 @@ function loadPage(el, url) {
     sidebarToggle.querySelector('i').classList.add('bi-layout-sidebar-inset');
   }
 }
-
-// Update badge counts (simulated)
-function updateBadges() {
-  const badges = {
-    'VIP ALARM': Math.floor(Math.random() * 10),
-    'CELL DOWN': Math.floor(Math.random() * 25),
-    'SITE DOWN': Math.floor(Math.random() * 15)
-  };
-  
-  document.querySelectorAll('.sidebar a').forEach(link => {
-    const textElement = link.querySelector('span');
-    if (textElement) {
-      const text = textElement.innerText;
-      if (badges[text]) {
-        let badge = link.querySelector('.badge');
-        if (!badge) {
-          badge = document.createElement('span');
-          badge.className = 'badge';
-          link.appendChild(badge);
-        }
-        badge.innerText = badges[text];
-        
-        // Add animation for new alerts
-        if (parseInt(badge.innerText) > 0) {
-          badge.style.animation = 'pulse 1s 3';
-          setTimeout(() => {
-            badge.style.animation = '';
-          }, 3000);
-        }
-      }
-    }
-  });
-}
-
-// Initialize badges
-updateBadges();
-
-// Update badges every 30 seconds
-setInterval(updateBadges, 30000);
 
 // Handle responsive behavior
 window.addEventListener('resize', function() {
