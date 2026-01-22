@@ -10,17 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS for maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <!-- PapaParse untuk parsing CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     
     <style>
         :root {
             --huawei-red: #ff0000;
-            --nokia-blue: #124191;
-            --ericsson-blue: #00205b;
-            --zte-green: #0b9e00;
             --dark-blue: #2c3e50;
             --vip-gold: #ffc107;
         }
@@ -71,9 +66,6 @@
             align-items: center;
             height: 300px;
         }
-        .cursor-pointer {
-            cursor: pointer;
-        }
         .search-highlight {
             background-color: #fff3cd;
             font-weight: 600;
@@ -83,9 +75,6 @@
             overflow-y: auto;
         }
         .badge-huawei { background-color: var(--huawei-red); color: white; }
-        .badge-nokia { background-color: var(--nokia-blue); color: white; }
-        .badge-ericsson { background-color: var(--ericsson-blue); color: white; }
-        .badge-zte { background-color: var(--zte-green); color: white; }
         .badge-2g { background-color: #6c757d; color: white; }
         .badge-4g { background-color: #28a745; color: white; }
         .badge-5g { background-color: #007bff; color: white; }
@@ -105,41 +94,12 @@
             border-radius: 5px !important;
             overflow: hidden;
         }
-        .vendor-filter {
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 1000;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
         .table thead th {
             background-color: var(--dark-blue);
             color: white;
             font-weight: 600;
             border: none;
         }
-        .dataTables_wrapper .dataTables_filter input {
-            border-radius: 5px;
-            border: 1px solid #ced4da;
-            padding: 5px 10px;
-        }
-        .cluster-marker {
-            background-color: #007bff;
-            border-radius: 50%;
-            color: white;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .marker-huawei { background-color: var(--huawei-red); }
-        .marker-nokia { background-color: var(--nokia-blue); }
-        .marker-ericsson { background-color: var(--ericsson-blue); }
-        .marker-zte { background-color: var(--zte-green); }
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -155,6 +115,35 @@
         .spinner-border {
             width: 3rem;
             height: 3rem;
+        }
+        .search-results-table {
+            margin-top: 20px;
+        }
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .empty-map {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        .action-buttons {
+            margin-bottom: 15px;
+        }
+        .map-instructions {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-align: center;
         }
     </style>
 </head>
@@ -186,22 +175,13 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-6">
-                                <h6 class="card-title mb-0"><i class="fas fa-database me-2"></i>Data Source Control</h6>
+                                <h6 class="card-title mb-0"><i class="fas fa-database me-2"></i>Data Source</h6>
                                 <small class="text-muted" id="dataSourceInfo">Loading data source information...</small>
                             </div>
                             <div class="col-md-6 text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
-                                        <i class="fas fa-redo me-1"></i> Refresh Data
-                                    </button>
-                                    <div class="form-check form-switch d-flex align-items-center">
-                                        <input class="form-check-input me-2" type="checkbox" id="autoRefreshToggle" checked>
-                                        <label class="form-check-label small" for="autoRefreshToggle">Auto (30s)</label>
-                                    </div>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="showSampleData()">
-                                        <i class="fas fa-eye me-1"></i> Sample
-                                    </button>
-                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
+                                    <i class="fas fa-redo me-1"></i> Refresh Data
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -211,34 +191,30 @@
 
         <!-- Search and Filter Row -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="card kpi-card">
                     <div class="card-body">
-                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Sites</h6>
+                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search Site Information</h6>
                         <div class="row g-2">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text"><i class="fas fa-tower-cell"></i></span>
                                     <input type="text" class="form-control" id="searchSiteName" placeholder="Search by Site Name">
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-sm btn-success w-100" onclick="applyFilters()">
+                                    <i class="fas fa-search me-1"></i> Search
+                                </button>
+                            </div>
                         </div>
                         <div class="row g-2 mt-2">
-                            <div class="col-md-4">
-                                <select class="form-select form-select-sm" id="filterVendor">
-                                    <option value="">All Vendors</option>
-                                    <option value="Huawei">Huawei</option>
-                                    <option value="Nokia">Nokia</option>
-                                    <option value="Ericsson">Ericsson</option>
-                                    <option value="ZTE">ZTE</option>
-                                </select>
-                            </div>
                             <div class="col-md-4">
                                 <select class="form-select form-select-sm" id="filterNetworkType">
                                     <option value="">All Network Types</option>
@@ -254,30 +230,32 @@
                                     <option value="">All Regions</option>
                                 </select>
                             </div>
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" id="filterCluster">
+                                    <option value="">All Clusters</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card kpi-card">
                     <div class="card-body">
                         <h6 class="card-title mb-3"><i class="fas fa-filter me-2"></i>Quick Filters</h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-sm btn-outline-danger" data-vendor="Huawei">
-                                <i class="fas fa-server me-1"></i> Huawei
-                            </button>
                             <button class="btn btn-sm btn-outline-primary" data-network="5G">
                                 <i class="fas fa-bolt me-1"></i> 5G Sites
                             </button>
                             <button class="btn btn-sm btn-outline-warning" data-vip="true">
                                 <i class="fas fa-crown me-1"></i> VIP Sites
                             </button>
-                            <button class="btn btn-sm btn-outline-success" onclick="clearFilters()">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
                                 <i class="fas fa-eraser me-1"></i> Clear All
                             </button>
                         </div>
                         <div class="mt-2">
-                            <small class="text-muted" id="searchResultsText">Loading data...</small>
+                            <small class="text-muted" id="searchResultsText">Enter search criteria to find sites</small>
                         </div>
                     </div>
                 </div>
@@ -298,7 +276,7 @@
                                 <i class="fas fa-tower-cell fa-2x text-danger opacity-50"></i>
                             </div>
                         </div>
-                        <div class="small text-muted mt-2">All network sites</div>
+                        <div class="small text-muted mt-2">Total sites in database</div>
                     </div>
                 </div>
             </div>
@@ -352,65 +330,50 @@
             </div>
         </div>
 
-        <!-- Map and Summary Row -->
-        <div class="row mb-4">
+        <!-- Map and Summary Row (Tampil setelah pencarian) -->
+        <div class="row mb-4" id="resultsContainer" style="display: none;">
             <!-- Map -->
             <div class="col-lg-8 mb-4">
                 <div class="summary-card map-container">
                     <h6 class="mb-3"><i class="fas fa-map me-2 text-primary"></i>Site Locations</h6>
-                    <div id="map"></div>
-                    <div class="vendor-filter">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showHuawei" checked>
-                            <label class="form-check-label" for="showHuawei">Huawei</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showNokia" checked>
-                            <label class="form-check-label" for="showNokia">Nokia</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showEricsson" checked>
-                            <label class="form-check-label" for="showEricsson">Ericsson</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showZTE" checked>
-                            <label class="form-check-label" for="showZTE">ZTE</label>
-                        </div>
+                    <div class="map-instructions">
+                        <i class="fas fa-info-circle me-1"></i> Map shows site locations based on search results
                     </div>
+                    <div id="map"></div>
                 </div>
             </div>
             
             <!-- Site Breakdown Summary -->
             <div class="col-lg-4 mb-4">
                 <div class="summary-card">
-                    <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-info"></i>Site Distribution</h6>
+                    <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-info"></i>Search Results Distribution</h6>
                     <div class="site-breakdown">
                         <table class="table table-sm table-borderless mb-0">
                             <thead>
                                 <tr>
-                                    <th class="small">Vendor</th>
-                                    <th class="small text-end">Sites</th>
-                                    <th class="small" style="width: 100px;">%</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vendorBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <h6 class="mb-3 mt-3"><i class="fas fa-network-wired me-2 text-success"></i>Network Type</h6>
-                    <div class="site-breakdown">
-                        <table class="table table-sm table-borderless mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="small">Type</th>
+                                    <th class="small">Network Type</th>
                                     <th class="small text-end">Sites</th>
                                     <th class="small" style="width: 100px;">%</th>
                                 </tr>
                             </thead>
                             <tbody id="networkBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                                <tr><td colspan="3" class="text-center py-4">No search results</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3 mt-3"><i class="fas fa-map-marker-alt me-2 text-success"></i>Region Distribution</h6>
+                    <div class="site-breakdown">
+                        <table class="table table-sm table-borderless mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="small">Region</th>
+                                    <th class="small text-end">Sites</th>
+                                    <th class="small" style="width: 100px;">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="regionBreakdownBody">
+                                <tr><td colspan="3" class="text-center py-4">No search results</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -418,15 +381,15 @@
             </div>
         </div>
 
-        <!-- Detailed Site Table -->
-        <div class="row">
+        <!-- Search Results Table (Tampil setelah pencarian) -->
+        <div class="row" id="searchResultsTable" style="display: none;">
             <div class="col-12">
-                <div class="card">
+                <div class="card search-results-table">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detailed Site Information</h6>
-                        <div>
+                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Search Results</h6>
+                        <div class="action-buttons">
                             <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
-                                <i class="fas fa-download me-1"></i> Export CSV
+                                <i class="fas fa-download me-1"></i> Export Results
                             </button>
                         </div>
                     </div>
@@ -437,7 +400,6 @@
                                     <tr>
                                         <th>Site ID</th>
                                         <th>Site Name</th>
-                                        <th>Vendor</th>
                                         <th>Network Type</th>
                                         <th>Site Type</th>
                                         <th>Category VIP POI</th>
@@ -448,10 +410,29 @@
                                     </tr>
                                 </thead>
                                 <tbody id="detailedSiteTableBody">
-                                    <!-- Data akan diisi oleh JavaScript -->
+                                    <!-- Data akan diisi setelah pencarian -->
                                 </tbody>
                             </table>
                         </div>
+                        <div id="noResultsMessage" class="no-data-message" style="display: none;">
+                            <i class="fas fa-search fa-2x mb-3"></i>
+                            <h5>No sites found</h5>
+                            <p>Try adjusting your search criteria</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Initial State Message -->
+        <div class="row mt-4" id="initialStateMessage">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Search Site Information</h4>
+                        <p class="text-muted">Use the search filters above to find specific sites</p>
+                        <p class="small text-muted">Total sites in database: <span id="totalSitesCount">0</span></p>
                     </div>
                 </div>
             </div>
@@ -465,7 +446,7 @@
                         <i class="fas fa-database me-1"></i> Site Information Dashboard | 
                         <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span>
                     </p>
-                    <p class="mb-0">Click on map markers to view site details. Use filters to customize the view.</p>
+                    <p class="mb-0">Enter search criteria to view site details and locations on map</p>
                 </div>
             </div>
         </div>
@@ -484,93 +465,27 @@
     <!-- JavaScript -->
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- jQuery and DataTables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
         // ==================== KONFIGURASI ====================
         // URL CSV dari Google Sheets Anda
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=1983955719&single=true&output=csv";
-        
-        // Data sample untuk fallback
-        const SAMPLE_DATA = [
-            {
-                "Site ID": "11TGR0158",
-                "Site Name": "VIP_GEDUNG_OPERASI_EP",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.644,
-                "Y_LATITUDE": -6.13164,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-KARAWACI",
-                "Enodeb ID": "310036",
-                "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGR0284",
-                "Site Name": "VIP_HOTEL_ORCHARD_CENGKARENG_CM",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.6848,
-                "Y_LATITUDE": -6.11473,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-KARAWACI",
-                "Enodeb ID": "310142",
-                "TAC": "30172"
-            },
-            {
-                "Site ID": "11TGR0304",
-                "Site Name": "VIP_RAWABOKOR_TB",
-                "Vendor": "Huawei",
-                "Network Type": "2G_4G_5G (GL_NR)",
-                "Site Type": "VIP_Macro",
-                "Category VIP POI": "Airport Route_Airport Route",
-                "X_LONGITUDE": 106.6902,
-                "Y_LATITUDE": -6.11349,
-                "NMS": "100.91.254.5",
-                "Circle": "JAYA",
-                "Region": "OUTER JAKARTA",
-                "Micro Cluster": "MC-KARAWACI",
-                "Enodeb ID": "311284",
-                "TAC": "30172"
-            }
-        ];
 
         // ==================== VARIABEL GLOBAL ====================
         let allSiteData = [];
         let filteredSiteData = [];
-        let map;
+        let map = null;
         let markers = [];
-        let dataTable;
         let vendorStats = {};
         let networkStats = {};
-        let autoRefreshInterval = null;
-        let refreshCountdown = 30;
+        let regionStats = {};
+        let hasSearched = false;
 
         // ==================== FUNGSI INISIALISASI ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Site Info Dashboard initializing...');
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
-            
-            // Setup auto-refresh toggle
-            document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
-            
-            // Initialize DataTables
-            initializeDataTable();
-            
-            // Initialize map
-            initializeMap();
             
             // Fetch data from CSV
             fetchCSVData();
@@ -579,45 +494,8 @@
             setupEventListeners();
         });
 
-        function initializeDataTable() {
-            dataTable = $('#detailedSiteTable').DataTable({
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                order: [[0, 'asc']],
-                language: {
-                    search: "Filter sites:"
-                }
-            });
-        }
-
-        function initializeMap() {
-            // Initialize map centered on Jakarta area
-            map = L.map('map').setView([-6.12, 106.67], 12);
-            
-            // Add tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-        }
-
         function setupEventListeners() {
-            // Search inputs
-            document.getElementById('searchSiteId').addEventListener('input', applyFilters);
-            document.getElementById('searchSiteName').addEventListener('input', applyFilters);
-            
-            // Filter selects
-            document.getElementById('filterVendor').addEventListener('change', applyFilters);
-            document.getElementById('filterNetworkType').addEventListener('change', applyFilters);
-            document.getElementById('filterRegion').addEventListener('change', applyFilters);
-            
             // Quick filter buttons
-            document.querySelectorAll('[data-vendor]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.getElementById('filterVendor').value = this.getAttribute('data-vendor');
-                    applyFilters();
-                });
-            });
-            
             document.querySelectorAll('[data-network]').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.getElementById('filterNetworkType').value = this.getAttribute('data-network');
@@ -631,11 +509,14 @@
                 });
             });
             
-            // Map vendor filters
-            document.getElementById('showHuawei').addEventListener('change', updateMapMarkers);
-            document.getElementById('showNokia').addEventListener('change', updateMapMarkers);
-            document.getElementById('showEricsson').addEventListener('change', updateMapMarkers);
-            document.getElementById('showZTE').addEventListener('change', updateMapMarkers);
+            // Enter key untuk search
+            document.getElementById('searchSiteId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') applyFilters();
+            });
+            
+            document.getElementById('searchSiteName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') applyFilters();
+            });
         }
 
         // ==================== FUNGSI DATA CSV ====================
@@ -656,23 +537,18 @@
                         updateDashboardStatus('success', 'Data loaded successfully');
                         updateDataSourceInfo(`Loaded ${results.data.length} sites from CSV`);
                     } else {
-                        console.warn('No data found in CSV, using sample data');
-                        processSiteData(SAMPLE_DATA);
-                        updateDashboardStatus('warning', 'Using sample data');
-                        updateDataSourceInfo('Using sample data - CSV was empty');
+                        console.warn('No data found in CSV');
+                        updateDashboardStatus('error', 'No data found');
+                        updateDataSourceInfo('No data found in CSV');
                     }
                     showLoading(false);
                     updateLastUpdatedTime();
-                    resetAutoRefreshCountdown();
                 },
                 error: function(error) {
                     console.error('Error fetching CSV:', error);
-                    console.log('Using sample data instead');
-                    processSiteData(SAMPLE_DATA);
-                    updateDashboardStatus('warning', 'Using sample data');
-                    updateDataSourceInfo('Using sample data - CSV load failed');
+                    updateDashboardStatus('error', 'Failed to load data');
+                    updateDataSourceInfo('Failed to load CSV data');
                     showLoading(false);
-                    updateLastUpdatedTime();
                 }
             });
         }
@@ -681,9 +557,11 @@
             allSiteData = [];
             vendorStats = {};
             networkStats = {};
+            regionStats = {};
             
-            // Get all unique regions for filter dropdown
+            // Get all unique regions and clusters for filter dropdowns
             const regions = new Set();
+            const clusters = new Set();
             
             rawData.forEach(site => {
                 // Clean and validate data
@@ -692,19 +570,16 @@
                 // Process each column
                 Object.keys(site).forEach(key => {
                     const value = site[key] ? site[key].toString().trim() : '';
-                    
-                    // Clean column names (remove extra spaces, etc.)
                     const cleanKey = key.trim();
                     cleanedSite[cleanKey] = value;
                 });
                 
                 // Ensure we have required fields
                 if (!cleanedSite["Site ID"] && !cleanedSite["Site Name"]) {
-                    console.warn('Skipping row without Site ID or Site Name:', cleanedSite);
                     return;
                 }
                 
-                // Parse coordinates
+                // Parse coordinates (tapi tidak langsung ditampilkan di map)
                 let latitude = null;
                 let longitude = null;
                 
@@ -718,9 +593,13 @@
                     longitude = parseFloat(lngStr);
                 }
                 
-                // Add to regions set for filter
+                // Add to regions and clusters sets for filter
                 if (cleanedSite["Region"]) {
                     regions.add(cleanedSite["Region"]);
+                }
+                
+                if (cleanedSite["Micro Cluster"]) {
+                    clusters.add(cleanedSite["Micro Cluster"]);
                 }
                 
                 // Add processed site to data
@@ -733,7 +612,6 @@
                            cleanedSite["Category VIP POI"].includes("Airport") ||
                            cleanedSite["Category VIP POI"].includes("POI")),
                     has5G: cleanedSite["Network Type"] && cleanedSite["Network Type"].includes("5G"),
-                    vendorClass: `vendor-${(cleanedSite["Vendor"] || 'unknown').toLowerCase()}`,
                     networkClass: getNetworkClass(cleanedSite["Network Type"])
                 };
                 
@@ -745,37 +623,31 @@
                 
                 const netType = cleanedSite["Network Type"] || 'Unknown';
                 networkStats[netType] = (networkStats[netType] || 0) + 1;
+                
+                const region = cleanedSite["Region"] || 'Unknown';
+                regionStats[region] = (regionStats[region] || 0) + 1;
             });
             
             console.log(`Processed ${allSiteData.length} site records`);
             console.log(`Found ${Object.keys(vendorStats).length} vendors`);
             console.log(`Found ${Object.keys(networkStats).length} network types`);
+            console.log(`Found ${Object.keys(regionStats).length} regions`);
             
-            // Update region filter dropdown
-            updateRegionFilter(Array.from(regions));
+            // Update filter dropdowns
+            updateFilterDropdowns(Array.from(regions), Array.from(clusters));
             
-            // Reset filtered data to all data
-            filteredSiteData = [...allSiteData];
+            // Update KPI with total data
+            updateKPIs();
             
-            // Update UI
-            updateDashboard();
+            // Update total sites count in initial message
+            document.getElementById('totalSitesCount').textContent = allSiteData.length;
         }
 
-        function updateRegionFilter(regions) {
+        function updateFilterDropdowns(regions, clusters) {
+            // Update region filter
             const regionSelect = document.getElementById('filterRegion');
-            const currentValue = regionSelect.value;
-            
-            // Clear existing options except first
-            while (regionSelect.options.length > 1) {
-                regionSelect.remove(1);
-            }
-            
-            // Sort regions alphabetically
-            regions.sort();
-            
-            // Add new options
-            regions.forEach(region => {
-                if (region) { // Skip empty regions
+            regions.sort().forEach(region => {
+                if (region) {
                     const option = document.createElement('option');
                     option.value = region;
                     option.textContent = region;
@@ -783,10 +655,16 @@
                 }
             });
             
-            // Restore previous selection if it still exists
-            if (currentValue && Array.from(regionSelect.options).some(opt => opt.value === currentValue)) {
-                regionSelect.value = currentValue;
-            }
+            // Update cluster filter
+            const clusterSelect = document.getElementById('filterCluster');
+            clusters.sort().forEach(cluster => {
+                if (cluster) {
+                    const option = document.createElement('option');
+                    option.value = cluster;
+                    option.textContent = cluster;
+                    clusterSelect.appendChild(option);
+                }
+            });
         }
 
         function getNetworkClass(networkType) {
@@ -797,13 +675,13 @@
             return 'badge-2g';
         }
 
-        // ==================== FUNGSI FILTER ====================
+        // ==================== FUNGSI FILTER & PENCARIAN ====================
         function applyFilters() {
             const searchSiteId = document.getElementById('searchSiteId').value.toLowerCase();
             const searchSiteName = document.getElementById('searchSiteName').value.toLowerCase();
-            const filterVendor = document.getElementById('filterVendor').value;
             const filterNetworkType = document.getElementById('filterNetworkType').value;
             const filterRegion = document.getElementById('filterRegion').value;
+            const filterCluster = document.getElementById('filterCluster').value;
             
             filteredSiteData = allSiteData.filter(site => {
                 // Site ID search
@@ -813,11 +691,6 @@
                 
                 // Site Name search
                 if (searchSiteName && site["Site Name"] && !site["Site Name"].toLowerCase().includes(searchSiteName)) {
-                    return false;
-                }
-                
-                // Vendor filter
-                if (filterVendor && site["Vendor"] !== filterVendor) {
                     return false;
                 }
                 
@@ -846,131 +719,125 @@
                     return false;
                 }
                 
+                // Cluster filter
+                if (filterCluster && site["Micro Cluster"] !== filterCluster) {
+                    return false;
+                }
+                
                 return true;
             });
             
-            updateDashboard();
+            // Tandai bahwa sudah ada pencarian
+            hasSearched = true;
+            
+            // Update UI dengan hasil pencarian
+            updateSearchResults();
         }
 
         function filterByVIP() {
-            filteredSiteData = allSiteData.filter(site => site.isVIP);
-            document.getElementById('filterVendor').value = '';
-            document.getElementById('filterNetworkType').value = '';
-            document.getElementById('filterRegion').value = '';
             document.getElementById('searchSiteId').value = '';
             document.getElementById('searchSiteName').value = '';
-            updateDashboard();
+            document.getElementById('filterNetworkType').value = '';
+            document.getElementById('filterRegion').value = '';
+            document.getElementById('filterCluster').value = '';
+            
+            filteredSiteData = allSiteData.filter(site => site.isVIP);
+            hasSearched = true;
+            updateSearchResults();
         }
 
         function clearFilters() {
             document.getElementById('searchSiteId').value = '';
             document.getElementById('searchSiteName').value = '';
-            document.getElementById('filterVendor').value = '';
             document.getElementById('filterNetworkType').value = '';
             document.getElementById('filterRegion').value = '';
-            filteredSiteData = [...allSiteData];
-            updateDashboard();
-        }
-
-        // ==================== FUNGSI UPDATE UI ====================
-        function updateDashboard() {
-            updateKPIs();
-            updateDataTable();
-            updateMapMarkers();
-            updateBreakdownTables();
-            updateSiteCount();
-        }
-
-        function updateKPIs() {
-            const totalSites = filteredSiteData.length;
-            const sites5G = filteredSiteData.filter(site => site.has5G).length;
-            const vipSites = filteredSiteData.filter(site => site.isVIP).length;
-            const uniqueClusters = new Set(filteredSiteData.map(site => site["Micro Cluster"]).filter(Boolean)).size;
+            document.getElementById('filterCluster').value = '';
             
-            document.getElementById('kpiTotalSites').textContent = totalSites.toLocaleString();
-            document.getElementById('kpi5GSites').textContent = sites5G.toLocaleString();
-            document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
-            document.getElementById('kpiClusters').textContent = uniqueClusters.toLocaleString();
+            // Reset ke keadaan awal
+            hasSearched = false;
+            
+            // Sembunyikan hasil pencarian
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('searchResultsTable').style.display = 'none';
+            document.getElementById('initialStateMessage').style.display = 'block';
+            
+            // Update search results text
+            document.getElementById('searchResultsText').textContent = 'Enter search criteria to find sites';
+            document.getElementById('searchResultsText').className = 'text-muted';
+            
+            // Clear map jika ada
+            if (map) {
+                map.remove();
+                map = null;
+                markers = [];
+            }
         }
 
-        function updateDataTable() {
-            // Clear existing data
-            dataTable.clear();
+        // ==================== FUNGSI UPDATE UI HASIL PENCARIAN ====================
+        function updateSearchResults() {
+            const filteredCount = filteredSiteData.length;
+            const totalCount = allSiteData.length;
             
-            // Add new data
-            filteredSiteData.forEach(site => {
-                const vendor = site["Vendor"] || 'Unknown';
-                const networkType = site["Network Type"] || 'Unknown';
-                const siteType = site["Site Type"] || 'Unknown';
-                const region = site["Region"] || 'N/A';
-                const microCluster = site["Micro Cluster"] || 'N/A';
-                const enodebId = site["Enodeb ID"] || 'N/A';
-                const tac = site["TAC"] || 'N/A';
-                const vipCategory = site["Category VIP POI"] || 'N/A';
+            // Tampilkan atau sembunyikan container hasil
+            if (filteredCount > 0) {
+                // Tampilkan hasil pencarian
+                document.getElementById('resultsContainer').style.display = 'flex';
+                document.getElementById('searchResultsTable').style.display = 'block';
+                document.getElementById('initialStateMessage').style.display = 'none';
+                document.getElementById('noResultsMessage').style.display = 'none';
                 
-                const vendorClass = vendor.toLowerCase();
-                const networkClass = getNetworkClass(networkType);
-                const siteTypeClass = siteType.includes("VIP") ? "badge-vip" : 
-                                    siteType.includes("Micro") ? "badge-micro" : "badge-macro";
+                // Update search results text
+                document.getElementById('searchResultsText').innerHTML = 
+                    `Found <span class="fw-semibold">${filteredCount}</span> of <span class="fw-semibold">${totalCount}</span> sites`;
+                document.getElementById('searchResultsText').className = 'text-success fw-semibold';
                 
-                const row = [
-                    site["Site ID"] || 'N/A',
-                    site["Site Name"] || 'N/A',
-                    `<span class="badge badge-${vendorClass}">${vendor}</span>`,
-                    `<span class="badge ${networkClass}">${networkType}</span>`,
-                    `<span class="badge ${siteTypeClass}">${siteType}</span>`,
-                    vipCategory,
-                    region,
-                    microCluster,
-                    enodebId,
-                    tac
-                ];
+                // Update map dengan hasil pencarian
+                updateMapWithSearchResults();
                 
-                dataTable.row.add(row);
-            });
-            
-            // Draw the table
-            dataTable.draw();
-            
-            // Add VIP row highlighting
-            setTimeout(() => {
-                $('#detailedSiteTable tbody tr').each(function(index) {
-                    if (filteredSiteData[index] && filteredSiteData[index].isVIP) {
-                        $(this).addClass('vip-row');
-                    }
-                });
-            }, 100);
+                // Update breakdown tables
+                updateBreakdownTables();
+                
+                // Update results table
+                updateResultsTable();
+            } else {
+                // Tampilkan pesan tidak ada hasil
+                document.getElementById('resultsContainer').style.display = 'none';
+                document.getElementById('searchResultsTable').style.display = 'block';
+                document.getElementById('initialStateMessage').style.display = 'none';
+                document.getElementById('noResultsMessage').style.display = 'block';
+                
+                // Update search results text
+                document.getElementById('searchResultsText').textContent = 'No sites found matching your criteria';
+                document.getElementById('searchResultsText').className = 'text-danger fw-semibold';
+                
+                // Clear map jika ada
+                if (map) {
+                    map.remove();
+                    map = null;
+                    markers = [];
+                }
+            }
         }
 
-        function updateMapMarkers() {
-            // Clear existing markers
-            markers.forEach(marker => marker.removeFrom(map));
-            markers = [];
+        function updateMapWithSearchResults() {
+            // Inisialisasi map jika belum ada
+            if (!map) {
+                map = L.map('map').setView([-6.12, 106.67], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+            } else {
+                // Clear existing markers
+                markers.forEach(marker => marker.removeFrom(map));
+                markers = [];
+            }
             
-            // Get vendor filter states
-            const showHuawei = document.getElementById('showHuawei').checked;
-            const showNokia = document.getElementById('showNokia').checked;
-            const showEricsson = document.getElementById('showEricsson').checked;
-            const showZTE = document.getElementById('showZTE').checked;
-            
-            // Count sites with coordinates
+            // Count sites with valid coordinates
             let sitesWithCoords = 0;
+            const bounds = [];
             
             // Add markers for filtered sites
             filteredSiteData.forEach(site => {
-                // Check if vendor should be shown
-                let shouldShow = false;
-                const vendor = site["Vendor"] || '';
-                switch(vendor.toLowerCase()) {
-                    case 'huawei': shouldShow = showHuawei; break;
-                    case 'nokia': shouldShow = showNokia; break;
-                    case 'ericsson': shouldShow = showEricsson; break;
-                    case 'zte': shouldShow = showZTE; break;
-                    default: shouldShow = true;
-                }
-                
-                if (!shouldShow) return;
-                
                 const lat = site["Y_LATITUDE"];
                 const lng = site["X_LONGITUDE"];
                 
@@ -978,17 +845,10 @@
                 if (lat && lng && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
                     sitesWithCoords++;
                     
-                    // Determine marker color based on vendor
-                    let markerColor = 'blue';
-                    switch(vendor.toLowerCase()) {
-                        case 'huawei': markerColor = 'red'; break;
-                        case 'nokia': markerColor = 'blue'; break;
-                        case 'ericsson': markerColor = 'darkblue'; break;
-                        case 'zte': markerColor = 'green'; break;
-                        default: markerColor = 'gray';
-                    }
+                    // Determine marker color based on site type
+                    let markerColor = 'red'; // Default color for Huawei
                     
-                    // Determine icon based on site type
+                    // VIP sites get special treatment
                     let iconHtml = '';
                     if (site.isVIP) {
                         iconHtml = `<div style="background-color: ${markerColor}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid gold; box-shadow: 0 0 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
@@ -1011,7 +871,6 @@
                         .bindPopup(`
                             <strong>${site["Site Name"] || site["Site ID"]}</strong><br>
                             <small>${site["Site ID"]}</small><br>
-                            Vendor: ${vendor}<br>
                             Network: ${site["Network Type"] || 'N/A'}<br>
                             Type: ${site["Site Type"] || 'N/A'}<br>
                             Cluster: ${site["Micro Cluster"] || 'N/A'}<br>
@@ -1021,23 +880,20 @@
                         `);
                     
                     markers.push(marker);
+                    bounds.push([lat, lng]);
                 }
             });
             
-            console.log(`Added ${sitesWithCoords} markers with valid coordinates`);
+            console.log(`Added ${sitesWithCoords} markers from search results`);
             
             // Fit map to show all markers if there are any
-            if (markers.length > 0) {
-                const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.1));
-            } else {
-                // Default to Jakarta if no markers
-                map.setView([-6.12, 106.67], 12);
+            if (bounds.length > 0) {
+                map.fitBounds(bounds);
             }
         }
 
         function focusOnSite(siteId) {
-            const site = allSiteData.find(s => s["Site ID"] === siteId);
+            const site = filteredSiteData.find(s => s["Site ID"] === siteId);
             if (site && site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
                 map.setView([site["Y_LATITUDE"], site["X_LONGITUDE"]], 15);
                 
@@ -1052,52 +908,23 @@
         }
 
         function updateBreakdownTables() {
-            // Vendor breakdown
-            const vendorBody = document.getElementById('vendorBreakdownBody');
-            const vendorTotal = filteredSiteData.length;
-            
-            let vendorHTML = '';
-            const currentVendorStats = {};
-            
-            filteredSiteData.forEach(site => {
-                const vendor = site["Vendor"] || 'Unknown';
-                currentVendorStats[vendor] = (currentVendorStats[vendor] || 0) + 1;
-            });
-            
-            // Sort vendors by count (descending)
-            const sortedVendors = Object.entries(currentVendorStats)
-                .sort((a, b) => b[1] - a[1]);
-            
-            sortedVendors.forEach(([vendor, count]) => {
-                const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
-                vendorHTML += `
-                    <tr>
-                        <td class="small"><span class="badge badge-${vendor.toLowerCase()}">${vendor}</span></td>
-                        <td class="text-end fw-semibold">${count}</td>
-                        <td class="text-end text-muted">${percentage}%</td>
-                    </tr>
-                `;
-            });
-            
-            vendorBody.innerHTML = vendorHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
+            const totalSites = filteredSiteData.length;
             
             // Network type breakdown
             const networkBody = document.getElementById('networkBreakdownBody');
-            
-            let networkHTML = '';
-            const currentNetworkStats = {};
+            const networkStats = {};
             
             filteredSiteData.forEach(site => {
                 const netType = site["Network Type"] || 'Unknown';
-                currentNetworkStats[netType] = (currentNetworkStats[netType] || 0) + 1;
+                networkStats[netType] = (networkStats[netType] || 0) + 1;
             });
             
-            // Sort network types by count (descending)
-            const sortedNetworks = Object.entries(currentNetworkStats)
+            let networkHTML = '';
+            const sortedNetworks = Object.entries(networkStats)
                 .sort((a, b) => b[1] - a[1]);
             
             sortedNetworks.forEach(([netType, count]) => {
-                const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
+                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(1) : '0.0';
                 const badgeClass = getNetworkClass(netType);
                 const displayName = netType.split(' ')[0] || netType;
                 networkHTML += `
@@ -1110,22 +937,83 @@
             });
             
             networkBody.innerHTML = networkHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
+            
+            // Region breakdown
+            const regionBody = document.getElementById('regionBreakdownBody');
+            const regionStats = {};
+            
+            filteredSiteData.forEach(site => {
+                const region = site["Region"] || 'Unknown';
+                regionStats[region] = (regionStats[region] || 0) + 1;
+            });
+            
+            let regionHTML = '';
+            const sortedRegions = Object.entries(regionStats)
+                .sort((a, b) => b[1] - a[1]);
+            
+            sortedRegions.forEach(([region, count]) => {
+                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(1) : '0.0';
+                regionHTML += `
+                    <tr>
+                        <td class="small">${region}</td>
+                        <td class="text-end fw-semibold">${count}</td>
+                        <td class="text-end text-muted">${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            regionBody.innerHTML = regionHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
         }
 
-        function updateSiteCount() {
+        function updateResultsTable() {
+            const tableBody = document.getElementById('detailedSiteTableBody');
+            
+            let tableHTML = '';
+            filteredSiteData.forEach(site => {
+                const vendor = site["Vendor"] || 'Unknown';
+                const networkType = site["Network Type"] || 'Unknown';
+                const siteType = site["Site Type"] || 'Unknown';
+                const region = site["Region"] || 'N/A';
+                const microCluster = site["Micro Cluster"] || 'N/A';
+                const enodebId = site["Enodeb ID"] || 'N/A';
+                const tac = site["TAC"] || 'N/A';
+                const vipCategory = site["Category VIP POI"] || 'N/A';
+                
+                const networkClass = getNetworkClass(networkType);
+                const siteTypeClass = siteType.includes("VIP") ? "badge-vip" : 
+                                    siteType.includes("Micro") ? "badge-micro" : "badge-macro";
+                
+                // Determine row class for VIP sites
+                const rowClass = site.isVIP ? 'vip-row' : '';
+                
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td class="fw-semibold">${site["Site ID"] || 'N/A'}</td>
+                        <td>${site["Site Name"] || 'N/A'}</td>
+                        <td><span class="badge ${networkClass}">${networkType}</span></td>
+                        <td><span class="badge ${siteTypeClass}">${siteType}</span></td>
+                        <td>${vipCategory}</td>
+                        <td>${region}</td>
+                        <td>${microCluster}</td>
+                        <td>${enodebId}</td>
+                        <td>${tac}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
+        }
+
+        function updateKPIs() {
             const totalSites = allSiteData.length;
-            const filteredSites = filteredSiteData.length;
-            document.getElementById('siteCount').textContent = filteredSites.toLocaleString();
+            const sites5G = allSiteData.filter(site => site.has5G).length;
+            const vipSites = allSiteData.filter(site => site.isVIP).length;
+            const uniqueClusters = new Set(allSiteData.map(site => site["Micro Cluster"]).filter(Boolean)).size;
             
-            const resultsText = document.getElementById('searchResultsText');
-            
-            if (filteredSites < totalSites) {
-                resultsText.innerHTML = `Showing <span class="fw-semibold">${filteredSites.toLocaleString()}</span> of <span class="fw-semibold">${totalSites.toLocaleString()}</span> sites`;
-                resultsText.className = 'text-success fw-semibold';
-            } else {
-                resultsText.innerHTML = `Showing all <span class="fw-semibold">${totalSites.toLocaleString()}</span> sites`;
-                resultsText.className = 'text-muted';
-            }
+            document.getElementById('kpiTotalSites').textContent = totalSites.toLocaleString();
+            document.getElementById('kpi5GSites').textContent = sites5G.toLocaleString();
+            document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
+            document.getElementById('kpiClusters').textContent = uniqueClusters.toLocaleString();
         }
 
         // ==================== FUNGSI LOADING & STATUS ====================
@@ -1168,7 +1056,7 @@
             document.getElementById('dataSourceInfo').textContent = message;
         }
 
-        // ==================== FUNGSI WAKTU & AUTO-REFRESH ====================
+        // ==================== FUNGSI WAKTU ====================
         function updateCurrentTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { 
@@ -1188,47 +1076,17 @@
             document.getElementById('lastUpdatedTime').textContent = timeString;
         }
 
-        function resetAutoRefreshCountdown() {
-            refreshCountdown = 30;
-        }
-
-        function toggleAutoRefresh() {
-            const toggle = document.getElementById('autoRefreshToggle');
-            
-            if (toggle.checked) {
-                // Start auto-refresh interval
-                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-                
-                autoRefreshInterval = setInterval(() => {
-                    refreshCountdown--;
-                    
-                    if (refreshCountdown <= 0) {
-                        fetchCSVData();
-                    }
-                }, 1000);
-                
-                console.log('Auto-refresh enabled (30 seconds)');
-            } else {
-                // Stop auto-refresh
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                    autoRefreshInterval = null;
-                }
-                console.log('Auto-refresh disabled');
-            }
-        }
-
         // ==================== FUNGSI EKSPOR ====================
         function exportToCSV() {
-            if (filteredSiteData.length === 0) {
-                alert('No data to export!');
+            if (!hasSearched || filteredSiteData.length === 0) {
+                alert('No search results to export! Please search for sites first.');
                 return;
             }
             
-            // Get headers from first object (excluding processed fields)
+            // Get headers (excluding processed fields)
             const firstSite = filteredSiteData[0];
             const headers = Object.keys(firstSite).filter(key => 
-                !['isVIP', 'has5G', 'vendorClass', 'networkClass'].includes(key)
+                !['isVIP', 'has5G', 'networkClass'].includes(key)
             );
             
             // Prepare CSV content
@@ -1237,7 +1095,6 @@
                 ...filteredSiteData.map(site => {
                     return headers.map(header => {
                         const value = site[header] || '';
-                        // Escape quotes and wrap in quotes if contains comma
                         const escaped = value.toString().replace(/"/g, '""');
                         return escaped.includes(',') ? `"${escaped}"` : escaped;
                     }).join(',');
@@ -1249,7 +1106,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `site_info_export_${new Date().toISOString().slice(0,10)}.csv`;
+            link.download = `site_search_results_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1257,28 +1114,19 @@
         }
 
         // ==================== FUNGSI BANTUAN ====================
-        function showSampleData() {
-            processSiteData(SAMPLE_DATA);
-            updateDashboardStatus('info', 'Showing sample data');
-            updateDataSourceInfo('Showing sample data');
-            alert('Now showing sample data. Click "Refresh Data" to load from CSV again.');
-        }
-
         window.debugData = function() {
             console.log('All Site Data:', allSiteData);
             console.log('Filtered Site Data:', filteredSiteData);
-            console.log('Vendor Stats:', vendorStats);
-            console.log('Network Stats:', networkStats);
-            alert(`Data logged to console. Total sites: ${allSiteData.length}`);
+            console.log('Has Searched:', hasSearched);
+            alert(`Total sites: ${allSiteData.length}, Search results: ${filteredSiteData.length}`);
         };
 
-        // Ekspos fungsi penting untuk debugging
+        // Ekspos fungsi penting
         window.fetchCSVData = fetchCSVData;
         window.applyFilters = applyFilters;
         window.clearFilters = clearFilters;
         window.exportToCSV = exportToCSV;
         window.focusOnSite = focusOnSite;
-        window.showSampleData = showSampleData;
     </script>
 
     <!-- Bootstrap JS -->
