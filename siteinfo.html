@@ -5,149 +5,275 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Site Information Dashboard</title>
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS for maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- PapaParse untuk parsing CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     
     <style>
         :root {
+            --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+            --font-inter: 'Inter', sans-serif;
             --huawei-red: #ff0000;
-            --dark-blue: #2c3e50;
+            --dark-blue: #1e293b;
             --vip-gold: #ffc107;
-            --primary-color: #007bff;
-            --radius-color: #007bff;
+            --primary-color: #3b82f6;
+            --info-blue: #17a2b8;
         }
+        
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            font-family: var(--font-inter);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+        
+        /* HEADER - CONSISTENT WITH ALARM DASHBOARD */
         .executive-header {
-            background: linear-gradient(135deg, var(--dark-blue), #1a252f);
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
             color: white;
-            padding: 1rem 0;
-            border-bottom: 4px solid var(--huawei-red);
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
+        
+        .executive-header h1 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            font-size: 1.5rem !important;
+            margin: 0;
+        }
+        
+        .executive-header p {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* LAST UPDATE */
+        #currentTime, #lastUpdatedTime {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        /* KPI CARDS - Updated Design (Consistent) */
         .kpi-card {
-            border-radius: 10px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+            transition: all 0.3s ease;
             border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: transform 0.2s;
+            overflow: hidden;
             height: 100%;
         }
+        
         .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
         }
-        .card-title {
-            font-size: 0.9rem;
-            color: #6c757d;
-            font-weight: 600;
-        }
+        
         .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            line-height: 1.2;
+            font-family: var(--font-plus-jakarta);
+            font-weight: 800;
+            font-size: 1.75rem;
+            color: #1e293b;
         }
+        
+        .card-title {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        /* FILTER CARDS */
+        .filter-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border: none;
+        }
+        
+        .filter-card .input-group-text {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .filter-card .form-control {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+        }
+        
+        .btn-outline-success {
+            border-radius: 10px;
+            padding: 8px 16px;
+        }
+        
+        .btn-primary:hover, .btn-outline-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* SUMMARY CARDS */
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            border: none;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .summary-card h6 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        
+        /* TABLE HEADERS - CONSISTENT */
+        .table thead th {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 13px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border: none;
+            padding: 10px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        /* TABLE CONTENT - CONSISTENT */
+        .table tbody td {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+            padding: 8px 6px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8fafc;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        
+        /* BADGES - CONSISTENT */
+        .badge {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 5px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+        
+        /* SPECIAL BADGES FOR SITE TYPES */
+        .badge-huawei { 
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white;
+            border: none;
+        }
+        
+        .badge-2g { 
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            border: none;
+        }
+        
+        .badge-4g { 
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            border: none;
+        }
+        
+        .badge-5g { 
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+        }
+        
+        .badge-vip { 
+            background: linear-gradient(135deg, #ffc107, #ffaa00);
+            color: #212529;
+            border: none;
+        }
+        
+        .badge-macro { 
+            background: linear-gradient(135deg, #6610f2, #520dc2);
+            color: white;
+            border: none;
+        }
+        
+        .badge-micro { 
+            background: linear-gradient(135deg, #20c997, #17a589);
+            color: white;
+            border: none;
+        }
+        
+        /* VIP ROW */
         .vip-row {
             background-color: rgba(255, 193, 7, 0.1) !important;
         }
-        .summary-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.25rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            height: 100%;
-        }
-        #loadingSpinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
-        }
-        .search-highlight {
-            background-color: #fff3cd;
-            font-weight: 600;
-        }
-        .site-breakdown {
-            max-height: 350px;
-            overflow-y: auto;
-        }
-        .badge-huawei { background-color: var(--huawei-red); color: white; }
-        .badge-2g { background-color: #6c757d; color: white; }
-        .badge-4g { background-color: #28a745; color: white; }
-        .badge-5g { background-color: #007bff; color: white; }
-        .badge-vip { background-color: var(--vip-gold); color: #212529; }
-        .badge-macro { background-color: #6610f2; color: white; }
-        .badge-micro { background-color: #20c997; color: white; }
-        #map {
-            height: 400px;
-            width: 100%;
-            border-radius: 10px;
-            z-index: 1;
-        }
-        .map-container {
-            position: relative;
-        }
-        .leaflet-control-layers, .leaflet-control-zoom {
-            border-radius: 5px !important;
-            overflow: hidden;
-        }
-        .table thead th {
-            background-color: var(--dark-blue);
-            color: white;
-            font-weight: 600;
-            border: none;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 0.8rem;
-            padding: 8px 4px;
-        }
-        .table tbody td {
-            text-align: center;
-            vertical-align: middle;
-            font-size: 0.75rem;
-            padding: 6px 4px;
-        }
+        
+        /* LOADING */
         .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
         }
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
+        
+        /* MAP */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
         }
-        .search-results-table {
-            margin-top: 20px;
+        
+        .map-container {
+            position: relative;
         }
-        .no-data-message {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-        .empty-map {
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            color: #6c757d;
-            font-size: 1.1rem;
-        }
-        .action-buttons {
-            margin-bottom: 15px;
-        }
+        
         .map-instructions {
             background-color: #f8f9fa;
             padding: 10px;
@@ -156,36 +282,9 @@
             font-size: 0.9rem;
             color: #6c757d;
             text-align: center;
+            font-family: var(--font-inter);
         }
-        .radius-info {
-            background-color: #e7f3ff;
-            padding: 8px 12px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #0066cc;
-            border-left: 3px solid #0066cc;
-        }
-        .table-responsive {
-            overflow-x: auto;
-        }
-        .table th:nth-child(1) { width: 10%; }
-        .table th:nth-child(2) { width: 20%; }
-        .table th:nth-child(3) { width: 8%; }
-        .table th:nth-child(4) { width: 6%; }
-        .table th:nth-child(5) { width: 10%; }
-        .table th:nth-child(6) { width: 8%; }
-        .table th:nth-child(7) { width: 12%; }
-        .table th:nth-child(8) { width: 10%; }
-        .table th:nth-child(9) { width: 10%; }
-        .table th:nth-child(10) { width: 6%; }
-        .search-site-highlight {
-            background-color: rgba(255, 0, 0, 0.1);
-            font-weight: bold;
-        }
-        .within-radius-highlight {
-            background-color: rgba(0, 123, 255, 0.05);
-        }
+        
         .map-legend {
             background-color: white;
             padding: 10px;
@@ -196,71 +295,96 @@
             right: 10px;
             z-index: 1000;
             font-size: 0.8rem;
+            font-family: var(--font-inter);
         }
+        
         .legend-item {
             display: flex;
             align-items: center;
             margin-bottom: 5px;
         }
+        
         .legend-color {
             width: 15px;
             height: 15px;
             border-radius: 50%;
             margin-right: 8px;
         }
+        
         .legend-color-red { background-color: #ff0000; border: 2px solid white; }
         .legend-color-blue { background-color: #007bff; border: 2px solid white; }
-        .search-input-group {
-            margin-bottom: 10px;
-        }
-        .search-info {
-            font-size: 0.75rem;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        .nearest-sites-list {
-            list-style-type: none;
-            padding-left: 0;
-            margin-bottom: 0;
-        }
-        .nearest-sites-list li {
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nearest-sites-list li:last-child {
-            border-bottom: none;
-        }
-        .site-distance {
-            font-size: 0.75rem;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-        .nearest-site-id {
+        .legend-color-gray { background-color: #6c757d; border: 2px solid white; }
+        
+        /* SEARCH HIGHLIGHT */
+        .search-highlight {
+            background-color: #fff3cd;
             font-weight: 600;
-            font-size: 0.85rem;
         }
-        .nearest-site-name {
-            font-size: 0.8rem;
-            color: #495057;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
+        
+        .search-site-highlight {
+            background-color: rgba(255, 0, 0, 0.1);
+            font-weight: bold;
         }
-        .nearest-sites-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        
+        .within-radius-highlight {
+            background-color: rgba(0, 123, 255, 0.05);
         }
+        
+        /* SITE BREAKDOWN */
+        .site-breakdown {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        /* RESPONSIVE ADJUSTMENTS */
+        @media (max-width: 768px) {
+            .executive-header {
+                padding: 12px 16px;
+                text-align: center;
+            }
+            
+            .executive-header h1 {
+                font-size: 1.2rem !important;
+            }
+            
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* DASHBOARD STATUS BADGE */
+        #dashboardStatus {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        
+        /* FOOTER */
+        footer .small {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* DATA INFO */
+        #dataSourceInfo {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 12px;
+        }
+        
+        /* SEARCH RESULTS TEXT */
+        #searchResultsText {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* MARKER LABELS */
         .marker-label {
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             color: white;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
             text-align: center;
@@ -268,31 +392,146 @@
             background-color: rgba(0, 0, 0, 0.5);
             border-radius: 3px;
             white-space: nowrap;
+            font-family: var(--font-inter);
         }
+        
         .marker-label-red {
             background-color: rgba(255, 0, 0, 0.7);
         }
+        
         .marker-label-blue {
             background-color: rgba(0, 123, 255, 0.7);
         }
+        
         .marker-label-gray {
             background-color: rgba(108, 117, 125, 0.7);
+        }
+        
+        /* NEAREST SITES STYLING */
+        .nearest-sites-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        
+        .nearest-sites-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nearest-sites-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .site-distance {
+            font-size: 11px;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-family: var(--font-inter);
+        }
+        
+        .nearest-site-id {
+            font-weight: 600;
+            font-size: 12px;
+            font-family: var(--font-plus-jakarta);
+        }
+        
+        .nearest-site-name {
+            font-size: 11px;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            font-family: var(--font-inter);
+        }
+        
+        .nearest-sites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        /* RADIUS INFO */
+        .radius-info {
+            background-color: #e7f3ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #0066cc;
+            border-left: 3px solid #0066cc;
+            font-family: var(--font-inter);
+        }
+        
+        /* SEARCH INPUT */
+        .search-input-group {
+            margin-bottom: 10px;
+        }
+        
+        .search-info {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            font-family: var(--font-inter);
+        }
+        
+        /* NO DATA MESSAGE */
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-family: var(--font-inter);
+        }
+        
+        /* INITIAL STATE */
+        .initial-state-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 2rem;
+            text-align: center;
+            border: none;
+        }
+        
+        /* CARD HEADER */
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* ACTION BUTTONS */
+        .action-buttons {
+            margin-bottom: 15px;
+        }
+        
+        /* SPINNER */
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header - CONSISTENT -->
     <div class="executive-header">
-        <div class="container">
+        <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h4 mb-1"><i class="fas fa-tower-cell me-2"></i>Site Information Dashboard</h1>
+                    <h1 class="mb-1"><i class="fas fa-tower-cell me-2"></i>Site Information Dashboard</h1>
                     <p class="small mb-0 opacity-75">Network Site Data Visualization & Management</p>
                 </div>
                 <div class="text-end">
                     <div class="small mb-1"><i class="fas fa-clock me-1"></i> <span id="currentTime">Loading...</span></div>
-                    <span class="badge bg-success" id="dashboardStatus">
-                        <i class="fas fa-circle me-1"></i> Ready
+                    <span class="badge bg-danger" id="dashboardStatus">
+                        <i class="fas fa-circle me-1"></i> Loading Data...
                     </span>
                 </div>
             </div>
@@ -300,11 +539,11 @@
     </div>
 
     <!-- Main Container -->
-    <div class="container py-4">
+    <div class="container-fluid py-4">
         <!-- Data Control Row -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <div class="card kpi-card">
+                <div class="card filter-card">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-6">
@@ -312,7 +551,7 @@
                                 <small class="text-muted" id="dataSourceInfo">Loading data source information...</small>
                             </div>
                             <div class="col-md-6 text-end">
-                                <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
+                                <button class="btn btn-primary" onclick="fetchCSVData()" id="btnRefresh">
                                     <i class="fas fa-redo me-1"></i> Refresh Data
                                 </button>
                             </div>
@@ -325,45 +564,45 @@
         <!-- Search and Filter Row -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <div class="card kpi-card">
+                <div class="card filter-card">
                     <div class="card-body">
                         <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search Site Information</h6>
                         <div class="row g-2">
                             <div class="col-md-3">
-                                <div class="input-group input-group-sm search-input-group">
+                                <div class="input-group search-input-group">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
                                 </div>
                                 <div class="search-info">Enter Site ID to search and show 5km radius</div>
                             </div>
                             <div class="col-md-3">
-                                <div class="input-group input-group-sm search-input-group">
+                                <div class="input-group search-input-group">
                                     <span class="input-group-text"><i class="fas fa-tower-cell"></i></span>
                                     <input type="text" class="form-control" id="searchSiteName" placeholder="Search by Site Name">
                                 </div>
                                 <div class="search-info">Enter Site Name for general search</div>
                             </div>
                             <div class="col-md-3">
-                                <div class="input-group input-group-sm search-input-group">
+                                <div class="input-group search-input-group">
                                     <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
                                     <input type="text" class="form-control" id="searchEnodebId" placeholder="Search by Enodeb ID">
                                 </div>
                                 <div class="search-info">Enter Enodeb ID to search</div>
                             </div>
                             <div class="col-md-1">
-                                <button class="btn btn-sm btn-success w-100" onclick="applyFilters()">
+                                <button class="btn btn-success w-100" onclick="applyFilters()">
                                     <i class="fas fa-search me-1"></i> Search
                                 </button>
                             </div>
                             <div class="col-md-1">
-                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
+                                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
                                     <i class="fas fa-eraser me-1"></i> Clear
                                 </button>
                             </div>
                         </div>
                         <div class="row g-2 mt-2">
                             <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="filterNetworkType">
+                                <select class="form-select" id="filterNetworkType">
                                     <option value="">All Network Types</option>
                                     <option value="2G">2G</option>
                                     <option value="4G">4G</option>
@@ -373,17 +612,17 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="filterRegion">
+                                <select class="form-select" id="filterRegion">
                                     <option value="">All Regions</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="filterCluster">
+                                <select class="form-select" id="filterCluster">
                                     <option value="">All Clusters</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="filterSiteType">
+                                <select class="form-select" id="filterSiteType">
                                     <option value="">All Site Types</option>
                                     <option value="VIP_Macro">VIP Macro</option>
                                     <option value="Macro">Macro</option>
@@ -399,75 +638,67 @@
             </div>
         </div>
 
-        <!-- KPI Summary Row -->
+        <!-- KPI Summary Row - CONSISTENT DESIGN -->
         <div class="row mb-4">
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-danger border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">TOTAL SITES</h6>
-                                <div class="kpi-value text-danger" id="kpiTotalSites">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-tower-cell fa-2x text-danger opacity-50"></i>
-                            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">TOTAL SITES</h6>
+                            <div class="kpi-value text-danger" id="kpiTotalSites">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Total sites in database</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tower-cell fa-2x text-danger opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Total sites in database</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-primary border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">5G SITES</h6>
-                                <div class="kpi-value text-primary" id="kpi5GSites">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-bolt fa-2x text-primary opacity-50"></i>
-                            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">5G SITES</h6>
+                            <div class="kpi-value text-primary" id="kpi5GSites">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Sites with 5G capability</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bolt fa-2x text-primary opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Sites with 5G capability</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-warning border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">VIP SITES</h6>
-                                <div class="kpi-value text-warning" id="kpiVipSites">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-crown fa-2x text-warning opacity-50"></i>
-                            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">VIP SITES</h6>
+                            <div class="kpi-value text-warning" id="kpiVipSites">0</div>
                         </div>
-                        <div class="small text-muted mt-2">VIP & POI category sites</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-crown fa-2x text-warning opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">VIP & POI category sites</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-info border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">MICRO CLUSTERS</h6>
-                                <div class="kpi-value text-info" id="kpiClusters">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-sitemap fa-2x text-info opacity-50"></i>
-                            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">MICRO CLUSTERS</h6>
+                            <div class="kpi-value text-info" id="kpiClusters">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Unique micro clusters</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sitemap fa-2x text-info opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Unique micro clusters</div>
                 </div>
             </div>
         </div>
 
-        <!-- Map and Nearest Sites Row (Tampil setelah pencarian) -->
+        <!-- Map and Nearest Sites Row -->
         <div class="row mb-4" id="resultsContainer" style="display: none;">
             <!-- Map -->
             <div class="col-lg-8 mb-4">
@@ -526,39 +757,39 @@
             </div>
         </div>
 
-        <!-- Search Results Table (Tampil setelah pencarian) -->
+        <!-- Search Results Table -->
         <div class="row" id="searchResultsTable" style="display: none;">
             <div class="col-12">
-                <div class="card search-results-table">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Search Results</h6>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
+                <div class="summary-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0" style="font-family: var(--font-plus-jakarta); font-weight: 700;">
+                            <i class="fas fa-table me-2"></i>Search Results
+                        </h6>
+                        <div>
+                            <button class="btn btn-outline-success" onclick="exportToCSV()">
                                 <i class="fas fa-download me-1"></i> Export Results
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="detailedSiteTable">
-                                <thead>
-                                    <tr>
-                                        <th>Site ID</th>
-                                        <th>Site Name</th>
-                                        <th>Enodeb ID</th>
-                                        <th>TAC</th>
-                                        <th>Network Type</th>
-                                        <th>Site Type</th>
-                                        <th>Category VIP POI</th>
-                                        <th>Region</th>
-                                        <th>Micro Cluster</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailedSiteTableBody">
-                                    <!-- Data akan diisi setelah pencarian -->
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive" style="flex: 1; overflow: auto;">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Name</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Enodeb ID</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">TAC</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Network Type</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Type</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Category VIP POI</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Region</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Micro Cluster</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailedSiteTableBody">
+                                <!-- Data akan diisi setelah pencarian -->
+                            </tbody>
+                        </table>
                         <div id="noResultsMessage" class="no-data-message" style="display: none;">
                             <i class="fas fa-search fa-2x mb-3"></i>
                             <h5>No sites found</h5>
@@ -572,13 +803,11 @@
         <!-- Initial State Message -->
         <div class="row mt-4" id="initialStateMessage">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                        <h4 class="text-muted">Search Site Information</h4>
-                        <p class="text-muted">Use the search filters above to find specific sites</p>
-                        <p class="small text-muted">Total sites in database: <span id="totalSitesCount">0</span></p>
-                    </div>
+                <div class="initial-state-card">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted" style="font-family: var(--font-plus-jakarta);">Search Site Information</h4>
+                    <p class="text-muted" style="font-family: var(--font-inter);">Use the search filters above to find specific sites</p>
+                    <p class="small text-muted" style="font-family: var(--font-inter);">Total sites in database: <span id="totalSitesCount" class="fw-semibold">0</span></p>
                 </div>
             </div>
         </div>
@@ -587,11 +816,11 @@
         <div class="row mt-4">
             <div class="col-12">
                 <div class="text-center small text-muted">
-                    <p class="mb-1">
+                    <p class="mb-1" style="font-family: var(--font-inter);">
                         <i class="fas fa-database me-1"></i> Site Information Dashboard | 
                         <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span>
                     </p>
-                    <p class="mb-0">Enter Site ID to view site location and other sites within 5km radius</p>
+                    <p class="mb-0" style="font-family: var(--font-inter);">Enter Site ID to view site location and other sites within 5km radius</p>
                 </div>
             </div>
         </div>
@@ -603,7 +832,7 @@
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-3">Loading site data from CSV...</p>
+            <p class="mt-3" style="font-family: var(--font-inter);">Loading site data from CSV...</p>
         </div>
     </div>
 
@@ -774,7 +1003,7 @@
             const regionSelect = document.getElementById('filterRegion');
             regionSelect.innerHTML = '<option value="">All Regions</option>';
             
-            regionsArray = Array.from(regions).sort();
+            const regionsArray = Array.from(regions).sort();
             regionsArray.forEach(region => {
                 if (region && region.trim() !== '') {
                     const option = document.createElement('option');
@@ -788,7 +1017,7 @@
             const clusterSelect = document.getElementById('filterCluster');
             clusterSelect.innerHTML = '<option value="">All Clusters</option>';
             
-            clustersArray = Array.from(clusters).sort();
+            const clustersArray = Array.from(clusters).sort();
             clustersArray.forEach(cluster => {
                 if (cluster && cluster.trim() !== '') {
                     const option = document.createElement('option');
@@ -802,7 +1031,7 @@
             const siteTypeSelect = document.getElementById('filterSiteType');
             siteTypeSelect.innerHTML = '<option value="">All Site Types</option>';
             
-            siteTypesArray = Array.from(siteTypes).sort();
+            const siteTypesArray = Array.from(siteTypes).sort();
             siteTypesArray.forEach(siteType => {
                 if (siteType && siteType.trim() !== '') {
                     const option = document.createElement('option');
@@ -1395,21 +1624,6 @@
             document.getElementById('vipSitesCount').textContent = vipCount;
         }
 
-        function focusOnSite(siteId) {
-            const site = filteredSiteData.find(s => s["Site ID"] === siteId);
-            if (site && site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
-                map.setView([site["Y_LATITUDE"], site["X_LONGITUDE"]], 15);
-                
-                // Find and open the marker popup
-                markers.forEach(marker => {
-                    const latLng = marker.getLatLng();
-                    if (latLng.lat === site["Y_LATITUDE"] && latLng.lng === site["X_LONGITUDE"]) {
-                        marker.openPopup();
-                    }
-                });
-            }
-        }
-
         function updateResultsTable() {
             const tableBody = document.getElementById('detailedSiteTableBody');
             
@@ -1499,19 +1713,19 @@
             switch(status) {
                 case 'loading':
                     statusBadge.className = 'badge bg-warning';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    statusBadge.innerHTML = `<i class="fas fa-sync fa-spin me-1"></i> ${message}`;
                     break;
                 case 'success':
                     statusBadge.className = 'badge bg-success';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    statusBadge.innerHTML = `<i class="fas fa-check-circle me-1"></i> ${message}`;
                     break;
                 case 'warning':
                     statusBadge.className = 'badge bg-warning';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    statusBadge.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> ${message}`;
                     break;
                 case 'error':
                     statusBadge.className = 'badge bg-danger';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
+                    statusBadge.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> ${message}`;
                     break;
                 default:
                     statusBadge.className = 'badge bg-secondary';
@@ -1526,19 +1740,27 @@
         // ==================== FUNGSI WAKTU ====================
         function updateCurrentTime() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString([], { 
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
                 hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('currentTime').textContent = timeString;
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false
+            };
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleDateString('en-GB', options).replace(',', '');
         }
 
         function updateLastUpdatedTime() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString([], { 
+            const timeString = now.toLocaleTimeString('en-GB', { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
             });
             document.getElementById('lastUpdatedTime').textContent = timeString;
         }
@@ -1614,6 +1836,8 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            
+            alert(`Exported ${filteredSiteData.length} sites to CSV`);
         }
 
         // ==================== FUNGSI BANTUAN ====================
@@ -1632,11 +1856,10 @@
         window.applyFilters = applyFilters;
         window.clearFilters = clearFilters;
         window.exportToCSV = exportToCSV;
-        window.focusOnSite = focusOnSite;
     </script>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
