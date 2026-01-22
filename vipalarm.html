@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,111 +6,230 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
 body{
   margin:0;
-  background:#f4f6f9;
-  font-family:Segoe UI, Roboto;
+  background:#f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .header-bar{
-  background:linear-gradient(135deg,#1e3c72,#2a7db8);
+  background: linear-gradient(135deg, #1a2980, #26d0ce);
   color:#fff;
-  padding:14px 20px;
+  padding:16px 24px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .card-summary{
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
-  transition: transform 0.2s;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  transition: all 0.3s ease;
   cursor: pointer;
+  border: none;
+  overflow: hidden;
 }
 .card-summary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
 }
 .card-summary.active {
-  border: 2px solid #2a7db8;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 .badge-aging{
   font-size:13px;
-  padding:6px 10px;
+  padding:6px 12px;
   border-radius:20px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .table thead th{
   cursor:pointer;
-  background:#2c3e50;
+  background: linear-gradient(135deg, #1e293b, #334155);
   color:#fff;
-  font-size:13px;
-  position: sticky;
-  top: 0;
+  font-size:14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  padding: 14px 12px;
 }
 .table tbody td{
   font-size:13px;
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-family: 'Inter', sans-serif;
+}
+.table tbody tr:hover {
+  background-color: #f8fafc;
 }
 .status-badge {
   font-size: 11px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .site-id-cell {
   font-weight: 600;
-  font-family: monospace;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  color: #1e40af;
 }
 .filter-card {
   background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: none;
 }
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px;
+  padding: 60px;
   font-size: 18px;
-  color: #666;
+  color: #64748b;
+  font-family: 'Inter', sans-serif;
 }
 .export-btn {
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background: linear-gradient(135deg, #10b981, #34d399);
   border: none;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 10px;
+  padding: 10px 20px;
+}
+.export-btn:hover {
+  background: linear-gradient(135deg, #0da271, #2bbd88);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 .refresh-btn {
   background: linear-gradient(135deg, #6c757d, #495057);
   border: none;
 }
 .aging-badge-1 {
-  background-color: #d1ecf1;
-  color: #0c5460;
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
 }
 .aging-badge-2 {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
 }
 .aging-badge-3 {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
 }
 .distribution-card {
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  overflow-y: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: none;
+  background: white;
 }
 .distribution-table th {
-  position: sticky;
-  top: 0;
-  background: #2c3e50;
+  background: linear-gradient(135deg, #1e293b, #334155);
   color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
 }
 .main-table-container {
   background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 0;
+  border: none;
+  overflow: visible;
+}
+.main-table-wrapper {
+  overflow-x: auto;
+  border-radius: 16px;
+}
+.table {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8fafc;
+}
+.table-hover tbody tr:hover {
+  background-color: #f1f5f9;
+}
+.filter-card label {
+  font-weight: 600;
+  color: #334155;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.filter-card input, .filter-card select {
+  border: 2px solid #e2e8f0;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  padding: 15px;
-  height: 550px;
-  overflow-y: auto;
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+}
+.filter-card input:focus, .filter-card select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border: none;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 10px;
+  padding: 10px;
+}
+.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #475569);
+  border: none;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 10px;
+  padding: 10px;
+}
+.btn-primary:hover, .btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+}
+#totalAlarm, #uniqueSite, #aging1, #aging3, #aging4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  color: #1e293b;
+}
+#lastUpdate {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+.distribution-card h6, .filter-card h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: #1e293b;
+}
+#filteredCount {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+.form-check-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+.badge {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
 }
 </style>
 </head>
@@ -118,59 +237,71 @@ body{
 
 <!-- HEADER -->
 <div class="header-bar">
-  <h5 class="m-0"><i class="fas fa-tower-cell me-2"></i>VIP Alarms Dashboard</h5>
+  <h5 class="m-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">
+    <i class="fas fa-tower-cell me-2"></i>VIP Alarms Dashboard
+  </h5>
   <div>
     <span id="lastUpdate"><i class="fas fa-clock me-1"></i> Loading...</span>
-    <button class="btn btn-sm btn-light ms-2" onclick="loadData()">
+    <button class="btn btn-sm btn-light ms-2" onclick="loadData()" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
       <i class="fas fa-sync-alt me-1"></i>Refresh
     </button>
   </div>
 </div>
 
-<div class="container-fluid p-3">
+<div class="container-fluid p-4">
 
 <!-- SUMMARY ROW -->
-<div class="row g-3 mb-3">
+<div class="row g-4 mb-4">
   <div class="col-md-3">
-    <div class="card card-summary p-3" id="totalCard" onclick="filterByAging('all')">
+    <div class="card card-summary p-4" id="totalCard" onclick="filterByAging('all')">
       <div class="d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-bell me-2 text-primary"></i>Total Alarms</span>
+        <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
+          <i class="fas fa-bell me-2 text-primary"></i>Total Alarms
+        </span>
       </div>
-      <h3 id="totalAlarm" class="mt-2">0</h3>
+      <h3 id="totalAlarm" class="mt-3">0</h3>
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card card-summary p-3" id="uniqueCard">
-      <div><i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Site ID</div>
-      <h3 id="uniqueSite" class="mt-2">0</h3>
+    <div class="card card-summary p-4" id="uniqueCard">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
+        <i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Site ID
+      </div>
+      <h3 id="uniqueSite" class="mt-3">0</h3>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging1Card" onclick="filterByAging('1')" style="background-color: #e7f5ff;">
-      <div><i class="fas fa-clock me-2 text-info"></i>&le; 1 Day</div>
+    <div class="card card-summary p-3 aging-card" id="aging1Card" onclick="filterByAging('1')" style="background: linear-gradient(135deg, #dbeafe, #93c5fd);">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #1e40af;">
+        <i class="fas fa-clock me-2"></i>≤ 1 Day
+      </div>
       <h4 id="aging1" class="mt-2">0</h4>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging3Card" onclick="filterByAging('3')" style="background-color: #fff3cd;">
-      <div><i class="fas fa-clock me-2 text-warning"></i>&le; 3 Days</div>
+    <div class="card card-summary p-3 aging-card" id="aging3Card" onclick="filterByAging('3')" style="background: linear-gradient(135deg, #fef3c7, #fbbf24);">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #92400e;">
+        <i class="fas fa-clock me-2"></i>≤ 3 Days
+      </div>
       <h4 id="aging3" class="mt-2">0</h4>
     </div>
   </div>
   <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging4Card" onclick="filterByAging('4')" style="background-color: #f8d7da;">
-      <div><i class="fas fa-clock me-2 text-danger"></i>&ge; 4 Days</div>
+    <div class="card card-summary p-3 aging-card" id="aging4Card" onclick="filterByAging('4')" style="background: linear-gradient(135deg, #fee2e2, #f87171);">
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #991b1b;">
+        <i class="fas fa-clock me-2"></i>≥ 4 Days
+      </div>
       <h4 id="aging4" class="mt-2">0</h4>
     </div>
   </div>
 </div>
 
 <!-- MAIN CONTENT ROW -->
-<div class="row g-3">
+<div class="row g-4">
   <!-- LEFT COLUMN - FILTERS AND DISTRIBUTION -->
   <div class="col-md-3">
     <!-- FILTER CARD -->
-    <div class="card filter-card p-3 mb-3">
+    <div class="card filter-card p-4 mb-4">
       <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
       
       <!-- Other Filters -->
@@ -211,13 +342,13 @@ body{
     </div>
     
     <!-- ALARM DISTRIBUTION CARD -->
-    <div class="card distribution-card p-3">
+    <div class="card distribution-card p-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
-        <span class="badge bg-info" id="distTotalCount">0 alarms</span>
+        <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
       </div>
-      <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-        <table class="table table-sm table-hover distribution-table">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover distribution-table mb-0">
           <thead>
             <tr>
               <th>Alarm Name</th>
@@ -237,12 +368,12 @@ body{
   <!-- RIGHT COLUMN - MAIN TABLE -->
   <div class="col-md-9">
     <!-- EXPORT AND CONTROLS -->
-    <div class="d-flex justify-content-between mb-2">
+    <div class="d-flex justify-content-between mb-3">
       <div class="d-flex align-items-center">
-        <span class="badge bg-info me-2" id="filteredCount">Showing 0 of 0 records</span>
+        <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-          <label class="form-check-label" for="autoRefresh">Auto-refresh (5 min)</label>
+          <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
         </div>
       </div>
       <div>
@@ -254,31 +385,33 @@ body{
     
     <!-- MAIN TABLE -->
     <div class="main-table-container">
-      <table class="table table-striped table-hover table-bordered mb-0">
-        <thead>
-          <tr>
-            <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-            <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
-            <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
-            <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
-            <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
-            <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
-            <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-            <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
-            <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr id="loadingRow">
-            <td colspan="9" class="loading">
-              <div class="text-center">
-                <div class="spinner-border text-primary mb-2" role="status"></div>
-                <div>Loading data from Google Sheets...</div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="main-table-wrapper">
+        <table class="table table-striped table-hover table-bordered">
+          <thead>
+            <tr>
+              <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+              <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
+              <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+              <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
+              <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
+              <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
+              <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+              <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
+              <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr id="loadingRow">
+              <td colspan="9" class="loading">
+                <div class="text-center">
+                  <div class="spinner-border text-primary mb-3" role="status"></div>
+                  <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -426,8 +559,8 @@ function render() {
       <tr>
         <td colspan="9" class="text-center py-5">
           <i class="fas fa-database fa-2x mb-3 text-muted"></i>
-          <div>No data found</div>
-          <small class="text-muted">Try adjusting your filters</small>
+          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No data found</div>
+          <small class="text-muted" style="font-family: 'Inter', sans-serif;">Try adjusting your filters</small>
         </td>
       </tr>
     `;
@@ -460,21 +593,21 @@ function render() {
     // Create aging badge
     let agingBadge = "";
     if (item._agingText && item._agingText !== "-") {
-      agingBadge = `<span class="badge ${item._agingClass}">${item._agingText}</span>`;
+      agingBadge = `<span class="badge ${item._agingClass}" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item._agingText}</span>`;
     } else {
       agingBadge = "-";
     }
     
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
-      <td>${item["Alarm Source"] || ""}</td>
-      <td><span class="badge bg-primary">${item["Name"] || ""}</span></td>
-      <td>${item["Site Type"] || ""}</td>
-      <td><span class="badge bg-secondary">${item["Category VIP POI"] || ""}</span></td>
-      <td><span class="badge bg-dark">${ossValue}</span></td>
-      <td class="text-nowrap">${firstOccurred}</td>
+      <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
+      <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || ""}</span></td>
+      <td style="font-family: 'Inter', sans-serif;">${item["Site Type"] || ""}</td>
+      <td><span class="badge bg-secondary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Category VIP POI"] || ""}</span></td>
+      <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${ossValue}</span></td>
+      <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
       <td class="text-center">${agingBadge}</td>
-      <td>${item["MO Name"] || ""}</td>
+      <td style="font-family: 'Inter', sans-serif;">${item["MO Name"] || ""}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -593,7 +726,7 @@ function updateDistributionTable() {
   if (filteredData.length === 0) {
     distributionBody.innerHTML = `
       <tr>
-        <td colspan="2" class="text-center text-muted py-4">No data available</td>
+        <td colspan="2" class="text-center text-muted py-4" style="font-family: 'Inter', sans-serif;">No data available</td>
       </tr>
     `;
     distTotalCount.textContent = "0 alarms";
@@ -620,9 +753,9 @@ function updateDistributionTable() {
   sortedAlarms.forEach(([alarmName, count]) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${alarmName}</td>
+      <td style="font-family: 'Inter', sans-serif;">${alarmName}</td>
       <td class="text-end">
-        <span class="badge bg-primary rounded-pill">${count}</span>
+        <span class="badge bg-primary rounded-pill" style="font-family: 'Plus Jakarta Sans', sans-serif;">${count}</span>
       </td>
     `;
     distributionBody.appendChild(tr);
@@ -720,7 +853,7 @@ function showError(message) {
     <tr>
       <td colspan="9" class="text-center py-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-        <div>${message}</div>
+        <div style="font-family: 'Inter', sans-serif;">${message}</div>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
           <i class="fas fa-redo me-1"></i>Retry
         </button>
