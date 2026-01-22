@@ -152,7 +152,8 @@ body{
   padding: 0;
   border: none;
   overflow: hidden;
-  height: 550px;
+  flex: 1;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
 }
@@ -222,6 +223,10 @@ h1, h2, h3, h4, h5, h6 {
 #lastUpdate {
   font-family: 'Inter', sans-serif;
   font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 .distribution-card h6, .filter-card h6 {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -254,7 +259,7 @@ h1, h2, h3, h4, h5, h6 {
 .horizontal-sidebar {
   display: flex;
   gap: 24px;
-  height: 350px;
+  height: 400px;
   margin-bottom: 24px;
 }
 .horizontal-sidebar > .filter-card,
@@ -266,15 +271,51 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .distribution-section {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .filter-buttons {
   margin-top: auto;
   padding-top: 16px;
+}
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+}
+.main-table-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+.controls-section {
+  margin-bottom: 16px;
+}
+.filter-fields {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 16px;
+}
+.distribution-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.last-update-time {
+  font-size: 14px;
+  font-weight: 600;
+}
+.last-update-date {
+  font-size: 12px;
+  opacity: 0.9;
 }
 </style>
 </head>
@@ -286,14 +327,19 @@ h1, h2, h3, h4, h5, h6 {
     <i class="fas fa-tower-cell me-2"></i>VIP Alarms Dashboard
   </h5>
   <div>
-    <span id="lastUpdate"><i class="fas fa-clock me-1"></i> Loading...</span>
+    <div id="lastUpdate">
+      <div class="last-update-time">
+        <i class="fas fa-clock me-1"></i> Loading...
+      </div>
+      <div class="last-update-date">-</div>
+    </div>
     <button class="btn btn-sm btn-light ms-2" onclick="loadData()" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
       <i class="fas fa-sync-alt me-1"></i>Refresh
     </button>
   </div>
 </div>
 
-<div class="container-fluid p-4">
+<div class="container-fluid p-4 dashboard-content">
 
 <!-- SUMMARY ROW -->
 <div class="row g-4 mb-4">
@@ -326,7 +372,7 @@ h1, h2, h3, h4, h5, h6 {
   <div class="col-md-2">
     <div class="card card-summary p-3 aging-card" id="aging3Card" onclick="filterByAging('3')" style="background: linear-gradient(135deg, #fef3c7, #fbbf24);">
       <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #92400e;">
-        <i class="fas fa-clock me-2"></i>≤ 3 Days
+        <i class="fas fa-clock me-2"></i>≥ 1 & ≤ 4 Days
       </div>
       <h4 id="aging3" class="mt-2">0</h4>
     </div>
@@ -334,7 +380,7 @@ h1, h2, h3, h4, h5, h6 {
   <div class="col-md-2">
     <div class="card card-summary p-3 aging-card" id="aging4Card" onclick="filterByAging('4')" style="background: linear-gradient(135deg, #fee2e2, #f87171);">
       <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #991b1b;">
-        <i class="fas fa-clock me-2"></i>≥ 4 Days
+        <i class="fas fa-clock me-2"></i>≥ 5 Days
       </div>
       <h4 id="aging4" class="mt-2">0</h4>
     </div>
@@ -342,39 +388,41 @@ h1, h2, h3, h4, h5, h6 {
 </div>
 
 <!-- FILTER AND DISTRIBUTION ROW (SEJAJAR KESAMPING) -->
-<div class="row mb-4">
+<div class="row mb-4 flex-grow-0">
   <div class="col-12">
     <div class="horizontal-sidebar">
       <!-- FILTER CARD -->
       <div class="card filter-card p-4">
         <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
         
-        <!-- Other Filters -->
         <div class="filter-section">
-          <div class="mb-3">
-            <label class="form-label"><i class="fas fa-search me-1"></i> Alarm Name</label>
-            <input id="fAlarm" class="form-control" placeholder="Search alarm name...">
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label"><i class="fas fa-id-badge me-1"></i> Site ID</label>
-            <input id="fSite" class="form-control" placeholder="Search site ID...">
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label"><i class="fas fa-tag me-1"></i> Category</label>
-            <select id="fCategory" class="form-control">
-              <option value="">All Categories</option>
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label"><i class="fas fa-satellite-dish me-1"></i> OSS</label>
-            <select id="fSource" class="form-control">
-              <option value="">All OSS</option>
-              <option value="MAE6">MAE6</option>
-              <option value="MAE7">MAE7</option>
-            </select>
+          <div class="filter-fields">
+            <!-- Other Filters -->
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-search me-1"></i> Alarm Name</label>
+              <input id="fAlarm" class="form-control" placeholder="Search alarm name...">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-id-badge me-1"></i> Site ID</label>
+              <input id="fSite" class="form-control" placeholder="Search site ID...">
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-tag me-1"></i> Category</label>
+              <select id="fCategory" class="form-control">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-satellite-dish me-1"></i> OSS</label>
+              <select id="fSource" class="form-control">
+                <option value="">All OSS</option>
+                <option value="MAE6">MAE6</option>
+                <option value="MAE7">MAE7</option>
+              </select>
+            </div>
           </div>
           
           <div class="filter-buttons d-grid gap-2">
@@ -390,25 +438,27 @@ h1, h2, h3, h4, h5, h6 {
       
       <!-- ALARM DISTRIBUTION CARD -->
       <div class="card distribution-card p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
-          <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
-        </div>
-        <div class="distribution-table-container">
-          <div class="distribution-table-wrapper">
-            <table class="table table-sm table-hover distribution-table mb-0">
-              <thead>
-                <tr>
-                  <th>Alarm Name</th>
-                  <th class="text-end">Count</th>
-                </tr>
-              </thead>
-              <tbody id="distributionBody">
-                <tr>
-                  <td colspan="2" class="text-center text-muted py-4">Loading...</td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="distribution-content">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
+            <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
+          </div>
+          <div class="distribution-table-container">
+            <div class="distribution-table-wrapper">
+              <table class="table table-sm table-hover distribution-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Alarm Name</th>
+                    <th class="text-end">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="distributionBody">
+                  <tr>
+                    <td colspan="2" class="text-center text-muted py-4">Loading...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -417,11 +467,11 @@ h1, h2, h3, h4, h5, h6 {
 </div>
 
 <!-- MAIN TABLE ROW (DIBAWAH FILTER DAN DISTRIBUTION) -->
-<div class="row">
+<div class="row flex-grow-1">
   <div class="col-12">
-    <div class="d-flex flex-column" style="height: 100%;">
+    <div class="main-table-section">
       <!-- EXPORT AND CONTROLS -->
-      <div class="d-flex justify-content-between mb-3">
+      <div class="controls-section d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
           <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
           <div class="form-check form-switch">
@@ -445,11 +495,11 @@ h1, h2, h3, h4, h5, h6 {
                 <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
                 <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
                 <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+                <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+                <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
                 <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
                 <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
                 <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
-                <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-                <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
                 <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
               </tr>
             </thead>
@@ -489,7 +539,12 @@ function loadData() {
   const loadingRow = document.getElementById("loadingRow");
   if (loadingRow) loadingRow.style.display = "";
   
-  document.getElementById("lastUpdate").innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading...';
+  document.getElementById("lastUpdate").innerHTML = `
+    <div class="last-update-time">
+      <i class="fas fa-spinner fa-spin me-1"></i> Loading...
+    </div>
+    <div class="last-update-date">-</div>
+  `;
   
   Papa.parse(CSV_URL, {
     download: true,
@@ -517,17 +572,32 @@ function loadData() {
         showError("No data available from Google Sheets");
       }
       
-      const now = new Date();
-      document.getElementById("lastUpdate").innerHTML = 
-        `<i class="fas fa-clock me-1"></i> Last Update: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+      updateLastUpdateTime();
     },
     error: function(err) {
       console.error("Error loading data:", err);
       showError("Failed to load data from Google Sheets");
-      document.getElementById("lastUpdate").innerHTML = 
-        '<i class="fas fa-exclamation-triangle me-1 text-warning"></i> Failed to load';
+      document.getElementById("lastUpdate").innerHTML = `
+        <div class="last-update-time">
+          <i class="fas fa-exclamation-triangle me-1 text-warning"></i> Failed to load
+        </div>
+        <div class="last-update-date">-</div>
+      `;
     }
   });
+}
+
+function updateLastUpdateTime() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+  const dateString = now.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'});
+  
+  document.getElementById("lastUpdate").innerHTML = `
+    <div class="last-update-time">
+      <i class="fas fa-clock me-1"></i> ${timeString}
+    </div>
+    <div class="last-update-date">${dateString}</div>
+  `;
 }
 
 function processData(data) {
@@ -554,7 +624,7 @@ function processData(data) {
           agingText = `${Math.floor(agingDays)}d`;
           if (agingDays <= 1) {
             agingClass = "aging-badge-1";
-          } else if (agingDays <= 3) {
+          } else if (agingDays >= 1 && agingDays <= 4) {
             agingClass = "aging-badge-2";
           } else {
             agingClass = "aging-badge-3";
@@ -632,9 +702,9 @@ function render() {
     const agingDays = item._agingDays;
     if (agingDays <= 1) {
       d1++;
-    } else if (agingDays <= 3) {
+    } else if (agingDays >= 1 && agingDays <= 4) {
       d3++;
-    } else if (agingDays >= 4) {
+    } else if (agingDays >= 5) {
       d4++;
     }
     
@@ -652,15 +722,16 @@ function render() {
       agingBadge = "-";
     }
     
+    // Updated column order: Site ID, Site Name, Alarm Name, First Occurred, Aging, Site Type, Category, OSS, MO Name
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || ""}</span></td>
+      <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
+      <td class="text-center">${agingBadge}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["Site Type"] || ""}</td>
       <td><span class="badge bg-secondary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Category VIP POI"] || ""}</span></td>
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${ossValue}</span></td>
-      <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
-      <td class="text-center">${agingBadge}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["MO Name"] || ""}</td>
     `;
     tbody.appendChild(tr);
@@ -738,12 +809,12 @@ function applyAgingFilter(type) {
       filteredData = rawData.filter(item => item._agingDays <= 1);
       break;
     case '3':
-      // ≤ 3 Days
-      filteredData = rawData.filter(item => item._agingDays <= 3);
+      // ≥ 1 Day and ≤ 4 Days
+      filteredData = rawData.filter(item => item._agingDays >= 1 && item._agingDays <= 4);
       break;
     case '4':
-      // ≥ 4 Days
-      filteredData = rawData.filter(item => item._agingDays >= 4);
+      // ≥ 5 Days
+      filteredData = rawData.filter(item => item._agingDays >= 5);
       break;
     case 'all':
     default:
@@ -869,8 +940,8 @@ function exportCSV() {
   }
   
   const headers = [
-    "SITE ID", "Alarm Source", "Name", "Site Type", 
-    "Category VIP POI", "Source", "First Occurred (NT)", "Aging (Days)", "MO Name"
+    "SITE ID", "Alarm Source", "Name", "First Occurred (NT)", 
+    "Aging (Days)", "Site Type", "Category VIP POI", "Source", "MO Name"
   ];
   
   const csvRows = [
@@ -880,6 +951,8 @@ function exportCSV() {
         let cell;
         if (header === "Aging (Days)") {
           cell = row._agingText || "";
+        } else if (header === "First Occurred (NT)") {
+          cell = row["First Occurred (NT)"] || "";
         } else {
           cell = row[header] || "";
         }
