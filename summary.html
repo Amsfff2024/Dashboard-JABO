@@ -5,110 +5,377 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Executive Alarm Dashboard</title>
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- PapaParse untuk parsing CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
     <style>
         :root {
+            --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+            --font-inter: 'Inter', sans-serif;
             --critical-red: #dc3545;
             --warning-orange: #fd7e14;
             --normal-green: #28a745;
             --info-blue: #17a2b8;
             --vip-gold: #ffc107;
-            --dark-blue: #2c3e50;
         }
+        
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            font-family: var(--font-inter);
+            min-height: 100vh;
         }
+        
+        /* HEADER */
         .executive-header {
-            background: linear-gradient(135deg, var(--dark-blue), #1a252f);
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
             color: white;
-            padding: 1rem 0;
-            border-bottom: 4px solid var(--critical-red);
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
+        
+        .executive-header h1 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            font-size: 1.5rem !important;
+            margin: 0;
+        }
+        
+        .executive-header p {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* LAST UPDATE */
+        #currentTime, #lastUpdatedTime, #nextRefreshTime {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        /* KPI CARDS - Updated Design */
         .kpi-card {
-            border-radius: 10px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+            transition: all 0.3s ease;
             border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: transform 0.2s;
+            overflow: hidden;
             height: 100%;
         }
+        
         .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
         }
-        .card-title {
-            font-size: 0.9rem;
-            color: #6c757d;
-            font-weight: 600;
-        }
+        
         .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            line-height: 1.2;
+            font-family: var(--font-plus-jakarta);
+            font-weight: 800;
+            font-size: 1.75rem;
+            color: #1e293b;
         }
-        .table thead th {
-            background-color: var(--dark-blue);
-            color: white;
+        
+        .card-title {
+            font-family: var(--font-plus-jakarta);
             font-weight: 600;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        /* FILTER CARDS */
+        .filter-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             border: none;
+        }
+        
+        .filter-card .input-group-text {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .filter-card .form-control {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+            height: 46px;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .btn-outline-success {
+            border-radius: 10px;
+            padding: 10px 20px;
+        }
+        
+        .btn-primary:hover, .btn-outline-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* SUMMARY CARDS */
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            border: none;
+            height: 100%;
+        }
+        
+        .summary-card h6 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        /* TABLE HEADERS */
+        .table thead th {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #fff;
             position: sticky;
             top: 0;
+            z-index: 10;
+            border: none;
+            padding: 14px 12px;
         }
+        
+        /* TABLE CONTENT */
+        .table tbody td {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 13px;
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8fafc;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        
+        /* BADGES */
+        .badge {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 20px;
+        }
+        
+        .badge-priority-P1 {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+        }
+        
+        .badge-priority-P2 {
+            background: linear-gradient(135deg, #fd7e14, #e8590c);
+            color: white;
+            border: none;
+        }
+        
+        /* VIP ROW */
         .vip-row {
             background-color: rgba(255, 193, 7, 0.1) !important;
         }
-        .badge-priority-P1 {
-            background-color: #dc3545;
-            color: white;
+        
+        /* VIP BADGE */
+        .vip-badge {
+            background: linear-gradient(135deg, #ffc107, #ffaa00);
+            color: #212529;
+            font-weight: 700;
         }
-        .badge-priority-P2 {
-            background-color: #fd7e14;
-            color: white;
+        
+        /* SITE ID CELL */
+        .site-id-cell {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-weight: 600;
+            color: #1e40af;
         }
-        .summary-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.25rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            height: 100%;
-        }
+        
+        /* LOADING */
         #loadingSpinner {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 300px;
+            padding: 60px;
+            font-size: 18px;
+            color: #64748b;
+            font-family: var(--font-inter);
         }
+        
+        .alarm-type-badge {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        
+        .time-cell {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+        }
+        
+        .duration-badge {
+            min-width: 70px;
+            text-align: center;
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+        }
+        
+        /* PROGRESS BARS */
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        /* CURSOR POINTER */
         .cursor-pointer {
             cursor: pointer;
         }
+        
+        /* SEARCH HIGHLIGHT */
         .search-highlight {
             background-color: #fff3cd;
             font-weight: 600;
         }
-        .site-breakdown {
-            max-height: 350px;
+        
+        /* SITE BREAKDOWN */
+        .site-breakdown, .vip-breakdown {
+            max-height: 250px;
             overflow-y: auto;
+            margin-bottom: 10px;
         }
-        .progress {
-            height: 8px;
+        
+        .vip-breakdown {
+            max-height: 200px;
         }
-        .alarm-type-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 10px;
+        
+        /* FORM SWITCH */
+        .form-check-label {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 14px;
         }
-        .time-cell {
-            font-family: monospace;
-            font-size: 0.85rem;
+        
+        /* CARD HEADER */
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
         }
-        .duration-badge {
-            min-width: 70px;
-            text-align: center;
+        
+        /* DASHBOARD STATUS BADGE */
+        #dashboardStatus {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        
+        /* FOOTER */
+        footer .small {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* DATA INFO */
+        #dataInfo {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 12px;
+        }
+        
+        /* SEARCH RESULTS TEXT */
+        #searchResultsText {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* RESPONSIVE ADJUSTMENTS */
+        @media (max-width: 768px) {
+            .executive-header {
+                padding: 12px 16px;
+                text-align: center;
+            }
+            
+            .executive-header h1 {
+                font-size: 1.2rem !important;
+            }
+            
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* ADDITIONAL SPACING */
+        .container.py-4 {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1.5rem !important;
+        }
+        
+        .row.mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+        
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 80px);
+        }
+        
+        /* VIP SITES SECTION */
+        .vip-sites-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #ffc107;
+        }
+        
+        .vip-sites-section h7 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            font-size: 14px;
+            color: #996500;
+        }
+        
+        /* TAB HEADER ICONS */
+        .table-title-icon {
+            color: #3b82f6;
+        }
+        
+        .vip-title-icon {
+            color: #ffc107;
         }
     </style>
 </head>
@@ -118,7 +385,7 @@
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h4 mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Executive Alarm Dashboard</h1>
+                    <h1 class="mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Executive Alarm Dashboard</h1>
                     <p class="small mb-0 opacity-75">Real-time Network Health Monitoring</p>
                 </div>
                 <div class="text-end">
@@ -132,52 +399,56 @@
     </div>
 
     <!-- Main Container -->
-    <div class="container py-4">
+    <div class="container py-4 dashboard-content">
         <!-- Search and Filter Row -->
         <div class="row mb-4">
             <div class="col-md-8">
-                <div class="card kpi-card">
+                <div class="card filter-card">
                     <div class="card-body">
                         <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Alarms</h6>
-                        <div class="row g-2">
-                            <div class="col-md-5">
-                                <div class="input-group input-group-sm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID (e.g., 13CKR0564)" onkeyup="applyFilters()">
                                 </div>
                             </div>
-                            <div class="col-md-5">
-                                <div class="input-group input-group-sm">
+                            <div class="col-md-6">
+                                <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-bell"></i></span>
                                     <input type="text" class="form-control" id="searchAlarmName" placeholder="Search by Alarm Name (e.g., CELL UNAVAILABLE)" onkeyup="applyFilters()">
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
-                                    <i class="fas fa-eraser me-1"></i> Clear
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <small class="text-muted" id="searchResultsText">Start typing to filter alarms. Matching text will be highlighted.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                    <i class="fas fa-eraser me-1"></i> Clear Filters
                                 </button>
                             </div>
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted" id="searchResultsText">Start typing to filter alarms. Matching text will be highlighted.</small>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card kpi-card">
-                    <div class="card-body text-center">
-                        <h6 class="card-title"><i class="fas fa-sync-alt me-2"></i>Data Control</h6>
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-sm btn-primary" onclick="fetchCSVData()" id="btnRefresh">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-sync-alt me-2"></i>Data Control</h6>
+                        <div class="d-flex flex-column gap-2">
+                            <button class="btn btn-primary w-100" onclick="fetchCSVData()" id="btnRefresh">
                                 <i class="fas fa-redo me-1"></i> Refresh Data
                             </button>
-                            <div class="form-check form-switch d-flex align-items-center">
-                                <input class="form-check-input me-2" type="checkbox" id="autoRefreshToggle" checked>
-                                <label class="form-check-label small" for="autoRefreshToggle">Auto (60s)</label>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
+                                    <label class="form-check-label" for="autoRefreshToggle">Auto-refresh (60s)</label>
+                                </div>
+                                <div class="small text-muted" id="dataInfo">No data loaded.</div>
                             </div>
                         </div>
-                        <div class="small text-muted mt-2" id="dataInfo">No data loaded.</div>
                     </div>
                 </div>
             </div>
@@ -186,90 +457,102 @@
         <!-- KPI Summary Row -->
         <div class="row mb-4">
             <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-danger border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">TOTAL ALARMS</h6>
-                                <div class="kpi-value text-danger" id="kpiTotalAlarms">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
-                            </div>
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">TOTAL ALARMS</h6>
+                            <div class="kpi-value text-danger" id="kpiTotalAlarms">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Active uncleared alarms</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Active uncleared alarms</div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-warning border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">AFFECTED SITES</h6>
-                                <div class="kpi-value text-warning" id="kpiAffectedSites">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-map-marker-alt fa-2x text-warning opacity-50"></i>
-                            </div>
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">AFFECTED SITES</h6>
+                            <div class="kpi-value text-warning" id="kpiAffectedSites">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Unique site IDs with alarms</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-map-marker-alt fa-2x text-warning opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Unique site IDs with alarms</div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-info border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">ALARM CATEGORIES</h6>
-                                <div class="kpi-value text-info" id="kpiAlarmCategories">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-list fa-2x text-info opacity-50"></i>
-                            </div>
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">ALARM CATEGORIES</h6>
+                            <div class="kpi-value text-info" id="kpiAlarmCategories">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Different types of alarms</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x text-info opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Different types of alarms</div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-3">
-                <div class="card kpi-card border-start border-success border-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="card-title">VIP SITES</h6>
-                                <div class="kpi-value text-success" id="kpiVipSites">0</div>
-                            </div>
-                            <div class="align-self-center">
-                                <i class="fas fa-crown fa-2x text-success opacity-50"></i>
-                            </div>
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">VIP SITES</h6>
+                            <div class="kpi-value text-success" id="kpiVipSites">0</div>
                         </div>
-                        <div class="small text-muted mt-2">Sites with VIP/POI category</div>
+                        <div class="align-self-center">
+                            <i class="fas fa-crown fa-2x text-success opacity-50"></i>
+                        </div>
                     </div>
+                    <div class="small text-muted mt-2">Sites with VIP/POI category</div>
                 </div>
             </div>
         </div>
 
         <!-- Alarm Summary and Count Table Row -->
         <div class="row mb-4">
-            <!-- Site Breakdown Summary -->
+            <!-- Site Breakdown Summary (Now with VIP Sites) -->
             <div class="col-lg-5 mb-4">
                 <div class="summary-card">
-                    <h6 class="mb-3"><i class="fas fa-building me-2 text-primary"></i>Top Affected Sites</h6>
+                    <h6 class="mb-3"><i class="fas fa-building me-2 table-title-icon"></i>Top Affected Sites</h6>
                     <div class="site-breakdown">
                         <table class="table table-sm table-borderless mb-0">
                             <thead>
                                 <tr>
-                                    <th class="small">Site ID</th>
-                                    <th class="small text-end">Alarms</th>
-                                    <th class="small" style="width: 100px;">Distribution</th>
+                                    <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
+                                    <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Alarms</th>
+                                    <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Distribution</th>
                                 </tr>
                             </thead>
                             <tbody id="siteBreakdownBody">
-                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                                <tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- VIP SITES TABLE - NEW ADDITION -->
+                    <div class="vip-sites-section">
+                        <h7 class="mb-2"><i class="fas fa-crown me-2 vip-title-icon"></i>VIP Sites with Alarms</h7>
+                        <div class="vip-breakdown">
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site ID</th>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Name</th>
+                                        <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Count</th>
+                                        <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vipSitesBody">
+                                    <tr><td colspan="4" class="text-center py-3" style="font-family: var(--font-inter);">Loading VIP sites...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -280,23 +563,23 @@
                     <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-hover mb-0">
-                            <thead class="small">
+                            <thead>
                                 <tr>
-                                    <th>Alarm Type</th>
-                                    <th class="text-end">Count</th>
-                                    <th class="text-end">%</th>
-                                    <th style="width: 120px;">Distribution</th>
-                                    <th>Priority</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Alarm Type</th>
+                                    <th class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Count</th>
+                                    <th class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">%</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 120px;">Distribution</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Priority</th>
                                 </tr>
                             </thead>
                             <tbody id="alarmCountTableBody">
-                                <tr><td colspan="5" class="text-center py-4">Loading data...</td></tr>
+                                <tr><td colspan="5" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
                             </tbody>
-                            <tfoot class="small table-light">
+                            <tfoot class="table-light">
                                 <tr id="alarmCountTableFooter">
-                                    <td><strong>Total</strong></td>
-                                    <td class="text-end"><strong>0</strong></td>
-                                    <td class="text-end"><strong>100%</strong></td>
+                                    <td style="font-family: var(--font-plus-jakarta); font-weight: 700;">Total</td>
+                                    <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">0</td>
+                                    <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">100%</td>
                                     <td colspan="2"></td>
                                 </tr>
                             </tfoot>
@@ -307,45 +590,47 @@
         </div>
 
         <!-- Detailed Alarm Table -->
-        <div class="row">
+        <div class="row flex-grow-1">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detailed Active Alarms</h6>
+                <div class="main-table-container">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0" style="font-family: var(--font-plus-jakarta); font-weight: 700;">
+                            <i class="fas fa-table me-2"></i>Detailed Active Alarms
+                        </h6>
                         <div>
-                            <span class="badge bg-secondary me-2" id="tableCountBadge">Showing 0 alarms</span>
-                            <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
-                                <i class="fas fa-download me-1"></i> Export
+                            <span class="badge bg-info me-2" id="tableCountBadge">Showing 0 alarms</span>
+                            <button class="btn btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-download me-1"></i> Export CSV
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="main-table-wrapper">
                         <div id="loadingSpinner">
                             <div class="text-center">
                                 <div class="spinner-border text-primary mb-3" role="status"></div>
-                                <p>Loading alarm data from CSV...</p>
+                                <p style="font-family: var(--font-inter);">Loading alarm data from Google Sheets...</p>
                             </div>
                         </div>
                         <div class="table-responsive" id="alarmTableContainer" style="display: none;">
-                            <table class="table table-hover mb-0" id="detailedAlarmTable">
+                            <table class="table table-striped table-hover table-bordered">
                                 <thead>
                                     <tr>
-                                        <th class="cursor-pointer" onclick="sortTable('siteId')">
+                                        <th class="cursor-pointer" onclick="sortTable('siteId')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Site ID <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="cursor-pointer" onclick="sortTable('alarmSource')">
+                                        <th class="cursor-pointer" onclick="sortTable('alarmSource')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Alarm Source <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="cursor-pointer" onclick="sortTable('alarmName')">
+                                        <th class="cursor-pointer" onclick="sortTable('alarmName')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Alarm Name <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="cursor-pointer" onclick="sortTable('timeFull')">
+                                        <th class="cursor-pointer" onclick="sortTable('timeFull')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Time <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="cursor-pointer" onclick="sortTable('duration')">
+                                        <th class="cursor-pointer" onclick="sortTable('duration')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Duration <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="cursor-pointer" onclick="sortTable('priority')">
+                                        <th class="cursor-pointer" onclick="sortTable('priority')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
                                             Priority <i class="fas fa-sort ms-1"></i>
                                         </th>
                                     </tr>
@@ -364,12 +649,12 @@
         <div class="row mt-4">
             <div class="col-12">
                 <div class="text-center small text-muted">
-                    <p class="mb-1">
+                    <p class="mb-1" style="font-family: var(--font-inter);">
                         <i class="fas fa-database me-1"></i> Data Source: Google Sheets CSV | 
                         <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span> |
                         <i class="fas fa-redo me-1 ms-3"></i> Next Auto-Refresh: <span id="nextRefreshTime">-</span>
                     </p>
-                    <p class="mb-0">Dashboard refreshes automatically every 60 seconds. Click "Refresh Data" to update manually.</p>
+                    <p class="mb-0" style="font-family: var(--font-inter);">Dashboard refreshes automatically every 60 seconds. Click "Refresh Data" to update manually.</p>
                 </div>
             </div>
         </div>
@@ -378,30 +663,28 @@
     <!-- JavaScript -->
     <script>
         // ==================== KONFIGURASI ====================
-        // GANTI URL INI DENGAN LINK CSV ANDA YANG SEBENARNYA
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=964625429&single=true&output=csv";
 
         // ==================== VARIABEL GLOBAL ====================
-        let allAlarmData = [];          // Semua data asli dari CSV
-        let filteredAlarmData = [];     // Data setelah difilter
-        let alarmCountByType = {};      // Hitungan per jenis alarm
-        let siteCountData = {};         // Hitungan per site ID
-        let currentSort = { column: 'timeFull', direction: 'desc' }; // Pengurutan tabel (default: time descending)
-        let autoRefreshInterval = null; // Interval auto-refresh
-        let refreshCountdown = 60;      // Hitung mundur auto-refresh
-        let currentSearchSiteId = '';   // Pencarian Site ID saat ini
-        let currentSearchAlarmName = ''; // Pencarian Alarm Name saat ini
+        let allAlarmData = [];
+        let filteredAlarmData = [];
+        let alarmCountByType = {};
+        let siteCountData = {};
+        let vipSitesData = {}; // NEW: Data untuk VIP sites
+        let currentSort = { column: 'timeFull', direction: 'desc' };
+        let autoRefreshInterval = null;
+        let refreshCountdown = 60;
+        let currentSearchSiteId = '';
+        let currentSearchAlarmName = '';
 
         // ==================== FUNGSI INISIALISASI ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard initializing...');
             updateCurrentTime();
-            setInterval(updateCurrentTime, 1000); // Update jam setiap detik
+            setInterval(updateCurrentTime, 1000);
             
-            // Setup auto-refresh toggle
             document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
             
-            // Ambil data CSV saat pertama kali load
             fetchCSVData();
         });
 
@@ -440,19 +723,16 @@
         }
 
         function processAlarmData(rawData) {
-            // Reset data
             allAlarmData = [];
             alarmCountByType = {};
             siteCountData = {};
+            vipSitesData = {}; // Reset VIP sites data
             
-            // Proses setiap baris data
             rawData.forEach(row => {
-                if (!row['Name'] || !row['SITE ID']) return; // Skip baris kosong
+                if (!row['Name'] || !row['SITE ID']) return;
                 
-                // Ambil waktu dari kolom 'First Occurred (NT)'
                 const firstOccurred = row['First Occurred (NT)'] || '';
                 
-                // Format waktu untuk display: DD/MM/YYYY HH:mm:ss
                 let formattedTime = 'N/A';
                 let dateObj = null;
                 
@@ -460,7 +740,6 @@
                     try {
                         dateObj = new Date(firstOccurred);
                         if (!isNaN(dateObj.getTime())) {
-                            // Format: DD/MM/YYYY HH:mm:ss
                             const day = String(dateObj.getDate()).padStart(2, '0');
                             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                             const year = dateObj.getFullYear();
@@ -475,7 +754,6 @@
                     }
                 }
                 
-                // Hitung durasi alarm (dalam menit)
                 let durationMinutes = 0;
                 if (dateObj && !isNaN(dateObj.getTime())) {
                     const now = new Date();
@@ -483,26 +761,26 @@
                     durationMinutes = Math.max(0, durationMinutes);
                 }
                 
-                // Tentukan prioritas berdasarkan jenis alarm
                 let priority = 'P2';
                 const alarmName = row['Name'] || '';
                 if (alarmName.includes('CELL UNAVAILABLE') || alarmName.includes('X2 INTERFACE')) {
                     priority = 'P1';
                 }
                 
-                // Tentukan apakah site VIP (untuk highlight)
                 const isVip = row['Category VIP POI'] && 
                              (row['Category VIP POI'].includes('Golden') || 
                               row['Category VIP POI'].includes('VIP'));
                 
-                // Simpan data yang diproses
+                const siteId = row['SITE ID'] || 'N/A';
+                const siteName = row['Alarm Source'] || 'N/A';
+                
                 const processedRow = {
-                    raw: row, // Simpan data asli
-                    siteId: row['SITE ID'] || 'N/A',
-                    alarmSource: row['Alarm Source'] || 'N/A',
+                    raw: row,
+                    siteId: siteId,
+                    alarmSource: siteName,
                     alarmName: alarmName,
-                    timeFull: firstOccurred, // Untuk sorting
-                    timeDisplay: formattedTime, // Untuk display format DD/MM/YYYY HH:mm:ss
+                    timeFull: firstOccurred,
+                    timeDisplay: formattedTime,
                     duration: durationMinutes,
                     priority: priority,
                     isVip: isVip,
@@ -511,27 +789,39 @@
                 
                 allAlarmData.push(processedRow);
                 
-                // Hitung per jenis alarm untuk tabel ringkasan
+                // Count alarm types
                 if (alarmCountByType[alarmName]) {
                     alarmCountByType[alarmName]++;
                 } else {
                     alarmCountByType[alarmName] = 1;
                 }
                 
-                // Hitung per site ID untuk breakdown
-                const siteId = row['SITE ID'] || 'N/A';
+                // Count sites
                 if (siteCountData[siteId]) {
                     siteCountData[siteId]++;
                 } else {
                     siteCountData[siteId] = 1;
+                }
+                
+                // NEW: Collect VIP sites data
+                if (isVip) {
+                    if (!vipSitesData[siteId]) {
+                        vipSitesData[siteId] = {
+                            siteId: siteId,
+                            siteName: siteName,
+                            count: 0,
+                            isVip: true
+                        };
+                    }
+                    vipSitesData[siteId].count++;
                 }
             });
             
             console.log(`Processed ${allAlarmData.length} alarm records`);
             console.log(`Found ${Object.keys(alarmCountByType).length} alarm types`);
             console.log(`Found ${Object.keys(siteCountData).length} unique sites`);
+            console.log(`Found ${Object.keys(vipSitesData).length} VIP sites with alarms`); // NEW
             
-            // Terapkan filter dan render
             applyFilters();
         }
 
@@ -542,7 +832,6 @@
             
             console.log(`Applying filters - Site: "${currentSearchSiteId}", Alarm: "${currentSearchAlarmName}"`);
             
-            // Filter data berdasarkan pencarian
             filteredAlarmData = allAlarmData.filter(alarm => {
                 const siteIdMatch = !currentSearchSiteId || 
                     alarm.siteId.toLowerCase().includes(currentSearchSiteId);
@@ -553,7 +842,6 @@
                 return siteIdMatch && alarmNameMatch;
             });
             
-            // Update teks hasil pencarian
             const resultsText = document.getElementById('searchResultsText');
             if (currentSearchSiteId || currentSearchAlarmName) {
                 resultsText.textContent = `Found ${filteredAlarmData.length} alarms matching your search.`;
@@ -563,10 +851,10 @@
                 resultsText.className = 'text-muted';
             }
             
-            // Update UI dengan data yang sudah difilter
             updateSummaryKPIs();
             updateAlarmCountTable();
             updateSiteBreakdown();
+            updateVipSitesTable(); // NEW: Update VIP sites table
             renderDetailedTable();
             updateTableCountBadge();
         }
@@ -597,7 +885,7 @@
                 <tr>
                     <td colspan="6" class="text-center py-5 text-danger">
                         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-                        <div>${message}</div>
+                        <div style="font-family: var(--font-inter);">${message}</div>
                         <button class="btn btn-sm btn-outline-primary mt-2" onclick="fetchCSVData()">
                             <i class="fas fa-redo me-1"></i> Try Again
                         </button>
@@ -609,19 +897,16 @@
         }
 
         function updateSummaryKPIs() {
-            // Hitung metrik dari data yang sudah difilter
             const totalAlarms = filteredAlarmData.length;
             const uniqueSites = new Set(filteredAlarmData.map(a => a.siteId)).size;
             const uniqueAlarmTypes = new Set(filteredAlarmData.map(a => a.alarmName)).size;
             const vipSites = filteredAlarmData.filter(a => a.isVip).length;
             
-            // Update tampilan KPI
             document.getElementById('kpiTotalAlarms').textContent = totalAlarms.toLocaleString();
             document.getElementById('kpiAffectedSites').textContent = uniqueSites.toLocaleString();
             document.getElementById('kpiAlarmCategories').textContent = uniqueAlarmTypes.toLocaleString();
             document.getElementById('kpiVipSites').textContent = vipSites.toLocaleString();
             
-            // Update data info
             document.getElementById('dataInfo').innerHTML = `
                 <i class="fas fa-check-circle text-success me-1"></i>
                 Loaded ${allAlarmData.length} total alarms, ${filteredAlarmData.length} filtered
@@ -633,11 +918,10 @@
             const tableFooter = document.getElementById('alarmCountTableFooter');
             
             if (Object.keys(alarmCountByType).length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No alarm data available</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="font-family: var(--font-inter);">No alarm data available</td></tr>';
                 return;
             }
             
-            // Konversi objek ke array dan urutkan berdasarkan jumlah (descending)
             const alarmTypesArray = Object.entries(alarmCountByType)
                 .map(([name, count]) => ({ 
                     name, 
@@ -648,20 +932,18 @@
             
             const totalAlarms = alarmTypesArray.reduce((sum, item) => sum + item.count, 0);
             
-            // Render baris tabel
             let tableHTML = '';
             alarmTypesArray.forEach(item => {
                 const percentage = totalAlarms > 0 ? ((item.count / totalAlarms) * 100).toFixed(1) : '0.0';
                 const barWidth = totalAlarms > 0 ? (item.count / totalAlarms * 100) : 0;
                 
-                // Tentukan warna progress bar berdasarkan prioritas
                 let progressBarClass = item.priority === 'P1' ? 'bg-danger' : 'bg-warning';
                 
                 tableHTML += `
                     <tr>
-                        <td class="small">${highlightSearchText(item.name, 'alarmName')}</td>
-                        <td class="text-end fw-semibold">${item.count}</td>
-                        <td class="text-end text-muted">${percentage}%</td>
+                        <td style="font-family: var(--font-inter);">${highlightSearchText(item.name, 'alarmName')}</td>
+                        <td class="text-end fw-semibold" style="font-family: var(--font-inter);">${item.count}</td>
+                        <td class="text-end text-muted" style="font-family: var(--font-inter);">${percentage}%</td>
                         <td>
                             <div class="progress">
                                 <div class="progress-bar ${progressBarClass}" 
@@ -684,9 +966,9 @@
             
             tableBody.innerHTML = tableHTML;
             tableFooter.innerHTML = `
-                <td><strong>Total</strong></td>
-                <td class="text-end"><strong>${totalAlarms}</strong></td>
-                <td class="text-end"><strong>100%</strong></td>
+                <td style="font-family: var(--font-plus-jakarta); font-weight: 700;">Total</td>
+                <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">${totalAlarms}</td>
+                <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">100%</td>
                 <td colspan="2"></td>
             `;
         }
@@ -695,19 +977,17 @@
             const tableBody = document.getElementById('siteBreakdownBody');
             
             if (Object.keys(siteCountData).length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No site data available</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">No site data available</td></tr>';
                 return;
             }
             
-            // Konversi objek ke array dan urutkan berdasarkan jumlah (descending)
             const siteArray = Object.entries(siteCountData)
                 .map(([siteId, count]) => ({ siteId, count }))
                 .sort((a, b) => b.count - a.count)
-                .slice(0, 10); // Ambil 10 site teratas
+                .slice(0, 10);
             
             const maxCount = siteArray.length > 0 ? Math.max(...siteArray.map(s => s.count)) : 1;
             
-            // Render baris tabel
             let tableHTML = '';
             siteArray.forEach(site => {
                 const barWidth = maxCount > 0 ? (site.count / maxCount * 100) : 0;
@@ -718,8 +998,8 @@
                 
                 tableHTML += `
                     <tr>
-                        <td class="small fw-semibold">${siteIdDisplay}</td>
-                        <td class="text-end small">${site.count}</td>
+                        <td style="font-family: var(--font-inter); font-weight: 600;">${siteIdDisplay}</td>
+                        <td class="text-end" style="font-family: var(--font-inter);">${site.count}</td>
                         <td>
                             <div class="progress">
                                 <div class="progress-bar bg-info" 
@@ -738,6 +1018,55 @@
             tableBody.innerHTML = tableHTML;
         }
 
+        // NEW FUNCTION: Update VIP Sites Table
+        function updateVipSitesTable() {
+            const tableBody = document.getElementById('vipSitesBody');
+            
+            if (Object.keys(vipSitesData).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3" style="font-family: var(--font-inter);">No VIP sites with alarms found</td></tr>';
+                return;
+            }
+            
+            // Convert object to array and sort by count (descending)
+            const vipSitesArray = Object.values(vipSitesData)
+                .sort((a, b) => b.count - a.count);
+            
+            // Calculate total VIP alarms for percentage
+            const totalVipAlarms = vipSitesArray.reduce((sum, site) => sum + site.count, 0);
+            
+            let tableHTML = '';
+            vipSitesArray.forEach(site => {
+                const percentage = totalVipAlarms > 0 ? ((site.count / totalVipAlarms) * 100).toFixed(1) : '0.0';
+                const isSearchMatch = currentSearchSiteId && site.siteId.toLowerCase().includes(currentSearchSiteId);
+                
+                const siteIdDisplay = isSearchMatch ? 
+                    `<span class="search-highlight">${site.siteId}</span>` : 
+                    site.siteId;
+                
+                tableHTML += `
+                    <tr class="vip-row">
+                        <td style="font-family: var(--font-inter); font-weight: 600;" class="site-id-cell">${siteIdDisplay}</td>
+                        <td style="font-family: var(--font-inter);">${site.siteName}</td>
+                        <td class="text-end" style="font-family: var(--font-inter); font-weight: 600;">${site.count}</td>
+                        <td class="text-end" style="font-family: var(--font-inter); color: #996500; font-weight: 600;">${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            // Add summary row if there are multiple VIP sites
+            if (vipSitesArray.length > 1) {
+                tableHTML += `
+                    <tr style="background-color: #fffdf6; border-top: 1px solid #ffc107;">
+                        <td colspan="2" style="font-family: var(--font-plus-jakarta); font-weight: 700; font-size: 12px;">Total VIP Sites</td>
+                        <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">${totalVipAlarms}</td>
+                        <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">100%</td>
+                    </tr>
+                `;
+            }
+            
+            tableBody.innerHTML = tableHTML;
+        }
+
         function renderDetailedTable() {
             const tableBody = document.getElementById('detailedAlarmTableBody');
             
@@ -746,52 +1075,47 @@
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <i class="fas fa-search fa-2x mb-3 text-muted"></i>
-                            <div>No alarms found matching your criteria</div>
-                            <small class="text-muted">Try adjusting your search filters</small>
+                            <div style="font-family: var(--font-inter); font-weight: 500;">No alarms found matching your criteria</div>
+                            <small class="text-muted" style="font-family: var(--font-inter);">Try adjusting your search filters</small>
                         </td>
                     </tr>
                 `;
                 return;
             }
             
-            // Urutkan data terlebih dahulu
             sortFilteredData();
             
-            // Render setiap baris alarm
             let tableHTML = '';
             filteredAlarmData.forEach(alarm => {
-                // Tentukan class baris untuk VIP
                 const rowClass = alarm.isVip ? 'vip-row' : '';
                 
-                // Format durasi dengan warna berbeda berdasarkan lama durasi
                 let durationText = '';
                 let durationBadgeClass = 'bg-info';
                 
-                if (alarm.duration >= 1440) { // Lebih dari 1 hari (24 jam * 60 menit)
+                if (alarm.duration >= 1440) {
                     const days = Math.floor(alarm.duration / 1440);
                     const hours = Math.floor((alarm.duration % 1440) / 60);
                     durationText = `${days}d ${hours}h`;
                     durationBadgeClass = 'bg-danger';
-                } else if (alarm.duration >= 60) { // Lebih dari 1 jam
+                } else if (alarm.duration >= 60) {
                     const hours = Math.floor(alarm.duration / 60);
                     const mins = alarm.duration % 60;
                     durationText = `${hours}h ${mins}m`;
                     durationBadgeClass = alarm.duration > 120 ? 'bg-danger' : 'bg-warning';
-                } else { // Kurang dari 1 jam
+                } else {
                     durationText = `${alarm.duration}m`;
                     durationBadgeClass = alarm.duration > 30 ? 'bg-warning' : 'bg-info';
                 }
                 
-                // Highlight teks pencarian
                 const highlightedSiteId = highlightSearchText(alarm.siteId, 'siteId');
                 const highlightedAlarmName = highlightSearchText(alarm.alarmName, 'alarmName');
                 const highlightedAlarmSource = highlightSearchText(alarm.alarmSource, 'alarmSource');
                 
                 tableHTML += `
                     <tr class="${rowClass}">
-                        <td class="fw-semibold">${highlightedSiteId}</td>
-                        <td>${highlightedAlarmSource}</td>
-                        <td>${highlightedAlarmName}</td>
+                        <td class="site-id-cell">${highlightedSiteId}</td>
+                        <td style="font-family: var(--font-inter);">${highlightedAlarmSource}</td>
+                        <td style="font-family: var(--font-inter);">${highlightedAlarmName}</td>
                         <td class="time-cell">${alarm.timeDisplay}</td>
                         <td>
                             <span class="badge ${durationBadgeClass} duration-badge">
@@ -819,7 +1143,6 @@
             } else if (filterType === 'alarmName' && currentSearchAlarmName) {
                 searchTerm = currentSearchAlarmName;
             } else if (filterType === 'alarmSource' && (currentSearchSiteId || currentSearchAlarmName)) {
-                // Untuk alarm source, kita highlight jika ada pencarian
                 searchTerm = currentSearchSiteId || currentSearchAlarmName;
             }
             
@@ -833,46 +1156,38 @@
             const badge = document.getElementById('tableCountBadge');
             badge.textContent = `Showing ${filteredAlarmData.length} of ${allAlarmData.length} alarms`;
             
-            // Update warna badge berdasarkan jumlah
             if (filteredAlarmData.length === 0) {
                 badge.className = 'badge bg-secondary';
             } else if (filteredAlarmData.length === allAlarmData.length) {
                 badge.className = 'badge bg-success';
             } else {
-                badge.className = 'badge bg-primary';
+                badge.className = 'badge bg-info';
             }
         }
 
         // ==================== FUNGSI PENGURUTAN TABEL ====================
         function sortTable(column) {
-            // Toggle arah pengurutan jika kolom yang sama diklik
             if (currentSort.column === column) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSort.column = column;
-                currentSort.direction = 'desc'; // Default descending
+                currentSort.direction = 'desc';
             }
             
-            // Update UI untuk menunjukkan kolom yang sedang diurutkan
             updateSortIndicators();
-            
-            // Render ulang tabel dengan data yang sudah diurutkan
             renderDetailedTable();
         }
 
         function updateSortIndicators() {
-            // Reset semua indikator
             document.querySelectorAll('#detailedAlarmTable thead th i').forEach(icon => {
                 icon.className = 'fas fa-sort ms-1 text-muted';
             });
             
-            // Set indikator untuk kolom yang aktif
             const headers = document.querySelectorAll('#detailedAlarmTable thead th');
             headers.forEach((header, index) => {
                 const icon = header.querySelector('i');
                 if (!icon) return;
                 
-                // Tentukan kolom berdasarkan teks header
                 let column = '';
                 if (header.textContent.includes('Site ID')) column = 'siteId';
                 else if (header.textContent.includes('Alarm Source')) column = 'alarmSource';
@@ -914,7 +1229,6 @@
                         bValue = b.duration;
                         break;
                     case 'priority':
-                        // Urutkan P1 sebelum P2
                         aValue = a.priority === 'P1' ? 0 : 1;
                         bValue = b.priority === 'P1' ? 0 : 1;
                         break;
@@ -923,7 +1237,6 @@
                         bValue = b.timeFull || '';
                 }
                 
-                // Untuk pengurutan ascending/descending
                 const multiplier = currentSort.direction === 'asc' ? 1 : -1;
                 
                 if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -967,7 +1280,6 @@
             const toggle = document.getElementById('autoRefreshToggle');
             
             if (toggle.checked) {
-                // Start auto-refresh interval
                 if (autoRefreshInterval) clearInterval(autoRefreshInterval);
                 
                 autoRefreshInterval = setInterval(() => {
@@ -981,7 +1293,6 @@
                 
                 console.log('Auto-refresh enabled');
             } else {
-                // Stop auto-refresh
                 if (autoRefreshInterval) {
                     clearInterval(autoRefreshInterval);
                     autoRefreshInterval = null;
@@ -997,20 +1308,17 @@
             switch(status) {
                 case 'loading':
                     statusBadge.className = 'badge bg-warning';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
                     break;
                 case 'success':
                     statusBadge.className = 'badge bg-success';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
                     break;
                 case 'error':
                     statusBadge.className = 'badge bg-danger';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
                     break;
                 default:
                     statusBadge.className = 'badge bg-secondary';
-                    statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
             }
+            statusBadge.innerHTML = `<i class="fas fa-circle me-1"></i> ${message}`;
         }
 
         // ==================== FUNGSI EKSPOR ====================
@@ -1020,12 +1328,10 @@
                 return;
             }
             
-            // Siapkan header CSV sesuai urutan baru
             const headers = [
                 'Site ID', 'Alarm Source', 'Alarm Name', 'Time', 'Duration', 'Priority'
             ];
             
-            // Siapkan data baris
             const csvRows = [
                 headers.join(','),
                 ...filteredAlarmData.map(alarm => {
@@ -1040,31 +1346,29 @@
                 })
             ];
             
-            // Buat file CSV
             const csvString = csvRows.join('\n');
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `alarm_dashboard_export_${new Date().toISOString().slice(0,10)}.csv`;
+            link.download = `executive_alarms_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
 
-        // ==================== FUNGSI BANTUAN ====================
-        // Fungsi untuk debugging: tampilkan data di console
+        // ==================== DEBUG FUNCTIONS ====================
         window.debugData = function() {
             console.log('All Alarm Data:', allAlarmData);
             console.log('Filtered Alarm Data:', filteredAlarmData);
             console.log('Alarm Count By Type:', alarmCountByType);
             console.log('Site Count Data:', siteCountData);
+            console.log('VIP Sites Data:', vipSitesData); // NEW
             console.log('Current Sort:', currentSort);
             alert(`Data logged to console. Total: ${allAlarmData.length}, Filtered: ${filteredAlarmData.length}`);
         };
 
-        // Ekspos fungsi penting ke global scope untuk debugging
         window.fetchCSVData = fetchCSVData;
         window.applyFilters = applyFilters;
         window.clearFilters = clearFilters;
@@ -1072,8 +1376,8 @@
         window.exportToCSV = exportToCSV;
     </script>
 
-    <!-- Bootstrap JS (optional, for some components) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
