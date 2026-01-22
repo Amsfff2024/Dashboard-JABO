@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Information Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    
+    <style>
+        :root {
+            --huawei-red: #ff0000;
+            --nokia-blue: #124191;
+            --ericsson-blue: #00205b;
+            --zte-green: #0b9e00;
+            --dark-blue: #2c3e50;
+            --vip-gold: #ffc107;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .executive-header {
+            background: linear-gradient(135deg, var(--dark-blue), #1a252f);
+            color: white;
+            padding: 1rem 0;
+            border-bottom: 4px solid var(--huawei-red);
+        }
+        .kpi-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .vip-row {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            height: 100%;
+        }
+        #loadingSpinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        .search-highlight {
+            background-color: #fff3cd;
+            font-weight: 600;
+        }
+        .site-breakdown {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .badge-huawei { background-color: var(--huawei-red); color: white; }
+        .badge-nokia { background-color: var(--nokia-blue); color: white; }
+        .badge-ericsson { background-color: var(--ericsson-blue); color: white; }
+        .badge-zte { background-color: var(--zte-green); color: white; }
+        .badge-2g { background-color: #6c757d; color: white; }
+        .badge-4g { background-color: #28a745; color: white; }
+        .badge-5g { background-color: #007bff; color: white; }
+        .badge-vip { background-color: var(--vip-gold); color: #212529; }
+        .badge-macro { background-color: #6610f2; color: white; }
+        .badge-micro { background-color: #20c997; color: white; }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+        .map-container {
+            position: relative;
+        }
+        .leaflet-control-layers, .leaflet-control-zoom {
+            border-radius: 5px !important;
+            overflow: hidden;
+        }
+        .vendor-filter {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .table thead th {
+            background-color: var(--dark-blue);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            padding: 5px 10px;
+        }
+        .cluster-marker {
+            background-color: #007bff;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .marker-huawei { background-color: var(--huawei-red); }
+        .marker-nokia { background-color: var(--nokia-blue); }
+        .marker-ericsson { background-color: var(--ericsson-blue); }
+        .marker-zte { background-color: var(--zte-green); }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="executive-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1"><i class="fas fa-tower-cell me-2"></i>Site Information Dashboard</h1>
+                    <p class="small mb-0 opacity-75">Network Site Data Visualization & Management</p>
+                </div>
+                <div class="text-end">
+                    <div class="small mb-1"><i class="fas fa-clock me-1"></i> <span id="currentTime">Loading...</span></div>
+                    <span class="badge bg-success" id="dashboardStatus">
+                        <i class="fas fa-circle me-1"></i> Ready
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container py-4">
+        <!-- Search and Filter Row -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card kpi-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Sites</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                    <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="fas fa-tower-cell"></i></span>
+                                    <input type="text" class="form-control" id="searchSiteName" placeholder="Search by Site Name">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" id="filterVendor">
+                                    <option value="">All Vendors</option>
+                                    <option value="Huawei">Huawei</option>
+                                    <option value="Nokia">Nokia</option>
+                                    <option value="Ericsson">Ericsson</option>
+                                    <option value="ZTE">ZTE</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" id="filterNetworkType">
+                                    <option value="">All Network Types</option>
+                                    <option value="2G">2G</option>
+                                    <option value="4G">4G</option>
+                                    <option value="5G">5G</option>
+                                    <option value="2G_4G">2G_4G</option>
+                                    <option value="2G_4G_5G">2G_4G_5G</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" id="filterRegion">
+                                    <option value="">All Regions</option>
+                                    <option value="OUTER JAKARTA">OUTER JAKARTA</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card kpi-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-filter me-2"></i>Quick Filters</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-outline-danger" data-vendor="Huawei">
+                                <i class="fas fa-server me-1"></i> Huawei
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" data-network="5G">
+                                <i class="fas fa-bolt me-1"></i> 5G Sites
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" data-vip="true">
+                                <i class="fas fa-crown me-1"></i> VIP Sites
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="clearFilters()">
+                                <i class="fas fa-eraser me-1"></i> Clear All
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted" id="searchResultsText">Showing <span id="siteCount">0</span> sites</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Summary Row -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-danger border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">TOTAL SITES</h6>
+                                <div class="kpi-value text-danger" id="kpiTotalSites">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-tower-cell fa-2x text-danger opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">All network sites</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-primary border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">5G SITES</h6>
+                                <div class="kpi-value text-primary" id="kpi5GSites">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-bolt fa-2x text-primary opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Sites with 5G capability</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">VIP SITES</h6>
+                                <div class="kpi-value text-warning" id="kpiVipSites">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-crown fa-2x text-warning opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">VIP & POI category sites</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card kpi-card border-start border-info border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">MICRO CLUSTERS</h6>
+                                <div class="kpi-value text-info" id="kpiClusters">0</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-sitemap fa-2x text-info opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Unique micro clusters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map and Summary Row -->
+        <div class="row mb-4">
+            <!-- Map -->
+            <div class="col-lg-8 mb-4">
+                <div class="summary-card map-container">
+                    <h6 class="mb-3"><i class="fas fa-map me-2 text-primary"></i>Site Locations</h6>
+                    <div id="map"></div>
+                    <div class="vendor-filter">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showHuawei" checked>
+                            <label class="form-check-label" for="showHuawei">Huawei</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showNokia" checked>
+                            <label class="form-check-label" for="showNokia">Nokia</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showEricsson" checked>
+                            <label class="form-check-label" for="showEricsson">Ericsson</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showZTE" checked>
+                            <label class="form-check-label" for="showZTE">ZTE</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Site Breakdown Summary -->
+            <div class="col-lg-4 mb-4">
+                <div class="summary-card">
+                    <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-info"></i>Site Distribution</h6>
+                    <div class="site-breakdown">
+                        <table class="table table-sm table-borderless mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="small">Vendor</th>
+                                    <th class="small text-end">Sites</th>
+                                    <th class="small" style="width: 100px;">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendorBreakdownBody">
+                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3 mt-3"><i class="fas fa-network-wired me-2 text-success"></i>Network Type</h6>
+                    <div class="site-breakdown">
+                        <table class="table table-sm table-borderless mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="small">Type</th>
+                                    <th class="small text-end">Sites</th>
+                                    <th class="small" style="width: 100px;">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="networkBreakdownBody">
+                                <tr><td colspan="3" class="text-center py-4">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Site Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Detailed Site Information</h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-download me-1"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="detailedSiteTable">
+                                <thead>
+                                    <tr>
+                                        <th>Site ID</th>
+                                        <th>Site Name</th>
+                                        <th>Vendor</th>
+                                        <th>Network Type</th>
+                                        <th>Site Type</th>
+                                        <th>Category VIP POI</th>
+                                        <th>Region</th>
+                                        <th>Micro Cluster</th>
+                                        <th>Enodeb ID</th>
+                                        <th>TAC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedSiteTableBody">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="text-center small text-muted">
+                    <p class="mb-1">
+                        <i class="fas fa-database me-1"></i> Site Information Dashboard | 
+                        <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span>
+                    </p>
+                    <p class="mb-0">Click on map markers to view site details. Use filters to customize the view.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- jQuery and DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        // ==================== DATA SAMPLE ====================
+        const siteData = [
+            {
+                "Site ID": "11TGR0158",
+                "Site Name": "VIP_GEDUNG_OPERASI_EP",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.644,
+                "Y_LATITUDE": -6.13164,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-KARAWACI",
+                "Enodeb ID": "310036",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGR0284",
+                "Site Name": "VIP_HOTEL_ORCHARD_CENGKARENG_CM",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.6848,
+                "Y_LATITUDE": -6.11473,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-KARAWACI",
+                "Enodeb ID": "310142",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGR0304",
+                "Site Name": "VIP_RAWABOKOR_TB",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.6902,
+                "Y_LATITUDE": -6.11349,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-KARAWACI",
+                "Enodeb ID": "311284",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGR0286",
+                "Site Name": "VIP_BENDA1_ST",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.685,
+                "Y_LATITUDE": -6.10906,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-KARAWACI",
+                "Enodeb ID": "312669",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGN0577",
+                "Site Name": "VIP_TELUK_NAGA_TGN2_ST",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G (GSM_LTE)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.6515,
+                "Y_LATITUDE": -6.10287,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-SEPATAN",
+                "Enodeb ID": "312992",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGN0569",
+                "Site Name": "VIP_RAWARENGAS_EP",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.6465,
+                "Y_LATITUDE": -6.10803,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-SEPATAN",
+                "Enodeb ID": "310163",
+                "TAC": "30172"
+            },
+            {
+                "Site ID": "11TGN0593",
+                "Site Name": "VIP_BELIMBING_TGN_PL",
+                "Vendor": "Huawei",
+                "Network Type": "2G_4G_5G (GL_NR)",
+                "Site Type": "VIP_Macro",
+                "Category VIP POI": "Airport Route_Airport Route",
+                "X_LONGITUDE": 106.6685,
+                "Y_LATITUDE": -6.09836,
+                "NMS": "100.91.254.5",
+                "Circle": "JAYA",
+                "Region": "OUTER JAKARTA",
+                "Micro Cluster": "MC-SEPATAN",
+                "Enodeb ID": "313782",
+                "TAC": "30172"
+            }
+        ];
+
+        // ==================== VARIABEL GLOBAL ====================
+        let allSiteData = [];
+        let filteredSiteData = [];
+        let map;
+        let markers = [];
+        let dataTable;
+        let vendorStats = {};
+        let networkStats = {};
+
+        // ==================== FUNGSI INISIALISASI ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Site Info Dashboard initializing...');
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // Initialize DataTables
+            initializeDataTable();
+            
+            // Initialize map
+            initializeMap();
+            
+            // Process data
+            processSiteData();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update UI
+            updateDashboard();
+        });
+
+        function initializeDataTable() {
+            dataTable = $('#detailedSiteTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                order: [[0, 'asc']],
+                language: {
+                    search: "Filter sites:"
+                }
+            });
+        }
+
+        function initializeMap() {
+            // Initialize map centered on Jakarta area
+            map = L.map('map').setView([-6.12, 106.67], 12);
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+
+        function processSiteData() {
+            allSiteData = siteData.map(site => {
+                return {
+                    ...site,
+                    isVIP: site["Category VIP POI"] && site["Category VIP POI"].includes("Airport Route"),
+                    has5G: site["Network Type"] && site["Network Type"].includes("5G"),
+                    vendorClass: `vendor-${site.Vendor.toLowerCase()}`,
+                    networkClass: getNetworkClass(site["Network Type"])
+                };
+            });
+            
+            filteredSiteData = [...allSiteData];
+            
+            // Calculate statistics
+            calculateStatistics();
+        }
+
+        function getNetworkClass(networkType) {
+            if (!networkType) return 'badge-2g';
+            if (networkType.includes("5G")) return 'badge-5g';
+            if (networkType.includes("4G")) return 'badge-4g';
+            return 'badge-2g';
+        }
+
+        function calculateStatistics() {
+            // Vendor statistics
+            vendorStats = {};
+            allSiteData.forEach(site => {
+                const vendor = site.Vendor || 'Unknown';
+                vendorStats[vendor] = (vendorStats[vendor] || 0) + 1;
+            });
+            
+            // Network type statistics
+            networkStats = {};
+            allSiteData.forEach(site => {
+                const netType = site["Network Type"] || 'Unknown';
+                networkStats[netType] = (networkStats[netType] || 0) + 1;
+            });
+        }
+
+        function setupEventListeners() {
+            // Search inputs
+            document.getElementById('searchSiteId').addEventListener('input', applyFilters);
+            document.getElementById('searchSiteName').addEventListener('input', applyFilters);
+            
+            // Filter selects
+            document.getElementById('filterVendor').addEventListener('change', applyFilters);
+            document.getElementById('filterNetworkType').addEventListener('change', applyFilters);
+            document.getElementById('filterRegion').addEventListener('change', applyFilters);
+            
+            // Quick filter buttons
+            document.querySelectorAll('[data-vendor]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('filterVendor').value = this.getAttribute('data-vendor');
+                    applyFilters();
+                });
+            });
+            
+            document.querySelectorAll('[data-network]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('filterNetworkType').value = this.getAttribute('data-network');
+                    applyFilters();
+                });
+            });
+            
+            document.querySelectorAll('[data-vip]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterByVIP();
+                });
+            });
+            
+            // Map vendor filters
+            document.getElementById('showHuawei').addEventListener('change', updateMapMarkers);
+            document.getElementById('showNokia').addEventListener('change', updateMapMarkers);
+            document.getElementById('showEricsson').addEventListener('change', updateMapMarkers);
+            document.getElementById('showZTE').addEventListener('change', updateMapMarkers);
+        }
+
+        // ==================== FUNGSI FILTER ====================
+        function applyFilters() {
+            const searchSiteId = document.getElementById('searchSiteId').value.toLowerCase();
+            const searchSiteName = document.getElementById('searchSiteName').value.toLowerCase();
+            const filterVendor = document.getElementById('filterVendor').value;
+            const filterNetworkType = document.getElementById('filterNetworkType').value;
+            const filterRegion = document.getElementById('filterRegion').value;
+            
+            filteredSiteData = allSiteData.filter(site => {
+                // Site ID search
+                if (searchSiteId && !site["Site ID"].toLowerCase().includes(searchSiteId)) {
+                    return false;
+                }
+                
+                // Site Name search
+                if (searchSiteName && !site["Site Name"].toLowerCase().includes(searchSiteName)) {
+                    return false;
+                }
+                
+                // Vendor filter
+                if (filterVendor && site.Vendor !== filterVendor) {
+                    return false;
+                }
+                
+                // Network Type filter
+                if (filterNetworkType) {
+                    if (filterNetworkType === "5G" && !site["Network Type"].includes("5G")) {
+                        return false;
+                    }
+                    if (filterNetworkType === "4G" && !site["Network Type"].includes("4G")) {
+                        return false;
+                    }
+                    if (filterNetworkType === "2G" && !site["Network Type"].includes("2G")) {
+                        return false;
+                    }
+                    if (filterNetworkType === "2G_4G" && site["Network Type"] !== "2G_4G (GSM_LTE)") {
+                        return false;
+                    }
+                    if (filterNetworkType === "2G_4G_5G" && site["Network Type"] !== "2G_4G_5G (GL_NR)") {
+                        return false;
+                    }
+                }
+                
+                // Region filter
+                if (filterRegion && site.Region !== filterRegion) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            updateDashboard();
+        }
+
+        function filterByVIP() {
+            filteredSiteData = allSiteData.filter(site => site.isVIP);
+            document.getElementById('filterVendor').value = '';
+            document.getElementById('filterNetworkType').value = '';
+            document.getElementById('filterRegion').value = '';
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchSiteName').value = '';
+            updateDashboard();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchSiteName').value = '';
+            document.getElementById('filterVendor').value = '';
+            document.getElementById('filterNetworkType').value = '';
+            document.getElementById('filterRegion').value = '';
+            filteredSiteData = [...allSiteData];
+            updateDashboard();
+        }
+
+        // ==================== FUNGSI UPDATE UI ====================
+        function updateDashboard() {
+            updateKPIs();
+            updateDataTable();
+            updateMapMarkers();
+            updateBreakdownTables();
+            updateSiteCount();
+        }
+
+        function updateKPIs() {
+            const totalSites = filteredSiteData.length;
+            const sites5G = filteredSiteData.filter(site => site.has5G).length;
+            const vipSites = filteredSiteData.filter(site => site.isVIP).length;
+            const uniqueClusters = new Set(filteredSiteData.map(site => site["Micro Cluster"])).size;
+            
+            document.getElementById('kpiTotalSites').textContent = totalSites;
+            document.getElementById('kpi5GSites').textContent = sites5G;
+            document.getElementById('kpiVipSites').textContent = vipSites;
+            document.getElementById('kpiClusters').textContent = uniqueClusters;
+        }
+
+        function updateDataTable() {
+            // Clear existing data
+            dataTable.clear();
+            
+            // Add new data
+            filteredSiteData.forEach(site => {
+                const row = [
+                    site["Site ID"],
+                    site["Site Name"],
+                    `<span class="badge badge-${site.Vendor.toLowerCase()}">${site.Vendor}</span>`,
+                    `<span class="badge ${getNetworkClass(site["Network Type"])}">${site["Network Type"]}</span>`,
+                    `<span class="badge ${site["Site Type"] === "VIP_Macro" ? "badge-vip" : "badge-macro"}">${site["Site Type"]}</span>`,
+                    site["Category VIP POI"],
+                    site.Region,
+                    site["Micro Cluster"],
+                    site["Enodeb ID"],
+                    site.TAC
+                ];
+                
+                dataTable.row.add(row);
+            });
+            
+            // Draw the table
+            dataTable.draw();
+            
+            // Add VIP row highlighting
+            $('#detailedSiteTable tbody tr').each(function(index) {
+                if (filteredSiteData[index] && filteredSiteData[index].isVIP) {
+                    $(this).addClass('vip-row');
+                }
+            });
+        }
+
+        function updateMapMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => marker.removeFrom(map));
+            markers = [];
+            
+            // Get vendor filter states
+            const showHuawei = document.getElementById('showHuawei').checked;
+            const showNokia = document.getElementById('showNokia').checked;
+            const showEricsson = document.getElementById('showEricsson').checked;
+            const showZTE = document.getElementById('showZTE').checked;
+            
+            // Add markers for filtered sites
+            filteredSiteData.forEach(site => {
+                // Check if vendor should be shown
+                let shouldShow = false;
+                switch(site.Vendor) {
+                    case 'Huawei': shouldShow = showHuawei; break;
+                    case 'Nokia': shouldShow = showNokia; break;
+                    case 'Ericsson': shouldShow = showEricsson; break;
+                    case 'ZTE': shouldShow = showZTE; break;
+                    default: shouldShow = true;
+                }
+                
+                if (!shouldShow) return;
+                
+                const lat = site["Y_LATITUDE"];
+                const lng = site["X_LONGITUDE"];
+                
+                if (lat && lng) {
+                    // Determine marker color based on vendor
+                    let markerColor = 'blue';
+                    switch(site.Vendor) {
+                        case 'Huawei': markerColor = 'red'; break;
+                        case 'Nokia': markerColor = 'blue'; break;
+                        case 'Ericsson': markerColor = 'darkblue'; break;
+                        case 'ZTE': markerColor = 'green'; break;
+                    }
+                    
+                    // Create custom icon
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+                    
+                    const marker = L.marker([lat, lng], { icon: icon })
+                        .addTo(map)
+                        .bindPopup(`
+                            <strong>${site["Site Name"]}</strong><br>
+                            <small>${site["Site ID"]}</small><br>
+                            Vendor: ${site.Vendor}<br>
+                            Network: ${site["Network Type"]}<br>
+                            Type: ${site["Site Type"]}<br>
+                            Cluster: ${site["Micro Cluster"]}<br>
+                            <button class="btn btn-sm btn-primary mt-1" onclick="focusOnSite('${site["Site ID"]}')">
+                                View Details
+                            </button>
+                        `);
+                    
+                    markers.push(marker);
+                }
+            });
+            
+            // Fit map to show all markers if there are any
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function focusOnSite(siteId) {
+            const site = allSiteData.find(s => s["Site ID"] === siteId);
+            if (site && site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
+                map.setView([site["Y_LATITUDE"], site["X_LONGITUDE"]], 15);
+                
+                // Find and open the marker popup
+                markers.forEach(marker => {
+                    const latLng = marker.getLatLng();
+                    if (latLng.lat === site["Y_LATITUDE"] && latLng.lng === site["X_LONGITUDE"]) {
+                        marker.openPopup();
+                    }
+                });
+            }
+        }
+
+        function updateBreakdownTables() {
+            // Vendor breakdown
+            const vendorBody = document.getElementById('vendorBreakdownBody');
+            const vendorTotal = filteredSiteData.length;
+            
+            let vendorHTML = '';
+            const currentVendorStats = {};
+            
+            filteredSiteData.forEach(site => {
+                const vendor = site.Vendor || 'Unknown';
+                currentVendorStats[vendor] = (currentVendorStats[vendor] || 0) + 1;
+            });
+            
+            Object.entries(currentVendorStats).forEach(([vendor, count]) => {
+                const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
+                vendorHTML += `
+                    <tr>
+                        <td class="small"><span class="badge badge-${vendor.toLowerCase()}">${vendor}</span></td>
+                        <td class="text-end fw-semibold">${count}</td>
+                        <td class="text-end text-muted">${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            vendorBody.innerHTML = vendorHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
+            
+            // Network type breakdown
+            const networkBody = document.getElementById('networkBreakdownBody');
+            
+            let networkHTML = '';
+            const currentNetworkStats = {};
+            
+            filteredSiteData.forEach(site => {
+                const netType = site["Network Type"] || 'Unknown';
+                currentNetworkStats[netType] = (currentNetworkStats[netType] || 0) + 1;
+            });
+            
+            Object.entries(currentNetworkStats).forEach(([netType, count]) => {
+                const percentage = vendorTotal > 0 ? ((count / vendorTotal) * 100).toFixed(1) : '0.0';
+                const badgeClass = getNetworkClass(netType);
+                networkHTML += `
+                    <tr>
+                        <td class="small"><span class="badge ${badgeClass}">${netType.split(' ')[0]}</span></td>
+                        <td class="text-end fw-semibold">${count}</td>
+                        <td class="text-end text-muted">${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            networkBody.innerHTML = networkHTML || '<tr><td colspan="3" class="text-center py-4">No data</td></tr>';
+        }
+
+        function updateSiteCount() {
+            document.getElementById('siteCount').textContent = filteredSiteData.length;
+            const resultsText = document.getElementById('searchResultsText');
+            
+            if (filteredSiteData.length < allSiteData.length) {
+                resultsText.innerHTML = `Showing <span class="fw-semibold">${filteredSiteData.length}</span> of <span class="fw-semibold">${allSiteData.length}</span> sites`;
+                resultsText.className = 'text-success fw-semibold';
+            } else {
+                resultsText.innerHTML = `Showing all <span class="fw-semibold">${allSiteData.length}</span> sites`;
+                resultsText.className = 'text-muted';
+            }
+        }
+
+        // ==================== FUNGSI WAKTU ====================
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+            document.getElementById('lastUpdatedTime').textContent = timeString;
+        }
+
+        // ==================== FUNGSI EKSPOR ====================
+        function exportToCSV() {
+            if (filteredSiteData.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            // Get headers from first object
+            const headers = Object.keys(filteredSiteData[0]).filter(key => 
+                !['isVIP', 'has5G', 'vendorClass', 'networkClass'].includes(key)
+            );
+            
+            // Prepare CSV content
+            const csvRows = [
+                headers.join(','),
+                ...filteredSiteData.map(site => {
+                    return headers.map(header => {
+                        const value = site[header];
+                        // Escape quotes and wrap in quotes if contains comma
+                        const escaped = ('' + value).replace(/"/g, '""');
+                        return escaped.includes(',') ? `"${escaped}"` : escaped;
+                    }).join(',');
+                })
+            ];
+            
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `site_info_export_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== FUNGSI BANTUAN ====================
+        window.debugData = function() {
+            console.log('All Site Data:', allSiteData);
+            console.log('Filtered Site Data:', filteredSiteData);
+            console.log('Vendor Stats:', vendorStats);
+            console.log('Network Stats:', networkStats);
+            alert(`Data logged to console. Total sites: ${allSiteData.length}`);
+        };
+
+        // Initialize
+        updateLastUpdatedTime();
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
