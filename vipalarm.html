@@ -14,6 +14,7 @@ body{
   margin:0;
   background:#f8fafc;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
 }
 .header-bar{
   background: linear-gradient(135deg, #1a2980, #26d0ce);
@@ -56,6 +57,9 @@ body{
   font-family: 'Plus Jakarta Sans', sans-serif;
   border: none;
   padding: 14px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .table tbody td{
   font-size:13px;
@@ -83,6 +87,7 @@ body{
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border: none;
+  height: 100%;
 }
 .loading {
   display: flex;
@@ -130,12 +135,15 @@ body{
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border: none;
   background: white;
+  height: 100%;
 }
 .distribution-table th {
   background: linear-gradient(135deg, #1e293b, #334155);
   color: white;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 600;
+  position: sticky;
+  top: 0;
 }
 .main-table-container {
   background: white;
@@ -143,18 +151,21 @@ body{
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   padding: 0;
   border: none;
-  overflow: visible;
+  overflow: hidden;
+  max-height: 550px;
+  display: flex;
+  flex-direction: column;
 }
 .main-table-wrapper {
-  overflow-x: auto;
+  overflow: auto;
+  flex: 1;
   border-radius: 16px;
 }
 .table {
   margin-bottom: 0;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 16px;
-  overflow: hidden;
+  min-width: 100%;
 }
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: #f8fafc;
@@ -231,6 +242,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 600;
 }
+.distribution-table-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.distribution-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+.left-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
 </style>
 </head>
 <body>
@@ -297,120 +323,126 @@ h1, h2, h3, h4, h5, h6 {
 </div>
 
 <!-- MAIN CONTENT ROW -->
-<div class="row g-4">
-  <!-- LEFT COLUMN - FILTERS AND DISTRIBUTION -->
+<div class="row g-4" style="min-height: 600px;">
+  <!-- LEFT COLUMN - SIDEBAR -->
   <div class="col-md-3">
-    <!-- FILTER CARD -->
-    <div class="card filter-card p-4 mb-4">
-      <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
-      
-      <!-- Other Filters -->
-      <div class="mb-3">
-        <label class="form-label"><i class="fas fa-search me-1"></i> Alarm Name</label>
-        <input id="fAlarm" class="form-control" placeholder="Search alarm name...">
+    <div class="left-sidebar">
+      <!-- FILTER CARD -->
+      <div class="card filter-card p-4">
+        <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
+        
+        <!-- Other Filters -->
+        <div class="mb-3">
+          <label class="form-label"><i class="fas fa-search me-1"></i> Alarm Name</label>
+          <input id="fAlarm" class="form-control" placeholder="Search alarm name...">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label"><i class="fas fa-id-badge me-1"></i> Site ID</label>
+          <input id="fSite" class="form-control" placeholder="Search site ID...">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label"><i class="fas fa-tag me-1"></i> Category</label>
+          <select id="fCategory" class="form-control">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label"><i class="fas fa-satellite-dish me-1"></i> OSS</label>
+          <select id="fSource" class="form-control">
+            <option value="">All OSS</option>
+            <option value="MAE6">MAE6</option>
+            <option value="MAE7">MAE7</option>
+          </select>
+        </div>
+        
+        <div class="d-grid gap-2 mt-3">
+          <button class="btn btn-primary" onclick="applyFilter()">
+            <i class="fas fa-filter me-1"></i>Apply Filters
+          </button>
+          <button class="btn btn-secondary" onclick="clearFilter()">
+            <i class="fas fa-eraser me-1"></i>Clear All
+          </button>
+        </div>
       </div>
       
-      <div class="mb-3">
-        <label class="form-label"><i class="fas fa-id-badge me-1"></i> Site ID</label>
-        <input id="fSite" class="form-control" placeholder="Search site ID...">
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label"><i class="fas fa-tag me-1"></i> Category</label>
-        <select id="fCategory" class="form-control">
-          <option value="">All Categories</option>
-        </select>
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label"><i class="fas fa-satellite-dish me-1"></i> OSS</label>
-        <select id="fSource" class="form-control">
-          <option value="">All OSS</option>
-          <option value="MAE6">MAE6</option>
-          <option value="MAE7">MAE7</option>
-        </select>
-      </div>
-      
-      <div class="d-grid gap-2">
-        <button class="btn btn-primary" onclick="applyFilter()">
-          <i class="fas fa-filter me-1"></i>Apply Filters
-        </button>
-        <button class="btn btn-secondary" onclick="clearFilter()">
-          <i class="fas fa-eraser me-1"></i>Clear All
-        </button>
-      </div>
-    </div>
-    
-    <!-- ALARM DISTRIBUTION CARD -->
-    <div class="card distribution-card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
-        <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover distribution-table mb-0">
-          <thead>
-            <tr>
-              <th>Alarm Name</th>
-              <th class="text-end">Count</th>
-            </tr>
-          </thead>
-          <tbody id="distributionBody">
-            <tr>
-              <td colspan="2" class="text-center text-muted py-4">Loading...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- ALARM DISTRIBUTION CARD -->
+      <div class="card distribution-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
+          <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
+        </div>
+        <div class="distribution-table-container">
+          <div class="distribution-table-wrapper">
+            <table class="table table-sm table-hover distribution-table mb-0">
+              <thead>
+                <tr>
+                  <th>Alarm Name</th>
+                  <th class="text-end">Count</th>
+                </tr>
+              </thead>
+              <tbody id="distributionBody">
+                <tr>
+                  <td colspan="2" class="text-center text-muted py-4">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   
   <!-- RIGHT COLUMN - MAIN TABLE -->
   <div class="col-md-9">
-    <!-- EXPORT AND CONTROLS -->
-    <div class="d-flex justify-content-between mb-3">
-      <div class="d-flex align-items-center">
-        <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-          <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
+    <div class="d-flex flex-column" style="height: 100%;">
+      <!-- EXPORT AND CONTROLS -->
+      <div class="d-flex justify-content-between mb-3">
+        <div class="d-flex align-items-center">
+          <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
+            <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
+          </div>
+        </div>
+        <div>
+          <button class="btn export-btn text-white" onclick="exportCSV()">
+            <i class="fas fa-file-export me-1"></i>Export CSV
+          </button>
         </div>
       </div>
-      <div>
-        <button class="btn export-btn text-white" onclick="exportCSV()">
-          <i class="fas fa-file-export me-1"></i>Export CSV
-        </button>
-      </div>
-    </div>
-    
-    <!-- MAIN TABLE -->
-    <div class="main-table-container">
-      <div class="main-table-wrapper">
-        <table class="table table-striped table-hover table-bordered">
-          <thead>
-            <tr>
-              <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-              <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
-              <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
-              <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
-              <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
-              <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
-              <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-              <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
-              <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr id="loadingRow">
-              <td colspan="9" class="loading">
-                <div class="text-center">
-                  <div class="spinner-border text-primary mb-3" role="status"></div>
-                  <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      
+      <!-- MAIN TABLE -->
+      <div class="main-table-container flex-grow-1">
+        <div class="main-table-wrapper">
+          <table class="table table-striped table-hover table-bordered">
+            <thead>
+              <tr>
+                <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+                <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
+                <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+                <th onclick="sortTable('Site Type')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Type</th>
+                <th onclick="sortTable('Category VIP POI')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Category</th>
+                <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS</th>
+                <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+                <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
+                <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr id="loadingRow">
+                <td colspan="9" class="loading">
+                  <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
