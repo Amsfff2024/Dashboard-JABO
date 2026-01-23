@@ -573,7 +573,7 @@
                                     <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
                                     <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID">
                                 </div>
-                                <div class="search-info">Enter Site ID to search and show 5km radius</div>
+                                <div class="search-info">Enter Site ID to search and show 2km radius</div>
                             </div>
                             <div class="col-md-3">
                                 <div class="input-group search-input-group">
@@ -715,7 +715,7 @@
                         </div>
                         <div class="legend-item">
                             <div class="legend-color legend-color-blue"></div>
-                            <span>Sites within 5km radius</span>
+                            <span>Sites within 2km radius (max 20)</span>
                         </div>
                     </div>
                 </div>
@@ -725,7 +725,7 @@
             <div class="col-lg-4 mb-4">
                 <div class="summary-card">
                     <div class="nearest-sites-header">
-                        <h6 class="mb-0"><i class="fas fa-location-arrow me-2 text-info"></i>10 Nearest Sites</h6>
+                        <h6 class="mb-0"><i class="fas fa-location-arrow me-2 text-info"></i>20 Nearest Sites</h6>
                         <span class="badge bg-info" id="nearestSitesCount">0 sites</span>
                     </div>
                     <div class="site-breakdown">
@@ -745,7 +745,7 @@
                             <span class="fw-semibold" id="searchedSiteInfo">Not found</span>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span>Sites in 5km Radius:</span>
+                            <span>Sites in 2km Radius:</span>
                             <span class="fw-semibold" id="radiusSitesCount">0</span>
                         </div>
                         <div class="d-flex justify-content-between">
@@ -779,6 +779,8 @@
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Name</th>
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Enodeb ID</th>
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">TAC</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">BSC</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">NMS</th>
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Network Type</th>
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Type</th>
                                     <th style="font-family: var(--font-plus-jakarta); font-weight: 600;">Category VIP POI</th>
@@ -820,7 +822,7 @@
                         <i class="fas fa-database me-1"></i> Site Information Dashboard | 
                         <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span>
                     </p>
-                    <p class="mb-0" style="font-family: var(--font-inter);">Enter Site ID to view site location and other sites within 5km radius</p>
+                    <p class="mb-0" style="font-family: var(--font-inter);">Enter Site ID to view site location and other sites within 2km radius</p>
                 </div>
             </div>
         </div>
@@ -1148,11 +1150,11 @@
             
             console.log(`Found ${filteredSiteData.length} matching sites`);
             
-            // Jika ada searched site dengan koordinat valid, cari site dalam radius 5km dan 10 site terdekat
+            // Jika ada searched site dengan koordinat valid, cari site dalam radius 2km dan 20 site terdekat
             if (searchedSite && searchedSite["Y_LATITUDE"] && searchedSite["X_LONGITUDE"]) {
-                findSitesWithinRadius(searchedSite, 5); // 5 km radius
-                findNearestSites(searchedSite, 10); // 10 site terdekat
-                console.log(`Found ${sitesWithinRadius.length} sites within 5km radius`);
+                findSitesWithinRadius(searchedSite, 2); // 2 km radius
+                findNearestSites(searchedSite, 20); // 20 site terdekat
+                console.log(`Found ${sitesWithinRadius.length} sites within 2km radius (max 20 shown)`);
                 console.log(`Found ${nearestSites.length} nearest sites`);
             }
             
@@ -1184,6 +1186,15 @@
                 
                 return distance <= radiusKm;
             });
+            
+            // Batasi hanya 20 site terdekat untuk ditampilkan di map
+            sitesWithinRadius.sort((a, b) => {
+                const distA = calculateDistance(centerLat, centerLng, a["Y_LATITUDE"], a["X_LONGITUDE"]);
+                const distB = calculateDistance(centerLat, centerLng, b["Y_LATITUDE"], b["X_LONGITUDE"]);
+                return distA - distB;
+            });
+            
+            sitesWithinRadius = sitesWithinRadius.slice(0, 20);
         }
 
         function findNearestSites(centerSite, count) {
@@ -1213,7 +1224,7 @@
             // Urutkan berdasarkan jarak terdekat
             sitesWithDistance.sort((a, b) => a.distance - b.distance);
             
-            // Ambil 10 site terdekat
+            // Ambil 20 site terdekat
             nearestSites = sitesWithDistance.slice(0, count).filter(site => site.distance < Infinity);
         }
 
@@ -1300,7 +1311,7 @@
                 // Update search results text
                 let resultsText = `Found <span class="fw-semibold">${filteredCount}</span> of <span class="fw-semibold">${totalCount}</span> sites`;
                 if (searchedSite && sitesWithinRadius.length > 0) {
-                    resultsText += ` (<span class="fw-semibold">${sitesWithinRadius.length}</span> sites within 5km radius)`;
+                    resultsText += ` (<span class="fw-semibold">${sitesWithinRadius.length}</span> sites within 2km radius)`;
                 }
                 document.getElementById('searchResultsText').innerHTML = resultsText;
                 document.getElementById('searchResultsText').className = 'text-success fw-semibold';
@@ -1395,7 +1406,7 @@
                         Type: ${searchedSite["Site Type"] || 'N/A'}<br>
                         Cluster: ${searchedSite["Micro Cluster"] || 'N/A'}<br>
                         <div class="radius-info">
-                            <i class="fas fa-circle me-1"></i> Showing 5km radius
+                            <i class="fas fa-circle me-1"></i> Showing 2km radius (max 20 sites)
                         </div>
                     `);
                 
@@ -1416,16 +1427,16 @@
                 
                 labelLayers.push(searchedLabel);
                 
-                // Tambahkan circle 5km radius
+                // Tambahkan circle 2km radius
                 circleLayer = L.circle([lat, lng], {
                     color: '#007bff',
                     fillColor: '#007bff',
                     fillOpacity: 0.1,
-                    radius: 5000 // 5km dalam meter
+                    radius: 2000 // 2km dalam meter
                 }).addTo(map);
-                console.log("5km radius circle added");
+                console.log("2km radius circle added");
                 
-                // Tambahkan sites dalam radius 5km dengan warna biru
+                // Tambahkan sites dalam radius 2km dengan warna biru (maksimal 20 site)
                 sitesWithinRadius.forEach(site => {
                     if (site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
                         const siteLat = site["Y_LATITUDE"];
@@ -1473,61 +1484,75 @@
                     }
                 });
                 
-                console.log(`Added ${sitesWithinRadius.length} sites within 5km radius`);
+                console.log(`Added ${sitesWithinRadius.length} sites within 2km radius (max 20)`);
                 
                 // Tambahkan site lainnya dari filteredData (tidak dalam radius) dengan warna default
-                filteredSiteData.forEach(site => {
-                    // Skip jika site adalah searched site atau sudah dalam radius
-                    if (site["Site ID"] === searchedSite["Site ID"] || 
-                        sitesWithinRadius.some(s => s["Site ID"] === site["Site ID"])) {
-                        return;
-                    }
-                    
-                    if (site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
-                        const siteLat = site["Y_LATITUDE"];
-                        const siteLng = site["X_LONGITUDE"];
+                // Hanya tambahkan jika total marker kurang dari 50 untuk menghindari overload
+                const maxTotalMarkers = 50;
+                if (markerCount < maxTotalMarkers) {
+                    filteredSiteData.forEach(site => {
+                        // Skip jika site adalah searched site atau sudah dalam radius
+                        if (site["Site ID"] === searchedSite["Site ID"] || 
+                            sitesWithinRadius.some(s => s["Site ID"] === site["Site ID"])) {
+                            return;
+                        }
                         
-                        // Marker default untuk site lainnya
-                        const defaultIcon = L.divIcon({
-                            className: 'default-site-marker',
-                            html: `<div style="background-color: #6c757d; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
-                            iconSize: [16, 16],
-                            iconAnchor: [8, 8]
-                        });
-                        
-                        const siteMarker = L.marker([siteLat, siteLng], { icon: defaultIcon })
-                            .addTo(map)
-                            .bindPopup(`
-                                <strong>${site["Site Name"] || site["Site ID"]}</strong><br>
-                                <small>${site["Site ID"]}</small><br>
-                                Network: ${site["Network Type"] || 'N/A'}<br>
-                                Type: ${site["Site Type"] || 'N/A'}<br>
-                                Cluster: ${site["Micro Cluster"] || 'N/A'}<br>
-                            `);
-                        
-                        markers.push(siteMarker);
-                        bounds.push([siteLat, siteLng]);
-                        markerCount++;
-                        
-                        // Tambahkan label Site ID untuk site lainnya
-                        const defaultLabel = L.marker([siteLat, siteLng], {
-                            icon: L.divIcon({
-                                className: 'site-label',
-                                html: `<div class="marker-label marker-label-gray">${site["Site ID"]}</div>`,
-                                iconSize: [60, 20],
-                                iconAnchor: [30, 20]
-                            }),
-                            zIndexOffset: 800
-                        }).addTo(map);
-                        
-                        labelLayers.push(defaultLabel);
-                    }
-                });
+                        if (site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
+                            if (markerCount >= maxTotalMarkers) return;
+                            
+                            const siteLat = site["Y_LATITUDE"];
+                            const siteLng = site["X_LONGITUDE"];
+                            
+                            // Marker default untuk site lainnya
+                            const defaultIcon = L.divIcon({
+                                className: 'default-site-marker',
+                                html: `<div style="background-color: #6c757d; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
+                                iconSize: [16, 16],
+                                iconAnchor: [8, 8]
+                            });
+                            
+                            const siteMarker = L.marker([siteLat, siteLng], { icon: defaultIcon })
+                                .addTo(map)
+                                .bindPopup(`
+                                    <strong>${site["Site Name"] || site["Site ID"]}</strong><br>
+                                    <small>${site["Site ID"]}</small><br>
+                                    Network: ${site["Network Type"] || 'N/A'}<br>
+                                    Type: ${site["Site Type"] || 'N/A'}<br>
+                                    Cluster: ${site["Micro Cluster"] || 'N/A'}<br>
+                                `);
+                            
+                            markers.push(siteMarker);
+                            bounds.push([siteLat, siteLng]);
+                            markerCount++;
+                            
+                            // Tambahkan label Site ID untuk site lainnya
+                            const defaultLabel = L.marker([siteLat, siteLng], {
+                                icon: L.divIcon({
+                                    className: 'site-label',
+                                    html: `<div class="marker-label marker-label-gray">${site["Site ID"]}</div>`,
+                                    iconSize: [60, 20],
+                                    iconAnchor: [30, 20]
+                                }),
+                                zIndexOffset: 800
+                            }).addTo(map);
+                            
+                            labelLayers.push(defaultLabel);
+                        }
+                    });
+                }
             } else {
                 // Jika tidak ada searched site dengan koordinat, tampilkan semua filtered sites dengan warna default
                 console.log("No searched site with coordinates, showing all filtered sites");
                 
-                filteredSiteData.forEach(site => {
+                // Batasi jumlah marker maksimal untuk performa
+                const maxMarkers = 50;
+                let sitesToShow = filteredSiteData;
+                if (filteredSiteData.length > maxMarkers) {
+                    sitesToShow = filteredSiteData.slice(0, maxMarkers);
+                    console.log(`Limiting to ${maxMarkers} markers for performance`);
+                }
+                
+                sitesToShow.forEach(site => {
                     if (site["Y_LATITUDE"] && site["X_LONGITUDE"]) {
                         const siteLat = site["Y_LATITUDE"];
                         const siteLng = site["X_LONGITUDE"];
@@ -1618,7 +1643,7 @@
                 document.getElementById('searchedSiteInfo').textContent = 'Not found';
             }
             
-            document.getElementById('radiusSitesCount').textContent = sitesWithinRadius.length;
+            document.getElementById('radiusSitesCount').textContent = `${sitesWithinRadius.length} of max 20 sites`;
             
             const vipCount = filteredSiteData.filter(site => site.isVIP).length;
             document.getElementById('vipSitesCount').textContent = vipCount;
@@ -1636,6 +1661,8 @@
                 const enodebId = site["Enodeb ID"] || 'N/A';
                 const tac = site["TAC"] || 'N/A';
                 const vipCategory = site["Category VIP POI"] || 'N/A';
+                const bsc = site["BSC"] || site["BSC ID"] || 'N/A'; // Ambil dari kolom BSC atau BSC ID
+                const nms = site["NMS"] || site["NMS System"] || 'N/A'; // Ambil dari kolom NMS atau NMS System
                 
                 const networkClass = getNetworkClass(networkType);
                 const siteTypeClass = siteType.includes("VIP") ? "badge-vip" : 
@@ -1659,7 +1686,7 @@
                         searchedSite["Y_LATITUDE"], searchedSite["X_LONGITUDE"],
                         site["Y_LATITUDE"], site["X_LONGITUDE"]
                     );
-                    if (distance <= 5) {
+                    if (distance <= 2) { // 2km radius
                         distanceInfo = `<br><small class="text-muted">${distance.toFixed(2)} km</small>`;
                     }
                 }
@@ -1670,6 +1697,8 @@
                         <td>${site["Site Name"] || 'N/A'}</td>
                         <td>${enodebId}</td>
                         <td>${tac}</td>
+                        <td>${bsc}</td>
+                        <td>${nms}</td>
                         <td><span class="badge ${networkClass}">${networkType}</span></td>
                         <td><span class="badge ${siteTypeClass}">${siteType}</span></td>
                         <td>${vipCategory}</td>
@@ -1778,6 +1807,8 @@
                 "Site Name", 
                 "Enodeb ID", 
                 "TAC", 
+                "BSC",  // Kolom BSC ditambahkan
+                "NMS",  // Kolom NMS ditambahkan
                 "Network Type", 
                 "Site Type", 
                 "Category VIP POI", 
@@ -1801,7 +1832,7 @@
                         searchedSite["Y_LATITUDE"], searchedSite["X_LONGITUDE"],
                         site["Y_LATITUDE"], site["X_LONGITUDE"]
                     );
-                    if (distance <= 5) {
+                    if (distance <= 2) { // 2km radius
                         siteData["Distance_From_Searched_Site_km"] = distance.toFixed(2);
                     }
                 }
@@ -1845,10 +1876,10 @@
             console.log('All Site Data:', allSiteData);
             console.log('Filtered Site Data:', filteredSiteData);
             console.log('Searched Site:', searchedSite);
-            console.log('Sites within 5km:', sitesWithinRadius);
+            console.log('Sites within 2km:', sitesWithinRadius);
             console.log('Nearest Sites:', nearestSites);
             console.log('Has Searched:', hasSearched);
-            alert(`Total sites: ${allSiteData.length}, Search results: ${filteredSiteData.length}, Sites within 5km: ${sitesWithinRadius.length}, Nearest sites: ${nearestSites.length}`);
+            alert(`Total sites: ${allSiteData.length}, Search results: ${filteredSiteData.length}, Sites within 2km: ${sitesWithinRadius.length}, Nearest sites: ${nearestSites.length}`);
         };
 
         // Ekspos fungsi penting
