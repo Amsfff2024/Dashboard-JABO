@@ -1,1815 +1,1510 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Dashboard JABO - Cell Down</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<!-- MAP LIBRARIES -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-
-<style>
-:root {
-  --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
-  --font-inter: 'Inter', sans-serif;
-  --primary-blue: #3b82f6;
-  --success-green: #10b981;
-  --warning-yellow: #f59e0b;
-  --danger-red: #ef4444;
-  --info-cyan: #06b6d4;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: #f8fafc;
-  font-family: var(--font-inter);
-  min-height: 100vh;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* HEADER */
-.executive-header {
-  background: linear-gradient(135deg, #1a2980, #26d0ce);
-  color: white;
-  padding: 16px 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  flex-shrink: 0;
-}
-
-.executive-header h1 {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 700;
-  font-size: 1.5rem !important;
-  margin: 0;
-}
-
-.executive-header p {
-  font-family: var(--font-inter);
-  font-weight: 400;
-  font-size: 14px;
-  opacity: 0.9;
-  margin: 0;
-}
-
-/* LAST UPDATE */
-#currentTime, #lastUpdatedTime, #nextRefreshTime {
-  font-family: var(--font-inter);
-  font-weight: 500;
-  font-size: 14px;
-}
-
-/* KPI CARDS */
-.kpi-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  transition: all 0.3s ease;
-  border: none;
-  overflow: hidden;
-  height: 100%;
-  padding: 20px;
-}
-
-.kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.15);
-}
-
-.kpi-value {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 800;
-  font-size: 1.75rem;
-  color: #1e293b;
-}
-
-.card-title {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  font-size: 14px;
-  color: #4b5563;
-}
-
-/* FILTER CARDS */
-.filter-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border: none;
-  padding: 20px;
-}
-
-.filter-card .input-group-text {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.filter-card .form-control {
-  font-family: var(--font-inter);
-  font-weight: 400;
-  font-size: 14px;
-  height: 46px;
-}
-
-/* BUTTONS */
-.btn {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  font-size: 14px;
-  border-radius: 10px;
-  padding: 10px 20px;
-  border: none;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.btn-outline-success {
-  border: 1px solid var(--success-green);
-  color: var(--success-green);
-}
-
-.btn-primary:hover, .btn-outline-success:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* SUMMARY CARDS */
-.summary-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  padding: 24px;
-  border: none;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.summary-card h6 {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 16px;
-  font-size: 16px;
-}
-
-/* TABLE STYLES */
-.table thead th {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  background: linear-gradient(135deg, #1e293b, #334155);
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border: none;
-  padding: 12px 10px;
-}
-
-.table tbody td {
-  font-family: var(--font-inter);
-  font-weight: 400;
-  font-size: 12px;
-  padding: 10px 8px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: #f8fafc;
-}
-
-.table-hover tbody tr:hover {
-  background-color: #f1f5f9;
-}
-
-/* BADGES */
-.badge {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  border: none;
-}
-
-/* MAIN CONTAINER */
-.main-container {
-  flex: 1;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* MAP STYLES - FIXED FOR FULL HEIGHT */
-#map {
-  height: 100% !important;
-  width: 100% !important;
-  border-radius: 0 0 16px 16px;
-  z-index: 1;
-}
-
-.map-container {
-  position: relative;
-  flex: 1;
-  min-height: 500px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: white;
-  display: flex;
-  flex-direction: column;
-}
-
-.map-wrapper {
-  flex: 1;
-  position: relative;
-  border-radius: 0 0 16px 16px;
-  overflow: hidden;
-}
-
-/* MAP CONTROLS */
-.map-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.map-controls .btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  background: white;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  font-size: 16px;
-}
-
-.map-controls .btn:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-}
-
-/* MAP LEGEND */
-.map-legend {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  font-family: var(--font-inter);
-  font-size: 12px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 6px 0;
-}
-
-.legend-color {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* POPUP STYLES */
-.leaflet-popup-content {
-  font-family: var(--font-inter);
-  min-width: 280px;
-  max-width: 320px;
-  padding: 5px;
-  margin: 0;
-}
-
-.popup-header {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
-  color: white;
-  padding: 12px 15px;
-  margin: -5px -5px 10px -5px;
-  border-radius: 8px 8px 0 0;
-}
-
-.popup-header h5 {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 700;
-  margin: 0;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.popup-content {
-  padding: 0 5px;
-}
-
-.popup-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin: 8px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.popup-row:last-child {
-  border-bottom: none;
-}
-
-.popup-label {
-  font-weight: 600;
-  color: #475569;
-  font-size: 12px;
-  min-width: 100px;
-}
-
-.popup-value {
-  text-align: right;
-  font-size: 12px;
-  color: #1e293b;
-  flex: 1;
-  margin-left: 10px;
-}
-
-/* VIEW TOGGLE TABS */
-.view-tabs {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 12px;
-  padding: 6px;
-  width: fit-content;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  flex-shrink: 0;
-}
-
-.view-tab {
-  padding: 10px 28px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #64748b;
-  font-size: 14px;
-}
-
-.view-tab.active {
-  background: white;
-  color: #3b82f6;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.view-tab:hover:not(.active) {
-  background: rgba(255,255,255,0.7);
-  color: #475569;
-}
-
-/* VIEW CONTENT */
-.view-content {
-  display: none;
-  flex: 1;
-  flex-direction: column;
-  min-height: 500px;
-}
-
-.view-content.active {
-  display: flex;
-}
-
-/* TABLE VIEW */
-#tableView.active {
-  display: flex;
-  flex-direction: column;
-}
-
-/* MAP VIEW */
-#mapView.active {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-/* CARD HEADER */
-.card-header {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 20px 24px;
-  border-radius: 16px 16px 0 0;
-  flex-shrink: 0;
-}
-
-.card-header h6 {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* MAIN TABLE CONTAINER */
-.main-table-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border: none;
-  overflow: hidden;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 500px;
-}
-
-.main-table-wrapper {
-  overflow: auto;
-  flex: 1;
-  border-radius: 0 0 16px 16px;
-}
-
-/* MAP STATUS */
-.map-status {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.98);
-  padding: 30px 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  text-align: center;
-  z-index: 1000;
-  max-width: 400px;
-  width: 90%;
-  font-family: var(--font-inter);
-  border: 1px solid rgba(0,0,0,0.1);
-}
-
-.map-status i {
-  font-size: 64px;
-  color: #94a3b8;
-  margin-bottom: 20px;
-  opacity: 0.7;
-}
-
-.map-status h5 {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 10px;
-  font-size: 18px;
-}
-
-.map-status p {
-  color: #64748b;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-/* SITE ID CELL */
-.site-id-cell {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-  font-weight: 600;
-  color: #1e40af;
-  font-size: 11px;
-}
-
-/* LOADING */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px;
-  font-size: 16px;
-  color: #64748b;
-  font-family: var(--font-inter);
-  flex: 1;
-}
-
-/* PROGRESS BARS */
-.progress {
-  height: 8px;
-  border-radius: 4px;
-  background-color: #e2e8f0;
-  overflow: hidden;
-}
-
-.progress-bar {
-  border-radius: 4px;
-}
-
-/* DASHBOARD STATUS BADGE */
-#dashboardStatus {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-}
-
-/* EXPORT BUTTON */
-.export-btn {
-  background: linear-gradient(135deg, #10b981, #34d399);
-  color: white;
-}
-
-.export-btn:hover {
-  background: linear-gradient(135deg, #0da271, #2bbd88);
-  color: white;
-}
-
-/* FORM SWITCH */
-.form-check-label {
-  font-family: var(--font-inter);
-  font-weight: 500;
-  font-size: 14px;
-  color: #475569;
-}
-
-.form-check-input:checked {
-  background-color: var(--primary-blue);
-  border-color: var(--primary-blue);
-}
-
-/* SEARCH HIGHLIGHT */
-.search-highlight {
-  background-color: #fff3cd;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-weight: 600;
-}
-
-/* COORDINATES INFO */
-.coordinates-info {
-  font-family: var(--font-inter);
-  font-size: 11px;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-/* MAP INFO CONTROL */
-.map-info-control {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 12px 16px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-  font-family: var(--font-inter);
-  font-size: 12px;
-  color: #1e293b;
-  border: 1px solid rgba(0,0,0,0.1);
-  backdrop-filter: blur(8px);
-}
-
-.map-info-control strong {
-  color: var(--primary-blue);
-  font-weight: 700;
-}
-
-/* AGING BADGES */
-.aging-badge-1 {
-  background: linear-gradient(135deg, #dbeafe, #93c5fd);
-  color: #1e40af;
-}
-
-.aging-badge-3 {
-  background: linear-gradient(135deg, #fef3c7, #fbbf24);
-  color: #92400e;
-}
-
-.aging-badge-4 {
-  background: linear-gradient(135deg, #fee2e2, #f87171);
-  color: #991b1b;
-}
-
-/* RESPONSIVE ADJUSTMENTS */
-@media (max-width: 768px) {
-  .executive-header {
-    padding: 12px 16px;
-  }
-  
-  .executive-header h1 {
-    font-size: 1.2rem !important;
-  }
-  
-  .kpi-value {
-    font-size: 1.5rem;
-  }
-  
-  .view-tab {
-    padding: 8px 16px;
-    font-size: 13px;
-  }
-  
-  .map-container {
-    min-height: 400px;
-  }
-  
-  .map-status {
-    padding: 20px;
-    width: 95%;
-  }
-  
-  .map-controls {
-    top: 10px;
-    right: 10px;
-  }
-  
-  .map-controls .btn {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .map-legend {
-    left: 10px;
-    bottom: 10px;
-    padding: 12px 15px;
-    font-size: 11px;
-  }
-  
-  .main-container {
-    padding: 16px;
-  }
-}
-
-/* FOOTER */
-.footer {
-  flex-shrink: 0;
-  padding: 20px 0;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-}
-
-.footer p {
-  margin: 0;
-  font-family: var(--font-inter);
-  font-size: 13px;
-  color: #64748b;
-}
-
-/* UTILITY CLASSES */
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.text-truncate-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-/* CLUSTER ICONS */
-.marker-cluster-small {
-  background-color: rgba(181, 226, 140, 0.6);
-}
-
-.marker-cluster-small div {
-  background-color: rgba(110, 204, 57, 0.6);
-}
-
-.marker-cluster-medium {
-  background-color: rgba(241, 211, 87, 0.6);
-}
-
-.marker-cluster-medium div {
-  background-color: rgba(240, 194, 12, 0.6);
-}
-
-.marker-cluster-large {
-  background-color: rgba(253, 156, 115, 0.6);
-}
-
-.marker-cluster-large div {
-  background-color: rgba(241, 128, 23, 0.6);
-}
-
-/* SCROLLBAR STYLING */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Alarm Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- PapaParse untuk parsing CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <style>
+        :root {
+            --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+            --critical-red: #dc3545;
+            --warning-orange: #fd7e14;
+            --normal-green: #28a745;
+            --info-blue: #17a2b8;
+            --vip-gold: #ffc107;
+        }
+        
+        body {
+            background: #f8fafc;
+            font-family: var(--font-inter);
+            min-height: 100vh;
+            overflow-x: hidden; /* Mencegah scroll horizontal global */
+        }
+        
+        /* HEADER */
+        .executive-header {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .executive-header h1 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            font-size: 1.5rem !important;
+            margin: 0;
+        }
+        
+        .executive-header p {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* LAST UPDATE */
+        #currentTime, #lastUpdatedTime, #nextRefreshTime {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        /* KPI CARDS - Updated Design */
+        .kpi-card {
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+            transition: all 0.3s ease;
+            border: none;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        }
+        
+        .kpi-value {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 800;
+            font-size: 1.75rem;
+            color: #1e293b;
+        }
+        
+        .card-title {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        /* FILTER CARDS */
+        .filter-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border: none;
+        }
+        
+        .filter-card .input-group-text {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .filter-card .form-control {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 14px;
+            height: 46px;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .btn-outline-success {
+            border-radius: 10px;
+            padding: 10px 20px;
+        }
+        
+        .btn-primary:hover, .btn-outline-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* SUMMARY CARDS - TINGGI 1000px */
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            border: none;
+            height: 1000px; /* DIUBAH MENJADI 1000px */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .summary-card h6 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        /* TABLE HEADERS - FONT SIZE DIKECILKAN */
+        .table thead th {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 13px; /* DIKECILKAN DARI 14px */
+            cursor: pointer;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border: none;
+            padding: 10px 8px; /* DIKECILKAN PADDING */
+        }
+        
+        /* TABLE CONTENT - FONT SIZE DIKECILKAN */
+        .table tbody td {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px; /* DIKECILKAN DARI 13px */
+            padding: 8px 6px; /* DIKECILKAN PADDING */
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8fafc;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        
+        /* BADGES */
+        .badge {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 5px 8px; /* DIKECILKAN */
+            border-radius: 20px;
+            font-size: 11px; /* DIKECILKAN */
+        }
+        
+        .badge-priority-P1 {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+        }
+        
+        .badge-priority-P2 {
+            background: linear-gradient(135deg, #fd7e14, #e8590c);
+            color: white;
+            border: none;
+        }
+        
+        /* VIP ROW */
+        .vip-row {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        
+        /* VIP BADGE */
+        .vip-badge {
+            background: linear-gradient(135deg, #ffc107, #ffaa00);
+            color: #212529;
+            font-weight: 700;
+        }
+        
+        /* SITE ID CELL */
+        .site-id-cell {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 11px; /* DIKECILKAN */
+        }
+        
+        /* LOADING */
+        #loadingSpinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            font-size: 18px;
+            color: #64748b;
+            font-family: var(--font-inter);
+        }
+        
+        .alarm-type-badge {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 11px; /* DIKECILKAN */
+            padding: 3px 6px; /* DIKECILKAN */
+            border-radius: 12px;
+        }
+        
+        .time-cell {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 11px; /* DIKECILKAN */
+        }
+        
+        .duration-badge {
+            min-width: 60px; /* DIKECILKAN DARI 70px */
+            text-align: center;
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            font-size: 11px; /* DIKECILKAN */
+        }
+        
+        /* PROGRESS BARS */
+        .progress {
+            height: 6px; /* DIKECILKAN DARI 8px */
+            border-radius: 4px;
+        }
+        
+        /* CURSOR POINTER */
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        /* SEARCH HIGHLIGHT */
+        .search-highlight {
+            background-color: #fff3cd;
+            font-weight: 600;
+        }
+        
+        /* SITE BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
+        .site-breakdown {
+            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
+            flex: 1;
+            max-height: 300px; /* TINGGI UNTUK 10 BARIS */
+        }
+        
+        /* VIP BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
+        .vip-breakdown {
+            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
+            flex: 1;
+            max-height: 250px; /* TINGGI UNTUK 10 BARIS */
+        }
+        
+        .site-breakdown table,
+        .vip-breakdown table {
+            margin-bottom: 0;
+        }
+        
+        /* FORM SWITCH */
+        .form-check-label {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        /* MAIN TABLE CONTAINER - TINGGI 1000px */
+        .main-table-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border: none;
+            overflow: hidden;
+            flex: 1;
+            height: 1000px; /* DIUBAH MENJADI 1000px */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-table-wrapper {
+            overflow: auto;
+            flex: 1;
+        }
+        
+        /* CARD HEADER */
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* DASHBOARD STATUS BADGE */
+        #dashboardStatus {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        
+        /* FOOTER */
+        footer .small {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* DATA INFO */
+        #dataInfo {
+            font-family: var(--font-inter);
+            font-weight: 500;
+            font-size: 12px;
+        }
+        
+        /* SEARCH RESULTS TEXT */
+        #searchResultsText {
+            font-family: var(--font-inter);
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        /* RESPONSIVE ADJUSTMENTS */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 100%;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .executive-header {
+                padding: 12px 16px;
+                text-align: center;
+            }
+            
+            .executive-header h1 {
+                font-size: 1.2rem !important;
+            }
+            
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+            
+            .summary-card,
+            .main-table-container {
+                height: auto;
+                min-height: 700px;
+            }
+            
+            .site-breakdown, .vip-breakdown {
+                max-height: none;
+            }
+        }
+        
+        /* ADDITIONAL SPACING */
+        .container.py-4 {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1.5rem !important;
+        }
+        
+        .row.mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+        
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 80px);
+        }
+        
+        /* VIP SITES SECTION */
+        .vip-sites-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #ffc107;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vip-sites-section h7 {
+            font-family: var(--font-plus-jakarta);
+            font-weight: 700;
+            font-size: 14px;
+            color: #996500;
+            margin-bottom: 1rem;
+        }
+        
+        /* TAB HEADER ICONS */
+        .table-title-icon {
+            color: #3b82f6;
+        }
+        
+        .vip-title-icon {
+            color: #ffc107;
+        }
+        
+        /* SPACING UNTUK TOP AFFECTED SITES */
+        .top-sites-section {
+            margin-bottom: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* TABLE FIXED LAYOUT */
+        .table-fixed-layout {
+            table-layout: fixed;
+        }
+        
+        /* ALARM COUNT TABLE - DENGAN SCROLL UNTUK TINGGI 1000px */
+        .alarm-count-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 880px; /* DITINGKATKAN UNTUK 1000px */
+        }
+        
+        /* STYLING UNTUK TABEL DETAIL ALARM */
+        .detailed-alarm-table {
+            max-height: 880px;
+        }
+        
+        /* OPTIMASI KOLOM UNTUK DETAILED TABLE */
+        .col-site-id {
+            width: 100px; /* DIKECILKAN */
+        }
+        
+        .col-alarm-source {
+            width: 150px; /* DIKECILKAN */
+        }
+        
+        .col-alarm-name {
+            width: 180px; /* DIKECILKAN */
+        }
+        
+        .col-time {
+            width: 140px; /* DIKECILKAN */
+        }
+        
+        .col-duration {
+            width: 80px; /* DIKECILKAN */
+        }
+        
+        .col-priority {
+            width: 70px; /* DIKECILKAN */
+        }
+        
+        /* TEKS TRUNCATE UNTUK KOLOM PANJANG */
+        .text-truncate-cell {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* FITUR SHOW MORE UNTUK TEKS PANJANG */
+        .text-expandable {
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .text-expandable:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .text-full {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+        
+        /* INFO TEXT UNTUK FREEZE PANE */
+        .freeze-pane-info {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: center;
+            font-family: var(--font-inter);
+        }
+    </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div class="executive-header">
-  <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h1 class="mb-2"><i class="fas fa-tower-cell me-2"></i>Dashboard JABO - Cell Down</h1>
-        <p class="small opacity-75">Real-time Cell Down Monitoring with Geographic Visualization</p>
-      </div>
-      <div class="text-end">
-        <div class="small mb-2"><i class="fas fa-clock me-1"></i> <span id="currentTime">Loading...</span></div>
-        <span class="badge bg-warning" id="dashboardStatus">
-          <i class="fas fa-circle me-1"></i> Loading Data...
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN CONTAINER -->
-<div class="main-container">
-  
-  <!-- SEARCH AND FILTER ROW -->
-  <div class="row mb-4">
-    <div class="col-lg-8 col-md-7">
-      <div class="filter-card">
-        <h6 class="mb-3"><i class="fas fa-search me-2"></i>Search & Filter Alarms</h6>
-        <div class="row g-3">
-          <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
-              <input type="text" class="form-control" id="searchSiteId" placeholder="Site ID" onkeyup="applyFilters()">
+    <!-- Header -->
+    <div class="executive-header">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Executive Alarm Dashboard</h1>
+                    <p class="small mb-0 opacity-75">Real-time Network Health Monitoring</p>
+                </div>
+                <div class="text-end">
+                    <div class="small mb-1"><i class="fas fa-clock me-1"></i> <span id="currentTime">Loading...</span></div>
+                    <span class="badge bg-danger" id="dashboardStatus">
+                        <i class="fas fa-circle me-1"></i> Loading Data...
+                    </span>
+                </div>
             </div>
-          </div>
-          <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-building"></i></span>
-              <input type="text" class="form-control" id="searchSiteName" placeholder="Site Name" onkeyup="applyFilters()">
+        </div>
+    </div>
+
+    <!-- Main Container - DIUBAH MENJADI CONTAINER-FLUID -->
+    <div class="container-fluid py-4 dashboard-content">
+        <!-- Search and Filter Row -->
+        <div class="row mb-4">
+            <div class="col-lg-8 col-md-7">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Alarms</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                    <input type="text" class="form-control" id="searchSiteId" placeholder="Search by Site ID (e.g., 13CKR0564)" onkeyup="applyFilters()">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-bell"></i></span>
+                                    <input type="text" class="form-control" id="searchAlarmName" placeholder="Search by Alarm Name (e.g., CELL UNAVAILABLE)" onkeyup="applyFilters()">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <small class="text-muted" id="searchResultsText">Start typing to filter alarms. Matching text will be highlighted.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                    <i class="fas fa-eraser me-1"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
-              <select class="form-control" id="filterSource" onchange="applyFilters()">
-                <option value="">All Sources</option>
-                <option value="MAE6">MAE6</option>
-                <option value="MAE7">MAE7</option>
-              </select>
+            <div class="col-lg-4 col-md-5">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3"><i class="fas fa-sync-alt me-2"></i>Data Control</h6>
+                        <div class="d-flex flex-column gap-2">
+                            <button class="btn btn-primary w-100" onclick="fetchCSVData()" id="btnRefresh">
+                                <i class="fas fa-redo me-1"></i> Refresh Data
+                            </button>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
+                                    <label class="form-check-label" for="autoRefreshToggle">Auto-refresh (60s)</label>
+                                </div>
+                                <div class="small text-muted" id="dataInfo">No data loaded.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-        <div class="row mt-3">
-          <div class="col-md-8">
-            <small class="text-muted" id="searchResultsText">Start typing to filter alarms</small>
-          </div>
-          <div class="col-md-4">
-            <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
-              <i class="fas fa-eraser me-1"></i> Clear Filters
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-md-5">
-      <div class="filter-card">
-        <h6 class="mb-3"><i class="fas fa-sync-alt me-2"></i>Data Control</h6>
-        <div class="d-flex flex-column gap-2">
-          <button class="btn btn-primary w-100" onclick="fetchData()" id="btnRefresh">
-            <i class="fas fa-redo me-1"></i> Refresh Data
-          </button>
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
-              <label class="form-check-label" for="autoRefreshToggle">Auto-refresh (5min)</label>
+
+        <!-- KPI Summary Row -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">TOTAL ALARMS</h6>
+                            <div class="kpi-value text-danger" id="kpiTotalAlarms">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2">Active uncleared alarms</div>
+                </div>
             </div>
-            <div class="small text-muted" id="dataInfo">No data loaded</div>
-          </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">AFFECTED SITES</h6>
+                            <div class="kpi-value text-warning" id="kpiAffectedSites">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-map-marker-alt fa-2x text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2">Unique site IDs with alarms</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">ALARM CATEGORIES</h6>
+                            <div class="kpi-value text-info" id="kpiAlarmCategories">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x text-info opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2">Different types of alarms</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="card kpi-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">VIP SITES</h6>
+                            <div class="kpi-value text-success" id="kpiVipSites">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-crown fa-2x text-success opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-2">Sites with VIP/POI category</div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- Alarm Summary and Count Table Row -->
+        <div class="row mb-4">
+            <!-- Site Breakdown Summary (Now with VIP Sites) -->
+            <div class="col-lg-5 mb-4">
+                <div class="summary-card">
+                    <!-- TOP AFFECTED SITES SECTION - 10 BARIS + SCROLL -->
+                    <div class="top-sites-section">
+                        <h6 class="mb-3"><i class="fas fa-building me-2 table-title-icon"></i>Top Affected Sites</h6>
+                        <div class="site-breakdown">
+                            <table class="table table-sm table-borderless mb-0 table-fixed-layout">
+                                <thead>
+                                    <tr>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Site ID</th>
+                                        <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 70px;">Alarms</th>
+                                        <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="siteBreakdownBody">
+                                    <tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="freeze-pane-info">
+                            <i class="fas fa-info-circle me-1"></i> Showing top 10 sites. Scroll for more.
+                        </div>
+                    </div>
+                    
+                    <!-- VIP SITES TABLE - 10 BARIS + SCROLL -->
+                    <div class="vip-sites-section">
+                        <h7 class="mb-2"><i class="fas fa-crown me-2 vip-title-icon"></i>VIP Sites with Alarms</h7>
+                        <div class="vip-breakdown">
+                            <table class="table table-sm table-borderless mb-0 table-fixed-layout">
+                                <thead>
+                                    <tr>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 100px;">Site ID</th>
+                                        <th class="small" style="font-family: var(--font-plus-jakarta); font-weight: 600;">Site Name</th>
+                                        <th class="small text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 70px;">Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vipSitesBody">
+                                    <tr><td colspan="3" class="text-center py-3" style="font-family: var(--font-inter);">Loading VIP sites...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="freeze-pane-info">
+                            <i class="fas fa-info-circle me-1"></i> Showing top 10 VIP sites. Scroll for more.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alarm Count Table -->
+            <div class="col-lg-7 mb-4">
+                <div class="summary-card">
+                    <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
+                    <div class="alarm-count-container">
+                        <table class="table table-sm table-hover mb-0 table-fixed-layout">
+                            <thead>
+                                <tr>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 250px;">Alarm Type</th>
+                                    <th class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 70px;">Count</th>
+                                    <th class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 60px;">%</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 120px;">Distribution</th>
+                                    <th style="font-family: var(--font-plus-jakarta); font-weight: 600; width: 70px;">Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alarmCountTableBody">
+                                <tr><td colspan="5" class="text-center py-4" style="font-family: var(--font-inter);">Loading data...</td></tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr id="alarmCountTableFooter">
+                                    <td style="font-family: var(--font-plus-jakarta); font-weight: 700;">Total</td>
+                                    <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">0</td>
+                                    <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 700;">100%</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Alarm Table -->
+        <div class="row flex-grow-1">
+            <div class="col-12">
+                <div class="main-table-container">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0" style="font-family: var(--font-plus-jakarta); font-weight: 700;">
+                            <i class="fas fa-table me-2"></i>Detailed Active Alarms
+                        </h6>
+                        <div>
+                            <span class="badge bg-info me-2" id="tableCountBadge">Showing 0 alarms</span>
+                            <button class="btn btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-download me-1"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="main-table-wrapper detailed-alarm-table">
+                        <div id="loadingSpinner">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status"></div>
+                                <p style="font-family: var(--font-inter);">Loading alarm data from Google Sheets...</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive" id="alarmTableContainer" style="display: none;">
+                            <table class="table table-striped table-hover table-bordered mb-0 table-fixed-layout">
+                                <thead>
+                                    <tr>
+                                        <th class="cursor-pointer col-site-id" onclick="sortTable('siteId')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Site ID <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer col-alarm-source" onclick="sortTable('alarmSource')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Alarm Source <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer col-alarm-name" onclick="sortTable('alarmName')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Alarm Name <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer col-time" onclick="sortTable('timeFull')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Time <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer col-duration" onclick="sortTable('duration')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Duration <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="cursor-pointer col-priority" onclick="sortTable('priority')" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+                                            Priority <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedAlarmTableBody">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="text-center small text-muted">
+                    <p class="mb-1" style="font-family: var(--font-inter);">
+                        <i class="fas fa-database me-1"></i> Data Source: Google Sheets CSV | 
+                        <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span> |
+                        <i class="fas fa-redo me-1 ms-3"></i> Next Auto-Refresh: <span id="nextRefreshTime">-</span>
+                    </p>
+                    <p class="mb-0" style="font-family: var(--font-inter);">Dashboard refreshes automatically every 60 seconds. Click "Refresh Data" to update manually.</p>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- KPI SUMMARY ROW -->
-  <div class="row mb-4">
-    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-      <div class="kpi-card">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">TOTAL ALARM COUNT</h6>
-            <div class="kpi-value text-danger" id="kpiTotalAlarms">0</div>
-          </div>
-          <div class="align-self-center">
-            <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
-          </div>
-        </div>
-        <div class="small text-muted mt-2">Sum of all alarm counts</div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-      <div class="kpi-card">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">UNIQUE SITES</h6>
-            <div class="kpi-value text-warning" id="kpiAffectedSites">0</div>
-          </div>
-          <div class="align-self-center">
-            <i class="fas fa-map-marker-alt fa-2x text-warning opacity-50"></i>
-          </div>
-        </div>
-        <div class="small text-muted mt-2">Unique site IDs with alarms</div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-      <div class="kpi-card">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">AGING ≤ 1 DAY</h6>
-            <div class="kpi-value text-info" id="kpiAging1">0</div>
-          </div>
-          <div class="align-self-center">
-            <i class="fas fa-clock fa-2x text-info opacity-50"></i>
-          </div>
-        </div>
-        <div class="small text-muted mt-2">New alarms (≤ 24 hours)</div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-      <div class="kpi-card">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">SITES WITH LOCATION</h6>
-            <div class="kpi-value text-success" id="kpiWithLocation">0</div>
-          </div>
-          <div class="align-self-center">
-            <i class="fas fa-map fa-2x text-success opacity-50"></i>
-          </div>
-        </div>
-        <div class="small text-muted mt-2">Sites with valid coordinates</div>
-      </div>
-    </div>
-  </div>
+    <!-- JavaScript -->
+    <script>
+        // ==================== KONFIGURASI ====================
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=964625429&single=true&output=csv";
 
-  <!-- VIEW TOGGLE -->
-  <div class="view-tabs mb-4">
-    <div class="view-tab active" data-view="table" onclick="switchView('table')">
-      <i class="fas fa-table"></i> Table View
-    </div>
-    <div class="view-tab" data-view="map" onclick="switchView('map')">
-      <i class="fas fa-map"></i> Map View
-    </div>
-  </div>
+        // ==================== VARIABEL GLOBAL ====================
+        let allAlarmData = [];
+        let filteredAlarmData = [];
+        let alarmCountByType = {};
+        let siteCountData = {};
+        let vipSitesData = {};
+        let currentSort = { column: 'timeFull', direction: 'desc' };
+        let autoRefreshInterval = null;
+        let refreshCountdown = 60;
+        let currentSearchSiteId = '';
+        let currentSearchAlarmName = '';
 
-  <!-- TABLE VIEW -->
-  <div id="tableView" class="view-content active">
-    <div class="main-table-container">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-          <i class="fas fa-table me-2"></i>Detailed Cell Down Alarms
-        </h6>
-        <div>
-          <span class="badge bg-info me-3" id="tableCountBadge">Showing 0 records</span>
-          <button class="btn export-btn" onclick="exportToCSV()">
-            <i class="fas fa-download me-1"></i> Export CSV
-          </button>
-        </div>
-      </div>
-      <div class="main-table-wrapper">
-        <div id="loadingSpinner">
-          <div class="text-center">
-            <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p>Loading alarm data from Google Sheets...</p>
-          </div>
-        </div>
-        <div class="table-responsive" id="dataTableContainer" style="display: none;">
-          <table class="table table-striped table-hover table-bordered mb-0">
-            <thead>
-              <tr>
-                <th class="cursor-pointer" onclick="sortTable('SITE ID')">Site ID</th>
-                <th class="cursor-pointer" onclick="sortTable('Alarm Source')">Site Name</th>
-                <th class="cursor-pointer" onclick="sortTable('Name')">Alarm Type</th>
-                <th class="cursor-pointer text-center" onclick="sortTable('Alarm Count')">Count</th>
-                <th class="cursor-pointer" onclick="sortTable('First Occurred (NT)')">First Occurred</th>
-                <th class="cursor-pointer" onclick="sortTable('Source')">Source</th>
-                <th class="cursor-pointer" onclick="sortTable('Updated At')">Updated At</th>
-                <th class="cursor-pointer">Aging</th>
-                <th class="text-center">Location</th>
-              </tr>
-            </thead>
-            <tbody id="dataTableBody">
-              <!-- Data will be populated by JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+        // ==================== FUNGSI INISIALISASI ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initializing...');
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
+            
+            fetchCSVData();
+            
+            // Setup click untuk hide text popup
+            document.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('text-expandable')) {
+                    hideAllTextPopups();
+                }
+            });
+        });
 
-  <!-- MAP VIEW -->
-  <div id="mapView" class="view-content">
-    <div class="main-table-container">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-          <i class="fas fa-map me-2"></i>Geographic Distribution of Cell Down Sites
-        </h6>
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-info" id="mapCountBadge">0 sites on map</span>
-          <button class="btn btn-sm btn-outline-primary" onclick="fitMapToBounds()">
-            <i class="fas fa-expand me-1"></i> Fit to Sites
-          </button>
-        </div>
-      </div>
-      <div class="map-wrapper">
-        <div id="map"></div>
-        <div class="map-controls">
-          <button class="btn btn-sm btn-light shadow-sm" onclick="zoomInMap()" title="Zoom In">
-            <i class="fas fa-plus"></i>
-          </button>
-          <button class="btn btn-sm btn-light shadow-sm" onclick="zoomOutMap()" title="Zoom Out">
-            <i class="fas fa-minus"></i>
-          </button>
-          <button class="btn btn-sm btn-light shadow-sm" onclick="refreshMap()" title="Refresh Map">
-            <i class="fas fa-sync-alt"></i>
-          </button>
-          <button class="btn btn-sm btn-light shadow-sm" onclick="showMapInfo()" title="Map Information">
-            <i class="fas fa-info"></i>
-          </button>
-        </div>
-        <div class="map-legend">
-          <div class="legend-item">
-            <div class="legend-color" style="background-color: #3b82f6;"></div>
-            <span>≤ 1 Day</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background-color: #f59e0b;"></div>
-            <span>≤ 3 Days</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background-color: #ef4444;"></div>
-            <span>≥ 4 Days</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background-color: #94a3b8;"></div>
-            <span>Cluster</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  <div class="container-fluid">
-    <div class="text-center">
-      <p class="mb-1">
-        <i class="fas fa-database me-1"></i> Data Source: Google Sheets CSV | 
-        <i class="fas fa-clock me-1 ms-3"></i> Last Updated: <span id="lastUpdatedTime">-</span> |
-        <i class="fas fa-redo me-1 ms-3"></i> Next Auto-Refresh: <span id="nextRefreshTime">-</span>
-      </p>
-      <p class="mb-0">Dashboard refreshes automatically every 5 minutes. Click "Refresh Data" to update manually.</p>
-    </div>
-  </div>
-</div>
-
-<script>
-// ==================== KONFIGURASI ====================
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=219697226&single=true&output=csv";
-
-// ==================== VARIABEL GLOBAL ====================
-let allData = [];
-let filteredData = [];
-let currentSort = { column: 'First Occurred (NT)', direction: 'desc' };
-let autoRefreshInterval = null;
-let refreshCountdown = 300; // 5 minutes
-let map = null;
-let markerCluster = null;
-let mapMarkers = [];
-
-// ==================== FUNGSI INISIALISASI ====================
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('Dashboard JABO - Cell Down initializing...');
-  updateCurrentTime();
-  setInterval(updateCurrentTime, 1000);
-  
-  document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
-  
-  fetchData();
-  
-  // Setup auto-refresh
-  setTimeout(() => {
-    if (document.getElementById('autoRefreshToggle').checked) {
-      startAutoRefresh();
-    }
-  }, 1000);
-});
-
-// ==================== FUNGSI DATA ====================
-function fetchData() {
-  console.log('Fetching data from:', CSV_URL);
-  showLoading(true);
-  updateDashboardStatus('loading', 'Fetching data...');
-  
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-      console.log('CSV parsing complete. Rows:', results.data.length);
-      
-      if (results.data && results.data.length > 0) {
-        processData(results.data);
-        updateDashboardStatus('success', 'Data loaded successfully');
-      } else {
-        console.warn('No data found in CSV');
-        showError('No data found in the CSV file.');
-        updateDashboardStatus('error', 'No data found');
-      }
-      showLoading(false);
-      updateLastUpdatedTime();
-      resetAutoRefreshCountdown();
-    },
-    error: function(error) {
-      console.error('Error fetching CSV:', error);
-      showError('Failed to load data from CSV. Please check the URL.');
-      updateDashboardStatus('error', 'Failed to load data');
-      showLoading(false);
-    }
-  });
-}
-
-function processData(rawData) {
-  allData = [];
-  let totalAlarmCount = 0;
-  let sitesWithLocation = 0;
-  
-  rawData.forEach(row => {
-    if (!row['Name'] || !row['SITE ID']) return;
-    
-    // Calculate aging
-    const firstOccurred = row['First Occurred (NT)'];
-    let agingDays = 0;
-    
-    if (firstOccurred && firstOccurred !== '-') {
-      try {
-        const firstDate = new Date(firstOccurred);
-        const now = new Date();
-        agingDays = (now - firstDate) / (1000 * 3600 * 24);
-        agingDays = Math.max(0, agingDays);
-      } catch (e) {
-        console.warn('Error parsing date:', firstOccurred);
-      }
-    }
-    
-    // Add aging category
-    let agingCategory = "";
-    if (agingDays <= 1) agingCategory = "≤1 Day";
-    else if (agingDays <= 3) agingCategory = "≤3 Days";
-    else agingCategory = "≥4 Days";
-    
-    // Parse coordinates
-    let lat = null;
-    let lng = null;
-    
-    const latValue = row["Lat"];
-    const lngValue = row["Long"];
-    
-    if (latValue && lngValue && latValue !== '' && lngValue !== '') {
-      try {
-        lat = parseFloat(latValue.toString().replace(',', '.'));
-        lng = parseFloat(lngValue.toString().replace(',', '.'));
-        
-        if (!isNaN(lat) && !isNaN(lng) && 
-            lat >= -90 && lat <= 90 && 
-            lng >= -180 && lng <= 180) {
-          sitesWithLocation++;
-        } else {
-          lat = null;
-          lng = null;
+        // ==================== FUNGSI DATA ====================
+        function fetchCSVData() {
+            console.log('Fetching CSV data from:', CSV_URL);
+            showLoading(true);
+            updateDashboardStatus('loading', 'Fetching data...');
+            
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    console.log('CSV parsing complete. Rows:', results.data.length);
+                    
+                    if (results.data && results.data.length > 0) {
+                        processAlarmData(results.data);
+                        updateDashboardStatus('success', 'Data loaded successfully');
+                    } else {
+                        console.warn('No data found in CSV');
+                        showError('No data found in the CSV file.');
+                        updateDashboardStatus('error', 'No data found');
+                    }
+                    showLoading(false);
+                    updateLastUpdatedTime();
+                    resetAutoRefreshCountdown();
+                },
+                error: function(error) {
+                    console.error('Error fetching CSV:', error);
+                    showError('Failed to load data from CSV. Please check the URL.');
+                    updateDashboardStatus('error', 'Failed to load data');
+                    showLoading(false);
+                }
+            });
         }
-      } catch (e) {
-        console.warn('Error parsing coordinates:', e);
-        lat = null;
-        lng = null;
-      }
-    }
-    
-    // Add to total alarm count
-    const alarmCount = parseInt(row["Alarm Count"]) || 0;
-    totalAlarmCount += alarmCount;
-    
-    const processedRow = {
-      ...row,
-      _agingDays: agingDays,
-      _agingCategory: agingCategory,
-      _agingBadgeClass: getAgingBadgeClass(agingDays),
-      _lat: lat,
-      _lng: lng,
-      _hasLocation: lat !== null && lng !== null
-    };
-    
-    allData.push(processedRow);
-  });
-  
-  console.log(`Processed ${allData.length} records`);
-  console.log(`Total alarm count: ${totalAlarmCount}`);
-  console.log(`Sites with location: ${sitesWithLocation}`);
-  
-  applyFilters();
-}
 
-function getAgingBadgeClass(days) {
-  if (days <= 1) return 'aging-badge-1';
-  if (days <= 3) return 'aging-badge-3';
-  return 'aging-badge-4';
-}
+        function processAlarmData(rawData) {
+            allAlarmData = [];
+            alarmCountByType = {};
+            siteCountData = {};
+            vipSitesData = {};
+            
+            rawData.forEach(row => {
+                if (!row['Name'] || !row['SITE ID']) return;
+                
+                const firstOccurred = row['First Occurred (NT)'] || '';
+                
+                let formattedTime = 'N/A';
+                let dateObj = null;
+                
+                if (firstOccurred && firstOccurred !== '-') {
+                    try {
+                        dateObj = new Date(firstOccurred);
+                        if (!isNaN(dateObj.getTime())) {
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const year = dateObj.getFullYear();
+                            const hours = String(dateObj.getHours()).padStart(2, '0');
+                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                            const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+                            
+                            formattedTime = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                        }
+                    } catch (e) {
+                        console.warn('Error parsing date:', firstOccurred);
+                    }
+                }
+                
+                let durationMinutes = 0;
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                    const now = new Date();
+                    durationMinutes = Math.floor((now - dateObj) / (1000 * 60));
+                    durationMinutes = Math.max(0, durationMinutes);
+                }
+                
+                let priority = 'P2';
+                const alarmName = row['Name'] || '';
+                if (alarmName.includes('CELL UNAVAILABLE') || alarmName.includes('X2 INTERFACE')) {
+                    priority = 'P1';
+                }
+                
+                const isVip = row['Category VIP POI'] && 
+                             (row['Category VIP POI'].includes('Golden') || 
+                              row['Category VIP POI'].includes('VIP'));
+                
+                const siteId = row['SITE ID'] || 'N/A';
+                const siteName = row['Alarm Source'] || 'N/A';
+                
+                const processedRow = {
+                    raw: row,
+                    siteId: siteId,
+                    alarmSource: siteName,
+                    alarmName: alarmName,
+                    timeFull: firstOccurred,
+                    timeDisplay: formattedTime,
+                    duration: durationMinutes,
+                    priority: priority,
+                    isVip: isVip,
+                    cleared: row['Cleared On (NT)'] && row['Cleared On (NT)'] !== '-'
+                };
+                
+                allAlarmData.push(processedRow);
+                
+                if (alarmCountByType[alarmName]) {
+                    alarmCountByType[alarmName]++;
+                } else {
+                    alarmCountByType[alarmName] = 1;
+                }
+                
+                if (siteCountData[siteId]) {
+                    siteCountData[siteId]++;
+                } else {
+                    siteCountData[siteId] = 1;
+                }
+                
+                if (isVip) {
+                    if (!vipSitesData[siteId]) {
+                        vipSitesData[siteId] = {
+                            siteId: siteId,
+                            siteName: siteName,
+                            count: 0,
+                            isVip: true
+                        };
+                    }
+                    vipSitesData[siteId].count++;
+                }
+            });
+            
+            console.log(`Processed ${allAlarmData.length} alarm records`);
+            console.log(`Found ${Object.keys(alarmCountByType).length} alarm types`);
+            console.log(`Found ${Object.keys(siteCountData).length} unique sites`);
+            console.log(`Found ${Object.keys(vipSitesData).length} VIP sites with alarms`);
+            
+            applyFilters();
+        }
 
-// ==================== FUNGSI FILTER & PENCARIAN ====================
-function applyFilters() {
-  const siteId = document.getElementById('searchSiteId').value.toLowerCase().trim();
-  const siteName = document.getElementById('searchSiteName').value.toLowerCase().trim();
-  const source = document.getElementById('filterSource').value;
-  
-  console.log(`Applying filters - Site ID: "${siteId}", Site Name: "${siteName}", Source: "${source}"`);
-  
-  filteredData = allData.filter(item => {
-    const siteIdMatch = !siteId || 
-      (item['SITE ID'] && item['SITE ID'].toLowerCase().includes(siteId));
-    
-    const siteNameMatch = !siteName || 
-      (item['Alarm Source'] && item['Alarm Source'].toLowerCase().includes(siteName));
-    
-    const sourceMatch = !source || 
-      (item['Source'] && item['Source'] === source);
-    
-    return siteIdMatch && siteNameMatch && sourceMatch;
-  });
-  
-  const resultsText = document.getElementById('searchResultsText');
-  if (siteId || siteName || source) {
-    const sitesWithLocation = filteredData.filter(item => item._hasLocation).length;
-    resultsText.textContent = `Found ${filteredData.length} records (${sitesWithLocation} with location)`;
-    resultsText.className = 'text-success fw-semibold';
-  } else {
-    resultsText.textContent = 'Start typing to filter alarms';
-    resultsText.className = 'text-muted';
-  }
-  
-  updateSummaryKPIs();
-  updateDataTable();
-  updateMapView();
-}
+        // ==================== FUNGSI FILTER & PENCARIAN ====================
+        function applyFilters() {
+            currentSearchSiteId = document.getElementById('searchSiteId').value.toLowerCase().trim();
+            currentSearchAlarmName = document.getElementById('searchAlarmName').value.toLowerCase().trim();
+            
+            console.log(`Applying filters - Site: "${currentSearchSiteId}", Alarm: "${currentSearchAlarmName}"`);
+            
+            filteredAlarmData = allAlarmData.filter(alarm => {
+                const siteIdMatch = !currentSearchSiteId || 
+                    alarm.siteId.toLowerCase().includes(currentSearchSiteId);
+                
+                const alarmNameMatch = !currentSearchAlarmName || 
+                    alarm.alarmName.toLowerCase().includes(currentSearchAlarmName);
+                
+                return siteIdMatch && alarmNameMatch;
+            });
+            
+            const resultsText = document.getElementById('searchResultsText');
+            if (currentSearchSiteId || currentSearchAlarmName) {
+                resultsText.textContent = `Found ${filteredAlarmData.length} alarms matching your search.`;
+                resultsText.className = 'text-success fw-semibold';
+            } else {
+                resultsText.textContent = 'Start typing to filter alarms. Matching text will be highlighted.';
+                resultsText.className = 'text-muted';
+            }
+            
+            updateSummaryKPIs();
+            updateAlarmCountTable();
+            updateSiteBreakdown();
+            updateDetailedAlarmTable();
+            updateVIPSitesTable();
+        }
 
-function clearFilters() {
-  document.getElementById('searchSiteId').value = '';
-  document.getElementById('searchSiteName').value = '';
-  document.getElementById('filterSource').value = '';
-  document.getElementById('searchResultsText').textContent = 'Start typing to filter alarms';
-  document.getElementById('searchResultsText').className = 'text-muted';
-  applyFilters();
-}
+        function clearFilters() {
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            document.getElementById('searchResultsText').textContent = 'Start typing to filter alarms. Matching text will be highlighted.';
+            document.getElementById('searchResultsText').className = 'text-muted';
+            applyFilters();
+        }
 
-// ==================== FUNGSI UPDATE UI ====================
-function updateSummaryKPIs() {
-  const totalAlarmCount = filteredData.reduce((sum, item) => {
-    return sum + (parseInt(item["Alarm Count"]) || 0);
-  }, 0);
-  
-  const uniqueSites = new Set(filteredData.map(item => item['SITE ID']).filter(Boolean)).size;
-  
-  let aging1 = 0, aging3 = 0, aging4 = 0;
-  filteredData.forEach(item => {
-    if (item._agingDays <= 1) aging1++;
-    else if (item._agingDays <= 3) aging3++;
-    else aging4++;
-  });
-  
-  const sitesWithLocation = filteredData.filter(item => item._hasLocation).length;
-  
-  document.getElementById('kpiTotalAlarms').textContent = totalAlarmCount.toLocaleString();
-  document.getElementById('kpiAffectedSites').textContent = uniqueSites.toLocaleString();
-  document.getElementById('kpiAging1').textContent = aging1.toLocaleString();
-  document.getElementById('kpiWithLocation').textContent = sitesWithLocation.toLocaleString();
-}
+        // ==================== FUNGSI UPDATE UI ====================
+        function updateSummaryKPIs() {
+            const totalAlarms = filteredAlarmData.length;
+            const uniqueSites = new Set(filteredAlarmData.map(alarm => alarm.siteId)).size;
+            const alarmCategories = new Set(filteredAlarmData.map(alarm => alarm.alarmName)).size;
+            const vipSitesCount = new Set(filteredAlarmData.filter(alarm => alarm.isVip).map(alarm => alarm.siteId)).size;
+            
+            document.getElementById('kpiTotalAlarms').textContent = totalAlarms.toLocaleString();
+            document.getElementById('kpiAffectedSites').textContent = uniqueSites.toLocaleString();
+            document.getElementById('kpiAlarmCategories').textContent = alarmCategories.toLocaleString();
+            document.getElementById('kpiVipSites').textContent = vipSitesCount.toLocaleString();
+        }
 
-function updateDataTable() {
-  const tbody = document.getElementById('dataTableBody');
-  const container = document.getElementById('dataTableContainer');
-  const countBadge = document.getElementById('tableCountBadge');
-  
-  if (filteredData.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="text-center py-5">
-          <i class="fas fa-search fa-2x text-muted mb-3"></i><br>
-          No alarms found matching your criteria
-        </td>
-      </tr>
-    `;
-    countBadge.textContent = 'Showing 0 records';
-    container.style.display = 'block';
-    return;
-  }
-  
-  let sortedData = [...filteredData];
-  
-  sortedData.sort((a, b) => {
-    const aVal = a[currentSort.column];
-    const bVal = b[currentSort.column];
-    
-    // Handle date columns
-    if (currentSort.column.includes('Occurred') || currentSort.column.includes('Updated')) {
-      const aDate = aVal ? new Date(aVal).getTime() : 0;
-      const bDate = bVal ? new Date(bVal).getTime() : 0;
-      return currentSort.direction === 'asc' ? aDate - bDate : bDate - aDate;
-    }
-    
-    // Handle numeric columns
-    if (currentSort.column === 'Alarm Count') {
-      const aNum = parseInt(aVal) || 0;
-      const bNum = parseInt(bVal) || 0;
-      return currentSort.direction === 'asc' ? aNum - bNum : bNum - aNum;
-    }
-    
-    // Handle string columns
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return currentSort.direction === 'asc' 
-        ? aVal.localeCompare(bVal)
-        : bVal.localeCompare(aVal);
-    }
-    
-    return 0;
-  });
-  
-  tbody.innerHTML = '';
-  
-  sortedData.forEach(item => {
-    const siteId = item['SITE ID'] || '';
-    const alarmSource = item['Alarm Source'] || '';
-    const alarmName = item['Name'] || 'CELL UNAVAILABLE';
-    const alarmCount = item['Alarm Count'] || '0';
-    const firstOccurred = formatDateTime(item['First Occurred (NT)']);
-    const source = item['Source'] || '';
-    const updatedAt = formatDateTime(item['Updated At']);
-    const agingDays = Math.round(item._agingDays);
-    
-    const locationCell = item._hasLocation 
-      ? `<span class="badge bg-success"><i class="fas fa-map-marker-alt"></i> ${item._lat.toFixed(4)}, ${item._lng.toFixed(4)}</span>`
-      : `<span class="badge bg-secondary"><i class="fas fa-map-marker-alt-slash"></i> No location</span>`;
-    
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="site-id-cell">${siteId}</td>
-      <td>${alarmSource}</td>
-      <td><span class="badge bg-primary">${alarmName}</span></td>
-      <td class="text-center"><span class="badge bg-info">${alarmCount}</span></td>
-      <td class="small">${firstOccurred}</td>
-      <td><span class="badge bg-dark">${source}</span></td>
-      <td class="small">${updatedAt}</td>
-      <td>
-        <span class="badge ${item._agingBadgeClass}">
-          ${item._agingCategory} (${agingDays}d)
-        </span>
-      </td>
-      <td class="text-center">${locationCell}</td>
-    `;
-    tbody.appendChild(row);
-  });
-  
-  countBadge.textContent = `Showing ${filteredData.length.toLocaleString()} records`;
-  container.style.display = 'block';
-}
+        function updateAlarmCountTable() {
+            const tbody = document.getElementById('alarmCountTableBody');
+            const footer = document.getElementById('alarmCountTableFooter');
+            
+            if (filteredAlarmData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="font-family: var(--font-inter);">No alarms found</td></tr>';
+                footer.querySelector('td:nth-child(2)').textContent = '0';
+                return;
+            }
+            
+            const alarmCounts = {};
+            filteredAlarmData.forEach(alarm => {
+                alarmCounts[alarm.alarmName] = (alarmCounts[alarm.alarmName] || 0) + 1;
+            });
+            
+            const totalAlarms = filteredAlarmData.length;
+            const sortedAlarms = Object.entries(alarmCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 40); // TAMPILKAN LEBIH BANYAK BARIS UNTUK TINGGI 1000px
+            
+            tbody.innerHTML = '';
+            
+            sortedAlarms.forEach(([alarmName, count]) => {
+                const percentage = ((count / totalAlarms) * 100).toFixed(1);
+                let priority = 'P2';
+                if (alarmName.includes('CELL UNAVAILABLE') || alarmName.includes('X2 INTERFACE')) {
+                    priority = 'P1';
+                }
+                
+                // Potong teks jika terlalu panjang
+                const displayAlarmName = alarmName.length > 50 ? 
+                    `<span class="text-expandable" onclick="showFullText(this, '${alarmName.replace(/'/g, "\\'")}')">${alarmName.substring(0, 47)}...</span>` :
+                    highlightSearchText(alarmName, currentSearchAlarmName);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-family: var(--font-inter); font-size: 12px;">${displayAlarmName}</td>
+                    <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">${count.toLocaleString()}</td>
+                    <td class="text-end" style="font-family: var(--font-inter); font-weight: 500;">${percentage}%</td>
+                    <td>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: ${percentage}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-priority-${priority}">${priority}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            footer.querySelector('td:nth-child(2)').textContent = totalAlarms.toLocaleString();
+        }
 
-function formatDateTime(datetimeStr) {
-  if (!datetimeStr || datetimeStr === '-') return '-';
-  try {
-    const date = new Date(datetimeStr);
-    if (isNaN(date.getTime())) return datetimeStr;
-    return date.toLocaleString('en-GB', { 
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(',', '');
-  } catch (e) {
-    return datetimeStr;
-  }
-}
+        function updateSiteBreakdown() {
+            const tbody = document.getElementById('siteBreakdownBody');
+            
+            if (filteredAlarmData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4" style="font-family: var(--font-inter);">No sites found</td></tr>';
+                return;
+            }
+            
+            const siteCounts = {};
+            filteredAlarmData.forEach(alarm => {
+                siteCounts[alarm.siteId] = (siteCounts[alarm.siteId] || 0) + 1;
+            });
+            
+            const sortedSites = Object.entries(siteCounts)
+                .sort((a, b) => b[1] - a[1]);
+            
+            const totalSites = sortedSites.reduce((sum, [_, count]) => sum + count, 0);
+            
+            tbody.innerHTML = '';
+            
+            // HANYA TAMPILKAN 10 BARIS PERTAMA
+            sortedSites.slice(0, 10).forEach(([siteId, count]) => {
+                const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(0) : 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="site-id-cell small">${highlightSearchText(siteId, currentSearchSiteId)}</td>
+                    <td class="text-end small fw-semibold">${count}</td>
+                    <td>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: ${percentage}%"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // TAMBAHKAN INFORMASI JUMLAH TOTAL SITE
+            const totalUniqueSites = Object.keys(siteCounts).length;
+            if (totalUniqueSites > 10) {
+                const infoRow = document.createElement('tr');
+                infoRow.innerHTML = `
+                    <td colspan="3" class="small text-center py-2" style="font-family: var(--font-inter); color: #6c757d;">
+                        <i class="fas fa-ellipsis-h me-1"></i> ${totalUniqueSites - 10} more sites available (scroll to see all)
+                    </td>
+                `;
+                tbody.appendChild(infoRow);
+            }
+        }
 
-// ==================== FUNGSI MAP ====================
-function initMap() {
-  if (map) return;
-  
-  // Center on Java, Indonesia
-  map = L.map('map').setView([-6.2, 106.8], 9);
-  
-  // Add OpenStreetMap tiles
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 18
-  }).addTo(map);
-  
-  // Initialize marker cluster
-  markerCluster = L.markerClusterGroup({
-    maxClusterRadius: 40,
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    disableClusteringAtZoom: 16
-  });
-  
-  map.addLayer(markerCluster);
-  
-  // Add scale control
-  L.control.scale({ imperial: false }).addTo(map);
-}
+        function updateVIPSitesTable() {
+            const tbody = document.getElementById('vipSitesBody');
+            
+            const vipSites = filteredAlarmData
+                .filter(alarm => alarm.isVip)
+                .reduce((acc, alarm) => {
+                    if (!acc[alarm.siteId]) {
+                        acc[alarm.siteId] = {
+                            siteId: alarm.siteId,
+                            siteName: alarm.alarmSource,
+                            count: 0
+                        };
+                    }
+                    acc[alarm.siteId].count++;
+                    return acc;
+                }, {});
+            
+            const vipSitesArray = Object.values(vipSites)
+                .sort((a, b) => b.count - a.count);
+            
+            if (vipSitesArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3" style="font-family: var(--font-inter);">No VIP sites with alarms</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            // HANYA TAMPILKAN 10 BARIS PERTAMA
+            vipSitesArray.slice(0, 10).forEach(site => {
+                // Potong teks nama site jika terlalu panjang
+                const displaySiteName = site.siteName.length > 25 ? 
+                    `<span class="text-expandable" onclick="showFullText(this, '${site.siteName.replace(/'/g, "\\'")}')">${site.siteName.substring(0, 22)}...</span>` :
+                    site.siteName;
+                
+                const row = document.createElement('tr');
+                row.className = 'vip-row';
+                row.innerHTML = `
+                    <td class="site-id-cell small">${highlightSearchText(site.siteId, currentSearchSiteId)}</td>
+                    <td class="small" style="font-family: var(--font-inter); font-size: 11px;">${displaySiteName}</td>
+                    <td class="text-end">
+                        <span class="badge vip-badge">${site.count}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // TAMBAHKAN INFORMASI JUMLAH TOTAL VIP SITE
+            const totalVIPSites = vipSitesArray.length;
+            if (totalVIPSites > 10) {
+                const infoRow = document.createElement('tr');
+                infoRow.className = 'vip-row';
+                infoRow.innerHTML = `
+                    <td colspan="3" class="small text-center py-2" style="font-family: var(--font-inter); color: #6c757d;">
+                        <i class="fas fa-ellipsis-h me-1"></i> ${totalVIPSites - 10} more VIP sites available (scroll to see all)
+                    </td>
+                `;
+                tbody.appendChild(infoRow);
+            }
+        }
 
-function updateMapView() {
-  if (!map) initMap();
-  
-  // Clear existing markers
-  markerCluster.clearLayers();
-  mapMarkers = [];
-  
-  // Filter data with locations
-  const dataWithLocations = filteredData.filter(item => item._hasLocation);
-  
-  // Update map badge
-  document.getElementById('mapCountBadge').textContent = `${dataWithLocations.length} sites on map`;
-  
-  if (dataWithLocations.length === 0) {
-    // Show status message
-    const statusHtml = `
-      <div class="map-status">
-        <i class="fas fa-map-marked-alt"></i>
-        <h5>No Location Data Available</h5>
-        <p>
-          ${filteredData.length} records found, but none have valid coordinates.
-        </p>
-        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-          <small style="color: #94a3b8;">
-            <strong>Note:</strong> This dashboard reads coordinates from:<br>
-            • <strong>"Lat"</strong> column for Latitude<br>
-            • <strong>"Long"</strong> column for Longitude<br>
-            <br>
-            Check your Google Sheets columns and ensure they contain valid numbers.
-          </small>
-        </div>
-        <button class="btn btn-sm btn-primary mt-2" onclick="switchView('table')">
-          <i class="fas fa-table me-1"></i> Switch to Table View
-        </button>
-      </div>
-    `;
-    
-    // Create and add status control
-    const statusControl = L.control({ position: 'topleft' });
-    statusControl.onAdd = function(map) {
-      const div = L.DomUtil.create('div', 'map-info-control');
-      div.innerHTML = statusHtml;
-      return div;
-    };
-    
-    // Remove any existing status control
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Control) {
-        map.removeControl(layer);
-      }
-    });
-    
-    statusControl.addTo(map);
-    
-    // Set default view
-    map.setView([-6.2, 106.8], 9);
-    return;
-  }
-  
-  // Add markers for each site
-  dataWithLocations.forEach(item => {
-    const markerColor = getMarkerColor(item._agingDays);
-    const icon = L.divIcon({
-      html: `
-        <div style="
-          background-color: ${markerColor}; 
-          width: 24px; 
-          height: 24px; 
-          border-radius: 50%; 
-          border: 3px solid white; 
-          box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-          position: relative;
-          cursor: pointer;
-          transition: transform 0.2s;
-        ">
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-          ">
-            ${Math.round(item._agingDays)}d
-          </div>
-        </div>
-      `,
-      className: 'custom-marker',
-      iconSize: [30, 30]
-    });
-    
-    const marker = L.marker([item._lat, item._lng], { 
-      icon: icon,
-      title: `${item['SITE ID']} - ${item['Alarm Source']}`
-    });
-    
-    // Create popup content
-    const popupContent = `
-      <div class="popup-header">
-        <h5><i class="fas fa-tower-cell me-1"></i>${item['SITE ID'] || 'Unknown Site'}</h5>
-      </div>
-      <div class="popup-content">
-        <div class="popup-row">
-          <div class="popup-label">Site Name:</div>
-          <div class="popup-value">${item['Alarm Source'] || '-'}</div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Alarm Type:</div>
-          <div class="popup-value"><span class="badge bg-primary">${item['Name'] || 'CELL UNAVAILABLE'}</span></div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Count:</div>
-          <div class="popup-value"><span class="badge bg-info">${item['Alarm Count'] || '0'}</span></div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Aging:</div>
-          <div class="popup-value"><span class="badge ${item._agingBadgeClass}">${item._agingCategory} (${Math.round(item._agingDays)}d)</span></div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">First Occurred:</div>
-          <div class="popup-value">${formatDateTime(item['First Occurred (NT)'])}</div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Source:</div>
-          <div class="popup-value"><span class="badge bg-dark">${item['Source'] || '-'}</span></div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Coordinates:</div>
-          <div class="popup-value">${item._lat.toFixed(6)}, ${item._lng.toFixed(6)}</div>
-        </div>
-        <div class="popup-row">
-          <div class="popup-label">Last Updated:</div>
-          <div class="popup-value">${formatDateTime(item['Updated At'])}</div>
-        </div>
-      </div>
-    `;
-    
-    marker.bindPopup(popupContent, {
-      maxWidth: 320,
-      minWidth: 280
-    });
-    
-    markerCluster.addLayer(marker);
-    mapMarkers.push(marker);
-  });
-  
-  // Fit map to bounds
-  fitMapToBounds();
-  
-  // Add info control
-  const infoControl = L.control({ position: 'topright' });
-  infoControl.onAdd = function(map) {
-    const div = L.DomUtil.create('div', 'map-info-control');
-    div.innerHTML = `
-      <div style="margin-bottom: 5px; font-weight: bold; color: #1e40af;">
-        <i class="fas fa-info-circle me-1"></i> Map Information
-      </div>
-      <div style="font-size: 11px;">
-        <div>📍 <strong>${dataWithLocations.length}</strong> sites shown</div>
-        <div>📊 ${filteredData.length} total records</div>
-        <div style="margin-top: 8px;">
-          <i class="fas fa-mouse-pointer me-1"></i> Click markers for details
-        </div>
-        <div>
-          <i class="fas fa-expand me-1"></i> Click clusters to zoom
-        </div>
-      </div>
-    `;
-    return div;
-  };
-  
-  // Remove any existing info control
-  map.eachLayer((layer) => {
-    if (layer instanceof L.Control && layer !== L.control.scale()) {
-      map.removeControl(layer);
-    }
-  });
-  
-  infoControl.addTo(map);
-}
+        function updateDetailedAlarmTable() {
+            const tbody = document.getElementById('detailedAlarmTableBody');
+            const container = document.getElementById('alarmTableContainer');
+            const countBadge = document.getElementById('tableCountBadge');
+            
+            if (filteredAlarmData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-5" style="font-family: var(--font-inter);">
+                            <i class="fas fa-search fa-2x text-muted mb-3"></i><br>
+                            No alarms found matching your criteria
+                        </td>
+                    </tr>
+                `;
+                countBadge.textContent = 'Showing 0 alarms';
+                container.style.display = 'block';
+                return;
+            }
+            
+            let sortedData = [...filteredAlarmData];
+            
+            sortedData.sort((a, b) => {
+                const aVal = a[currentSort.column];
+                const bVal = b[currentSort.column];
+                
+                if (currentSort.column === 'duration') {
+                    return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+                
+                if (currentSort.column === 'timeFull') {
+                    return currentSort.direction === 'asc' 
+                        ? new Date(aVal) - new Date(bVal)
+                        : new Date(bVal) - new Date(aVal);
+                }
+                
+                if (typeof aVal === 'string' && typeof bVal === 'string') {
+                    return currentSort.direction === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                }
+                
+                return 0;
+            });
+            
+            tbody.innerHTML = '';
+            
+            sortedData.forEach(alarm => {
+                const durationText = formatDuration(alarm.duration);
+                const durationBadgeClass = alarm.duration > 60 ? 'bg-danger' : 
+                                          alarm.duration > 30 ? 'bg-warning' : 'bg-secondary';
+                
+                // Potong teks jika terlalu panjang
+                const displayAlarmName = alarm.alarmName.length > 40 ? 
+                    `<span class="text-expandable" onclick="showFullText(this, '${alarm.alarmName.replace(/'/g, "\\'")}')">${alarm.alarmName.substring(0, 37)}...</span>` :
+                    highlightSearchText(alarm.alarmName, currentSearchAlarmName);
+                
+                const displayAlarmSource = alarm.alarmSource.length > 25 ? 
+                    `<span class="text-expandable" onclick="showFullText(this, '${alarm.alarmSource.replace(/'/g, "\\'")}')">${alarm.alarmSource.substring(0, 22)}...</span>` :
+                    highlightSearchText(alarm.alarmSource, currentSearchAlarmName);
+                
+                const row = document.createElement('tr');
+                if (alarm.isVip) row.className = 'vip-row';
+                
+                row.innerHTML = `
+                    <td class="site-id-cell">
+                        ${highlightSearchText(alarm.siteId, currentSearchSiteId)}
+                        ${alarm.isVip ? '<span class="badge vip-badge ms-1">VIP</span>' : ''}
+                    </td>
+                    <td style="font-family: var(--font-inter); font-size: 12px;">
+                        ${displayAlarmSource}
+                    </td>
+                    <td style="font-family: var(--font-inter); font-size: 12px;">
+                        ${displayAlarmName}
+                    </td>
+                    <td class="time-cell small">${alarm.timeDisplay}</td>
+                    <td><span class="badge ${durationBadgeClass} duration-badge">${durationText}</span></td>
+                    <td><span class="badge badge-priority-${alarm.priority}">${alarm.priority}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            countBadge.textContent = `Showing ${filteredAlarmData.length.toLocaleString()} alarms`;
+            container.style.display = 'block';
+        }
 
-function getMarkerColor(agingDays) {
-  if (agingDays <= 1) return '#3b82f6'; // Blue
-  if (agingDays <= 3) return '#f59e0b'; // Orange/Yellow
-  return '#ef4444'; // Red
-}
+        // ==================== FUNGSI UTILITAS ====================
+        function showFullText(element, fullText) {
+            // Hide semua popup lainnya
+            hideAllTextPopups();
+            
+            // Buat popup baru
+            const popup = document.createElement('div');
+            popup.className = 'text-full';
+            popup.textContent = fullText;
+            
+            // Posisikan popup
+            const rect = element.getBoundingClientRect();
+            popup.style.left = rect.left + 'px';
+            popup.style.top = (rect.bottom + 5) + 'px';
+            
+            // Tambahkan ke body
+            document.body.appendChild(popup);
+            
+            // Tampilkan popup
+            popup.style.display = 'block';
+        }
+        
+        function hideAllTextPopups() {
+            const popups = document.querySelectorAll('.text-full');
+            popups.forEach(popup => popup.remove());
+        }
 
-function fitMapToBounds() {
-  if (!map || mapMarkers.length === 0) return;
-  
-  if (mapMarkers.length === 1) {
-    const marker = mapMarkers[0];
-    map.setView(marker.getLatLng(), 14);
-    return;
-  }
-  
-  const bounds = L.latLngBounds(mapMarkers.map(marker => marker.getLatLng()));
-  map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-}
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc';
+            }
+            
+            updateDetailedAlarmTable();
+        }
 
-function zoomInMap() {
-  if (map) map.zoomIn();
-}
+        function formatDuration(minutes) {
+            if (minutes < 60) {
+                return `${minutes}m`;
+            } else if (minutes < 1440) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return `${hours}h ${mins}m`;
+            } else {
+                const days = Math.floor(minutes / 1440);
+                const hours = Math.floor((minutes % 1440) / 60);
+                return `${days}d ${hours}h`;
+            }
+        }
 
-function zoomOutMap() {
-  if (map) map.zoomOut();
-}
+        function highlightSearchText(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+            
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.toString().replace(regex, '<span class="search-highlight">$1</span>');
+        }
 
-function refreshMap() {
-  updateMapView();
-}
+        function exportToCSV() {
+            if (filteredAlarmData.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            const headers = ['Site ID', 'Alarm Source', 'Alarm Name', 'Time', 'Duration (min)', 'Priority', 'VIP'];
+            const csvData = [
+                headers.join(','),
+                ...filteredAlarmData.map(alarm => [
+                    alarm.siteId,
+                    `"${alarm.alarmSource.replace(/"/g, '""')}"`,
+                    `"${alarm.alarmName.replace(/"/g, '""')}"`,
+                    alarm.timeDisplay,
+                    alarm.duration,
+                    alarm.priority,
+                    alarm.isVip ? 'Yes' : 'No'
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `alarm_dashboard_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`Exported ${filteredAlarmData.length} alarms to CSV`);
+        }
 
-function showMapInfo() {
-  alert(
-    'Map Controls:\n\n' +
-    '• Click markers to view site details\n' +
-    '• Click clusters to expand and see individual markers\n' +
-    '• Use + and - buttons to zoom\n' +
-    '• Use Fit to Sites button to view all markers\n' +
-    '• Colors indicate aging: Blue (≤1d), Yellow (≤3d), Red (≥4d)'
-  );
-}
+        // ==================== FUNGSI WAKTU & STATUS ====================
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false
+            };
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleDateString('en-GB', options).replace(',', '');
+        }
 
-// ==================== FUNGSI VIEW TOGGLE ====================
-function switchView(view) {
-  // Update active tab
-  document.querySelectorAll('.view-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  document.querySelector(`.view-tab[data-view="${view}"]`).classList.add('active');
-  
-  // Show selected view
-  document.querySelectorAll('.view-content').forEach(content => {
-    content.classList.remove('active');
-  });
-  document.getElementById(`${view}View`).classList.add('active');
-  
-  // Initialize map if switching to map view
-  if (view === 'map') {
-    // Small delay to ensure container is visible
-    setTimeout(() => {
-      initMap();
-      updateMapView();
-      // Trigger map resize
-      if (map) {
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('lastUpdatedTime').textContent = timeString;
+            document.getElementById('dataInfo').textContent = `${filteredAlarmData.length} alarms loaded`;
+        }
+
+        function updateDashboardStatus(status, message) {
+            const badge = document.getElementById('dashboardStatus');
+            
+            switch(status) {
+                case 'loading':
+                    badge.className = 'badge bg-warning';
+                    badge.innerHTML = '<i class="fas fa-sync fa-spin me-1"></i> ' + message;
+                    break;
+                case 'success':
+                    badge.className = 'badge bg-success';
+                    badge.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + message;
+                    break;
+                case 'error':
+                    badge.className = 'badge bg-danger';
+                    badge.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> ' + message;
+                    break;
+            }
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loadingSpinner');
+            loadingDiv.style.display = show ? 'flex' : 'none';
+        }
+
+        function showError(message) {
+            const tbody = document.getElementById('detailedAlarmTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-danger" style="font-family: var(--font-inter);">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>
+                        ${message}
+                    </td>
+                </tr>
+            `;
+            document.getElementById('alarmTableContainer').style.display = 'block';
+        }
+
+        // ==================== FUNGSI AUTO-REFRESH ====================
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            
+            if (toggle.checked) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            
+            refreshCountdown = 60;
+            updateNextRefreshTime();
+            
+            autoRefreshInterval = setInterval(() => {
+                refreshCountdown--;
+                updateNextRefreshTime();
+                
+                if (refreshCountdown <= 0) {
+                    fetchCSVData();
+                    refreshCountdown = 60;
+                }
+            }, 1000);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            document.getElementById('nextRefreshTime').textContent = 'Disabled';
+        }
+
+        function resetAutoRefreshCountdown() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            if (toggle.checked) {
+                refreshCountdown = 60;
+                updateNextRefreshTime();
+            }
+        }
+
+        function updateNextRefreshTime() {
+            const nextRefreshEl = document.getElementById('nextRefreshTime');
+            nextRefreshEl.textContent = `${refreshCountdown}s`;
+        }
+
+        // ==================== INISIALISASI AKHIR ====================
+        // Memastikan auto-refresh dimulai jika toggle aktif
         setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
-      }
-    }, 50);
-  }
-}
+            if (document.getElementById('autoRefreshToggle').checked) {
+                startAutoRefresh();
+            }
+        }, 1000);
+    </script>
 
-// ==================== FUNGSI SORT ====================
-function sortTable(column) {
-  if (currentSort.column === column) {
-    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-  } else {
-    currentSort.column = column;
-    currentSort.direction = 'desc';
-  }
-  
-  updateDataTable();
-}
-
-// ==================== FUNGSI EXPORT ====================
-function exportToCSV() {
-  if (filteredData.length === 0) {
-    alert('No data to export!');
-    return;
-  }
-  
-  const headers = [
-    'SITE ID', 'Alarm Source', 'Name', 'Alarm Count', 
-    'First Occurred (NT)', 'Source', 'Updated At', 'Lat', 'Long'
-  ];
-  
-  const csvData = [
-    headers.join(','),
-    ...filteredData.map(row => [
-      row['SITE ID'] || '',
-      `"${(row['Alarm Source'] || '').replace(/"/g, '""')}"`,
-      `"${(row['Name'] || '').replace(/"/g, '""')}"`,
-      row['Alarm Count'] || '0',
-      row['First Occurred (NT)'] || '',
-      row['Source'] || '',
-      row['Updated At'] || '',
-      row['Lat'] || '',
-      row['Long'] || ''
-    ].join(','))
-  ].join('\n');
-  
-  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `cell_down_${new Date().toISOString().slice(0,10)}.csv`);
-  link.style.visibility = 'hidden';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  alert(`Exported ${filteredData.length} records to CSV`);
-}
-
-// ==================== FUNGSI WAKTU & STATUS ====================
-function updateCurrentTime() {
-  const now = new Date();
-  const options = { 
-    weekday: 'short', 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit',
-    hour12: false
-  };
-  document.getElementById('currentTime').textContent = 
-    now.toLocaleDateString('en-GB', options).replace(',', '');
-}
-
-function updateLastUpdatedTime() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('en-GB', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-  document.getElementById('lastUpdatedTime').textContent = timeString;
-  document.getElementById('dataInfo').textContent = `${filteredData.length} records loaded`;
-}
-
-function updateDashboardStatus(status, message) {
-  const badge = document.getElementById('dashboardStatus');
-  
-  switch(status) {
-    case 'loading':
-      badge.className = 'badge bg-warning';
-      badge.innerHTML = '<i class="fas fa-sync fa-spin me-1"></i> ' + message;
-      break;
-    case 'success':
-      badge.className = 'badge bg-success';
-      badge.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + message;
-      break;
-    case 'error':
-      badge.className = 'badge bg-danger';
-      badge.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> ' + message;
-      break;
-  }
-}
-
-function showLoading(show) {
-  const loadingDiv = document.getElementById('loadingSpinner');
-  loadingDiv.style.display = show ? 'flex' : 'none';
-  if (!show) {
-    document.getElementById('dataTableContainer').style.display = 'block';
-  }
-}
-
-function showError(message) {
-  const tbody = document.getElementById('dataTableBody');
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="9" class="text-center py-5 text-danger">
-        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>
-        ${message}
-      </td>
-    </tr>
-  `;
-  document.getElementById('dataTableContainer').style.display = 'block';
-}
-
-// ==================== FUNGSI AUTO-REFRESH ====================
-function toggleAutoRefresh() {
-  const toggle = document.getElementById('autoRefreshToggle');
-  
-  if (toggle.checked) {
-    startAutoRefresh();
-  } else {
-    stopAutoRefresh();
-  }
-}
-
-function startAutoRefresh() {
-  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-  
-  refreshCountdown = 300;
-  updateNextRefreshTime();
-  
-  autoRefreshInterval = setInterval(() => {
-    refreshCountdown--;
-    updateNextRefreshTime();
-    
-    if (refreshCountdown <= 0) {
-      fetchData();
-      refreshCountdown = 300;
-    }
-  }, 1000);
-}
-
-function stopAutoRefresh() {
-  if (autoRefreshInterval) {
-    clearInterval(autoRefreshInterval);
-    autoRefreshInterval = null;
-  }
-  document.getElementById('nextRefreshTime').textContent = 'Disabled';
-}
-
-function resetAutoRefreshCountdown() {
-  const toggle = document.getElementById('autoRefreshToggle');
-  if (toggle.checked) {
-    refreshCountdown = 300;
-    updateNextRefreshTime();
-  }
-}
-
-function updateNextRefreshTime() {
-  const minutes = Math.floor(refreshCountdown / 60);
-  const seconds = refreshCountdown % 60;
-  const nextRefreshEl = document.getElementById('nextRefreshTime');
-  nextRefreshEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
-
-// Fix map size when switching tabs
-window.addEventListener('resize', function() {
-  if (map) {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-  }
-});
-</script>
-
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
