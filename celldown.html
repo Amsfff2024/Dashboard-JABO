@@ -119,7 +119,7 @@ body {
   font-size: 14px;
 }
 
-/* New styles from VIP Alarms Dashboard */
+/* HEADER BAR */
 .header-bar {
   background: linear-gradient(135deg, #1a2980, #26d0ce);
   color: #fff;
@@ -402,19 +402,67 @@ body {
 /* POPUP STYLES */
 .leaflet-popup-content {
   font-family: var(--font-inter);
-  min-width: 200px;
+  min-width: 250px;
+  max-width: 300px;
 }
 
 .popup-content h5 {
   font-family: var(--font-plus-jakarta);
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: #1e40af;
+  font-size: 16px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
 }
 
 .popup-content p {
-  margin: 4px 0;
+  margin: 6px 0;
   font-size: 13px;
+  line-height: 1.4;
+}
+
+.popup-content strong {
+  color: #475569;
+  min-width: 100px;
+  display: inline-block;
+}
+
+/* MAP STATUS MESSAGE */
+.map-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  text-align: center;
+  z-index: 1000;
+  max-width: 80%;
+  font-family: var(--font-inter);
+}
+
+.map-status i {
+  font-size: 48px;
+  color: #64748b;
+  margin-bottom: 15px;
+}
+
+.map-status h5 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+/* COORDINATES INFO */
+.coordinates-info {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
 }
 
 /* Responsive adjustments */
@@ -441,6 +489,11 @@ body {
   
   #map {
     height: 400px;
+  }
+  
+  .map-status {
+    padding: 15px 20px;
+    width: 90%;
   }
 }
 
@@ -601,7 +654,7 @@ body {
             <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Source</th>
             <th onclick="sortTable('Updated At')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Updated At</th>
             <th class="text-nowrap">Aging</th>
-            <th class="text-nowrap">Location</th>
+            <th class="text-nowrap">Location (Lat, Long)</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -629,6 +682,9 @@ body {
       </button>
       <button class="btn btn-sm btn-light" onclick="refreshMap()" title="Refresh map">
         <i class="fas fa-sync-alt"></i>
+      </button>
+      <button class="btn btn-sm btn-light" onclick="showAllMarkers()" title="Show all markers">
+        <i class="fas fa-eye"></i>
       </button>
     </div>
     <div class="map-legend">
@@ -665,6 +721,8 @@ let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
 let map = null;
 let markers = null;
+let mapStatusMessage = null;
+let mapStatusControl = null;
 
 function loadData() {
   // Show loading state
@@ -689,6 +747,11 @@ function loadData() {
       if (res.data && res.data.length > 0) {
         rawData = processData(res.data);
         console.log(`Data loaded: ${rawData.length} records`);
+        
+        // Count sites with locations
+        const sitesWithLocations = rawData.filter(item => item._hasLocation).length;
+        console.log(`Sites with coordinates: ${sitesWithLocations} out of ${rawData.length}`);
+        
         filteredData = [...rawData];
         render();
         updateMap();
@@ -748,30 +811,40 @@ function processData(data) {
     else if (agingDays <= 3) agingCategory = "≤3 Days";
     else agingCategory = "≥4 Days";
     
-    // Parse coordinates from Latitude and Longitude columns
+    // Parse coordinates from "Long" and "Lat" columns (sesuai sample data)
     let lat = null;
     let lng = null;
     
-    // Try to extract from Latitude and Longitude columns
-    if (item["Latitude"] && item["Longitude"]) {
+    // Ambil dari kolom "Lat" dan "Long" sesuai sample data
+    const latValue = item["Lat"];  // Kolom "Lat" (Latitude)
+    const lngValue = item["Long"]; // Kolom "Long" (Longitude)
+    
+    if (latValue !== undefined && lngValue !== undefined && 
+        latValue !== null && lngValue !== null &&
+        latValue !== "" && lngValue !== "") {
       try {
-        lat = parseFloat(item["Latitude"]);
-        lng = parseFloat(item["Longitude"]);
+        // Konversi ke number, handle koma sebagai desimal
+        lat = parseFloat(latValue.toString().replace(',', '.'));
+        lng = parseFloat(lngValue.toString().replace(',', '.'));
+        
+        // Validasi range koordinat Indonesia
         if (isNaN(lat) || isNaN(lng)) {
+          console.warn(`Invalid coordinates for ${item["SITE ID"]}: Lat=${latValue}, Long=${lngValue}`);
           lat = null;
           lng = null;
+        } else if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          console.warn(`Coordinates out of range for ${item["SITE ID"]}: Lat=${lat}, Long=${lng}`);
+          lat = null;
+          lng = null;
+        } else if (lat < -11 || lat > 6 || lng < 95 || lng > 141) {
+          // Coordinates outside Indonesia area - might be wrong but still valid
+          console.warn(`Coordinates outside Indonesia area for ${item["SITE ID"]}: Lat=${lat}, Long=${lng}`);
+          // We'll still use it, just log warning
         }
       } catch (e) {
-        console.warn("Error parsing coordinates:", e);
-      }
-    }
-    
-    // If not found, try to parse from other columns
-    if ((!lat || !lng) && item["Site Location"]) {
-      const coords = extractCoordinates(item["Site Location"]);
-      if (coords) {
-        lat = coords.lat;
-        lng = coords.lng;
+        console.warn(`Error parsing coordinates for ${item["SITE ID"]}:`, e);
+        lat = null;
+        lng = null;
       }
     }
     
@@ -784,28 +857,6 @@ function processData(data) {
       _hasLocation: lat !== null && lng !== null
     };
   });
-}
-
-function extractCoordinates(locationString) {
-  if (!locationString) return null;
-  
-  // Try to find coordinates in the string
-  const coordRegex = /[-+]?[0-9]*\.?[0-9]+/g;
-  const numbers = locationString.match(coordRegex);
-  
-  if (numbers && numbers.length >= 2) {
-    const lat = parseFloat(numbers[0]);
-    const lng = parseFloat(numbers[1]);
-    
-    // Validate coordinate ranges
-    if (!isNaN(lat) && !isNaN(lng) && 
-        lat >= -90 && lat <= 90 && 
-        lng >= -180 && lng <= 180) {
-      return { lat, lng };
-    }
-  }
-  
-  return null;
 }
 
 function render() {
@@ -828,7 +879,8 @@ function render() {
   
   // Initialize counters
   let d1 = 0, d3 = 0, d4 = 0;
-  let totalAlarmCount = 0; // NEW: Sum of all alarm counts
+  let totalAlarmCount = 0;
+  let sitesWithLocation = 0;
   
   filteredData.forEach(item => {
     const tr = document.createElement("tr");
@@ -842,14 +894,33 @@ function render() {
     const alarmCount = parseInt(item["Alarm Count"]) || 0;
     totalAlarmCount += alarmCount;
     
+    // Count sites with location
+    if (item._hasLocation) sitesWithLocation++;
+    
     // Format timestamp for display
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
     const updatedAt = formatDateTime(item["Updated At"]);
     
-    // Location indicator
-    const locationIndicator = item._hasLocation 
-      ? `<span class="badge bg-success"><i class="fas fa-map-marker-alt"></i></span>`
-      : `<span class="badge bg-secondary"><i class="fas fa-map-marker-alt"></i></span>`;
+    // Location display
+    let locationDisplay = "";
+    if (item._hasLocation) {
+      locationDisplay = `
+        <div>
+          <span class="badge bg-success">
+            <i class="fas fa-map-marker-alt me-1"></i>${item._lat.toFixed(4)}, ${item._lng.toFixed(4)}
+          </span>
+          <div class="coordinates-info">
+            From: Lat=${item["Lat"]}, Long=${item["Long"]}
+          </div>
+        </div>
+      `;
+    } else {
+      locationDisplay = `
+        <span class="badge bg-secondary">
+          <i class="fas fa-map-marker-alt-slash"></i> No location
+        </span>
+      `;
+    }
     
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
@@ -860,14 +931,14 @@ function render() {
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Source"] || ""}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${updatedAt}</td>
       <td>${getAgingBadge(item._agingDays)}</td>
-      <td class="text-center">${locationIndicator}</td>
+      <td>${locationDisplay}</td>
     `;
     tbody.appendChild(tr);
   });
   
-  // Update summary - NOW using totalAlarmCount instead of filteredData.length
+  // Update summary
   const uniqueSites = new Set(filteredData.map(d => d["SITE ID"]).filter(Boolean)).size;
-  updateSummary(totalAlarmCount, uniqueSites, d1, d3, d4);
+  updateSummary(totalAlarmCount, uniqueSites, d1, d3, d4, sitesWithLocation);
 }
 
 function formatDateTime(datetimeStr) {
@@ -905,7 +976,7 @@ function getAgingBadge(days) {
   return `<span class="badge ${badgeClass} status-badge">${text}</span>`;
 }
 
-function updateSummary(totalAlarmCount, unique, a1, a3, a4) {
+function updateSummary(totalAlarmCount, unique, a1, a3, a4, sitesWithLocation = 0) {
   // Format total alarm count with comma separator
   document.getElementById("totalAlarm").innerText = totalAlarmCount.toLocaleString();
   document.getElementById("uniqueSite").innerText = unique;
@@ -913,11 +984,18 @@ function updateSummary(totalAlarmCount, unique, a1, a3, a4) {
   document.getElementById("aging3").innerText = a3;
   document.getElementById("aging4").innerText = a4;
   
-  // Update filtered count
+  // Update filtered count with location info
   const totalRecords = filteredData.length;
   const totalAlarmCountFormatted = totalAlarmCount.toLocaleString();
-  document.getElementById("filteredCount").innerHTML = 
-    `Showing ${totalRecords} records | Total Count: ${totalAlarmCountFormatted}`;
+  const locationPercentage = totalRecords > 0 ? Math.round((sitesWithLocation / totalRecords) * 100) : 0;
+  
+  document.getElementById("filteredCount").innerHTML = `
+    <div>
+      <span>Showing ${totalRecords} records | Total Count: ${totalAlarmCountFormatted}</span>
+      <br>
+      <small class="text-muted">${sitesWithLocation} sites with coordinates (${locationPercentage}%)</small>
+    </div>
+  `;
 }
 
 function applyFilter() {
@@ -997,7 +1075,7 @@ function exportCSV() {
   
   const headers = [
     "SITE ID", "Alarm Source", "Name", "Alarm Count", 
-    "First Occurred (NT)", "Source", "Updated At", "Latitude", "Longitude"
+    "First Occurred (NT)", "Source", "Updated At", "Lat", "Long"
   ];
   
   const csvRows = [
@@ -1056,20 +1134,22 @@ function toggleAutoRefresh() {
 function initMap() {
   if (map) return;
   
-  // Default center to Indonesia
-  map = L.map('map').setView([-2.5489, 118.0149], 5);
+  // Default center to Java area (based on sample coordinates)
+  map = L.map('map').setView([-6.2, 106.8], 9);
   
   // Add OpenStreetMap tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18
   }).addTo(map);
   
   // Initialize marker cluster group
   markers = L.markerClusterGroup({
-    maxClusterRadius: 50,
+    maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
-    zoomToBoundsOnClick: true
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 16
   });
   
   map.addLayer(markers);
@@ -1081,15 +1161,61 @@ function updateMap() {
   // Clear existing markers
   markers.clearLayers();
   
+  // Remove existing status message
+  if (mapStatusMessage) {
+    map.removeLayer(mapStatusMessage);
+    mapStatusMessage = null;
+  }
+  
+  // Remove existing status control
+  if (mapStatusControl) {
+    map.removeControl(mapStatusControl);
+    mapStatusControl = null;
+  }
+  
   // Filter data with locations
   const dataWithLocations = filteredData.filter(item => item._hasLocation);
   
+  console.log(`Updating map: ${dataWithLocations.length} locations out of ${filteredData.length} total records`);
+  
   if (dataWithLocations.length === 0) {
-    // Show message if no locations
-    L.popup()
-      .setLatLng(map.getCenter())
-      .setContent('<div style="padding: 10px; text-align: center;"><i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>No location data available</div>')
-      .openOn(map);
+    // Show informative status message
+    const statusHtml = `
+      <div class="map-status">
+        <i class="fas fa-map-marked-alt"></i>
+        <h5>No Location Data Available</h5>
+        <p style="color: #64748b; margin-bottom: 10px;">
+          ${filteredData.length} records found, but none have valid coordinates.
+        </p>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin: 10px 0;">
+          <small style="color: #94a3b8;">
+            <strong>Note:</strong> This dashboard reads coordinates from:<br>
+            • <strong>"Lat"</strong> column for Latitude<br>
+            • <strong>"Long"</strong> column for Longitude<br>
+            <br>
+            Check your Google Sheets columns and ensure they contain valid numbers.
+          </small>
+        </div>
+      </div>
+    `;
+    
+    mapStatusMessage = L.divIcon({
+      html: statusHtml,
+      className: 'map-status-container',
+      iconSize: [350, 200]
+    });
+    
+    const statusMarker = L.marker(map.getCenter(), { 
+      icon: mapStatusMessage, 
+      interactive: false,
+      zIndexOffset: 1000 
+    });
+    
+    statusMarker.addTo(map);
+    mapStatusMessage = statusMarker;
+    
+    // Default view to Java
+    map.setView([-6.2, 106.8], 9);
     return;
   }
   
@@ -1097,33 +1223,113 @@ function updateMap() {
   dataWithLocations.forEach(item => {
     const markerColor = getMarkerColor(item._agingDays);
     const icon = L.divIcon({
-      html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+      html: `
+        <div style="
+          background-color: ${markerColor}; 
+          width: 24px; 
+          height: 24px; 
+          border-radius: 50%; 
+          border: 3px solid white; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+          position: relative;
+          cursor: pointer;
+          transition: transform 0.2s;
+        ">
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+          ">
+            ${Math.round(item._agingDays)}d
+          </div>
+        </div>
+      `,
       className: 'custom-marker',
-      iconSize: [20, 20]
+      iconSize: [30, 30]
     });
     
-    const marker = L.marker([item._lat, item._lng], { icon: icon });
+    const marker = L.marker([item._lat, item._lng], { 
+      icon: icon,
+      title: `${item["SITE ID"]} - ${item["Alarm Source"]}`
+    });
     
     // Create popup content
     const popupContent = `
       <div class="popup-content">
-        <h5>${item["SITE ID"] || "Unknown Site"}</h5>
+        <h5><i class="fas fa-tower-cell me-1"></i>${item["SITE ID"] || "Unknown Site"}</h5>
         <p><strong>Site Name:</strong> ${item["Alarm Source"] || "-"}</p>
-        <p><strong>Alarm Type:</strong> ${item["Name"] || "CELL UNAVAILABLE"}</p>
-        <p><strong>Count:</strong> ${item["Alarm Count"] || "0"}</p>
-        <p><strong>Aging:</strong> ${Math.round(item._agingDays)} days</p>
+        <p><strong>Alarm Type:</strong> <span class="badge bg-primary">${item["Name"] || "CELL UNAVAILABLE"}</span></p>
+        <p><strong>Count:</strong> <span class="badge bg-info">${item["Alarm Count"] || "0"}</span></p>
+        <p><strong>Aging:</strong> ${getAgingBadge(item._agingDays)} (${Math.round(item._agingDays)} days)</p>
         <p><strong>First Occurred:</strong> ${formatDateTime(item["First Occurred (NT)"])}</p>
-        <p><strong>Source:</strong> ${item["Source"] || "-"}</p>
-        <p><strong>Coordinates:</strong> ${item._lat.toFixed(6)}, ${item._lng.toFixed(6)}</p>
+        <p><strong>Source:</strong> <span class="badge bg-dark">${item["Source"] || "-"}</span></p>
+        <p><strong>Coordinates:</strong> 
+          <br>Lat: ${item._lat.toFixed(6)}
+          <br>Long: ${item._lng.toFixed(6)}
+        </p>
+        <p><strong>Last Updated:</strong> ${formatDateTime(item["Updated At"])}</p>
+        <hr style="margin: 10px 0;">
+        <small style="color: #64748b;">
+          <i class="fas fa-info-circle me-1"></i>
+          Click other markers to view more sites
+        </small>
       </div>
     `;
     
-    marker.bindPopup(popupContent);
+    marker.bindPopup(popupContent, {
+      maxWidth: 300,
+      minWidth: 250
+    });
+    
     markers.addLayer(marker);
   });
   
   // Fit map to bounds of all markers
   fitMapBounds();
+  
+  // Add status control showing count
+  mapStatusControl = L.control({position: 'topright'});
+  mapStatusControl.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'map-status-control');
+    const missingLocations = filteredData.length - dataWithLocations.length;
+    
+    div.innerHTML = `
+      <div style="
+        background: rgba(255, 255, 255, 0.95);
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        color: #1e293b;
+        border-left: 4px solid #3b82f6;
+        backdrop-filter: blur(4px);
+        max-width: 200px;
+      ">
+        <div style="display: flex; align-items: center; margin-bottom: 4px;">
+          <i class="fas fa-map-marker-alt me-2" style="color: #3b82f6;"></i>
+          <strong>Map View</strong>
+        </div>
+        <div>
+          📍 <strong>${dataWithLocations.length}</strong> sites with coordinates
+          ${missingLocations > 0 ? 
+            `<br><span style="color: #ef4444;">⚠ ${missingLocations} without location</span>` : 
+            ''
+          }
+          <br><small style="color: #64748b;">Total: ${filteredData.length} records</small>
+        </div>
+      </div>
+    `;
+    
+    return div;
+  };
+  
+  mapStatusControl.addTo(map);
 }
 
 function getMarkerColor(agingDays) {
@@ -1138,15 +1344,15 @@ function fitMapBounds() {
   const dataWithLocations = filteredData.filter(item => item._hasLocation);
   
   if (dataWithLocations.length === 0) {
-    // Default view if no locations
-    map.setView([-2.5489, 118.0149], 5);
+    // Default view to Java
+    map.setView([-6.2, 106.8], 9);
     return;
   }
   
   if (dataWithLocations.length === 1) {
     // Zoom to single marker
     const item = dataWithLocations[0];
-    map.setView([item._lat, item._lng], 12);
+    map.setView([item._lat, item._lng], 14);
     return;
   }
   
@@ -1154,11 +1360,33 @@ function fitMapBounds() {
   const bounds = L.latLngBounds(
     dataWithLocations.map(item => [item._lat, item._lng])
   );
-  map.fitBounds(bounds, { padding: [50, 50] });
+  
+  // Add padding and set max zoom
+  map.fitBounds(bounds, { 
+    padding: [50, 50], 
+    maxZoom: 15 
+  });
 }
 
 function refreshMap() {
   updateMap();
+}
+
+function showAllMarkers() {
+  if (!map || !markers) return;
+  
+  // Zoom out to show all markers
+  fitMapBounds();
+  
+  // Open all popups (limited to avoid overcrowding)
+  const markerLayers = markers.getLayers();
+  if (markerLayers.length <= 10) {
+    markerLayers.forEach(layer => {
+      if (layer instanceof L.Marker) {
+        layer.openPopup();
+      }
+    });
+  }
 }
 
 function switchView(view) {
