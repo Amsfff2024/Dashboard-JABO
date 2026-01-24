@@ -9,6 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- MAP LIBRARIES -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
@@ -39,11 +47,11 @@ body {
 }
 
 .card-summary h3 {
-  font-size: 1.75rem; /* h3 equivalent */
+  font-size: 1.75rem;
 }
 
 .card-summary h4 {
-  font-size: 1.5rem; /* h4 equivalent */
+  font-size: 1.5rem;
 }
 
 /* TABLE HEADERS */
@@ -297,6 +305,118 @@ body {
   opacity: 0.9;
 }
 
+/* VIEW TOGGLE TABS */
+.view-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.view-tab {
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+}
+
+.view-tab.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.view-tab:hover:not(.active) {
+  background: rgba(255,255,255,0.5);
+}
+
+.view-content {
+  display: none;
+  flex: 1;
+}
+
+.view-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* MAP STYLES */
+#map {
+  height: 600px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  z-index: 1;
+}
+
+.map-container {
+  position: relative;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.map-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: var(--font-inter);
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+/* POPUP STYLES */
+.leaflet-popup-content {
+  font-family: var(--font-inter);
+  min-width: 200px;
+}
+
+.popup-content h5 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1e40af;
+}
+
+.popup-content p {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   #lastUpdate {
@@ -312,6 +432,15 @@ body {
   
   .header-bar h5 {
     font-size: 1.2rem !important;
+  }
+  
+  .view-tab {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  #map {
+    height: 400px;
   }
 }
 
@@ -353,9 +482,9 @@ body {
     <div class="card card-summary p-4">
       <div class="d-flex justify-content-between align-items-center">
         <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
-          <i class="fas fa-bell me-2 text-primary"></i>Total Alarms
+          <i class="fas fa-bell me-2 text-primary"></i>Total Alarms Count
         </span>
-        <span class="badge bg-primary">CELL UNAVAILABLE</span>
+        <span class="badge bg-primary">SUM of All Counts</span>
       </div>
       <h3 id="totalAlarm" class="mt-3">0</h3>
     </div>
@@ -430,54 +559,94 @@ body {
   </div>
 </div>
 
-<!-- MAIN TABLE ROW -->
-<div class="row flex-grow-1">
-  <div class="col-12">
-    <div class="main-table-section">
-      <!-- EXPORT AND CONTROLS -->
-      <div class="controls-section d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-            <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
-          </div>
-        </div>
-        <div>
-          <button class="btn export-btn text-white" onclick="exportCSV()">
-            <i class="fas fa-file-export me-1"></i>Export CSV
-          </button>
-        </div>
+<!-- VIEW TOGGLE -->
+<div class="view-tabs mb-4">
+  <div class="view-tab active" data-view="table" onclick="switchView('table')">
+    <i class="fas fa-table"></i> Table View
+  </div>
+  <div class="view-tab" data-view="map" onclick="switchView('map')">
+    <i class="fas fa-map"></i> Map View
+  </div>
+</div>
+
+<!-- TABLE VIEW -->
+<div id="tableView" class="view-content active">
+  <!-- EXPORT AND CONTROLS -->
+  <div class="controls-section d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
+        <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
       </div>
-      
-      <!-- MAIN TABLE -->
-      <div class="main-table-container">
-        <div class="main-table-wrapper">
-          <table class="table table-striped table-hover table-bordered">
-            <thead>
-              <tr>
-                <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-                <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
-                <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Type</th>
-                <th onclick="sortTable('Alarm Count')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Count</th>
-                <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-                <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Source</th>
-                <th onclick="sortTable('Updated At')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Updated At</th>
-                <th class="text-nowrap">Aging</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr id="loadingRow">
-                <td colspan="8" class="loading">
-                  <div class="text-center">
-                    <div class="spinner-border text-primary mb-3" role="status"></div>
-                    <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    </div>
+    <div>
+      <button class="btn export-btn text-white" onclick="exportCSV()">
+        <i class="fas fa-file-export me-1"></i>Export CSV
+      </button>
+    </div>
+  </div>
+  
+  <!-- MAIN TABLE -->
+  <div class="main-table-container">
+    <div class="main-table-wrapper">
+      <table class="table table-striped table-hover table-bordered">
+        <thead>
+          <tr>
+            <th onclick="sortTable('SITE ID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+            <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site Name</th>
+            <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Type</th>
+            <th onclick="sortTable('Alarm Count')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Count</th>
+            <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+            <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Source</th>
+            <th onclick="sortTable('Updated At')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Updated At</th>
+            <th class="text-nowrap">Aging</th>
+            <th class="text-nowrap">Location</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr id="loadingRow">
+            <td colspan="9" class="loading">
+              <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MAP VIEW -->
+<div id="mapView" class="view-content">
+  <div class="map-container">
+    <div id="map"></div>
+    <div class="map-controls">
+      <button class="btn btn-sm btn-light" onclick="fitMapBounds()" title="Fit to bounds">
+        <i class="fas fa-expand"></i>
+      </button>
+      <button class="btn btn-sm btn-light" onclick="refreshMap()" title="Refresh map">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #3b82f6;"></div>
+        <span>≤ 1 Day</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #fbbf24;"></div>
+        <span>≤ 3 Days</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ef4444;"></div>
+        <span>≥ 4 Days</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #94a3b8;"></div>
+        <span>No Location</span>
       </div>
     </div>
   </div>
@@ -494,6 +663,8 @@ let filteredData = [];
 let sortDir = {};
 let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
+let map = null;
+let markers = null;
 
 function loadData() {
   // Show loading state
@@ -520,6 +691,7 @@ function loadData() {
         console.log(`Data loaded: ${rawData.length} records`);
         filteredData = [...rawData];
         render();
+        updateMap();
       } else {
         console.warn("No data loaded from Google Sheets");
         showError("No data available from Google Sheets");
@@ -576,12 +748,64 @@ function processData(data) {
     else if (agingDays <= 3) agingCategory = "≤3 Days";
     else agingCategory = "≥4 Days";
     
+    // Parse coordinates from Latitude and Longitude columns
+    let lat = null;
+    let lng = null;
+    
+    // Try to extract from Latitude and Longitude columns
+    if (item["Latitude"] && item["Longitude"]) {
+      try {
+        lat = parseFloat(item["Latitude"]);
+        lng = parseFloat(item["Longitude"]);
+        if (isNaN(lat) || isNaN(lng)) {
+          lat = null;
+          lng = null;
+        }
+      } catch (e) {
+        console.warn("Error parsing coordinates:", e);
+      }
+    }
+    
+    // If not found, try to parse from other columns
+    if ((!lat || !lng) && item["Site Location"]) {
+      const coords = extractCoordinates(item["Site Location"]);
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+      }
+    }
+    
     return {
       ...item,
       _agingDays: agingDays,
-      _agingCategory: agingCategory
+      _agingCategory: agingCategory,
+      _lat: lat,
+      _lng: lng,
+      _hasLocation: lat !== null && lng !== null
     };
   });
+}
+
+function extractCoordinates(locationString) {
+  if (!locationString) return null;
+  
+  // Try to find coordinates in the string
+  const coordRegex = /[-+]?[0-9]*\.?[0-9]+/g;
+  const numbers = locationString.match(coordRegex);
+  
+  if (numbers && numbers.length >= 2) {
+    const lat = parseFloat(numbers[0]);
+    const lng = parseFloat(numbers[1]);
+    
+    // Validate coordinate ranges
+    if (!isNaN(lat) && !isNaN(lng) && 
+        lat >= -90 && lat <= 90 && 
+        lng >= -180 && lng <= 180) {
+      return { lat, lng };
+    }
+  }
+  
+  return null;
 }
 
 function render() {
@@ -591,7 +815,7 @@ function render() {
   if (filteredData.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center py-5">
+        <td colspan="9" class="text-center py-5">
           <i class="fas fa-database fa-2x mb-3 text-muted"></i>
           <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No data found</div>
           <small class="text-muted" style="font-family: 'Inter', sans-serif;">Try adjusting your filters</small>
@@ -604,6 +828,7 @@ function render() {
   
   // Initialize counters
   let d1 = 0, d3 = 0, d4 = 0;
+  let totalAlarmCount = 0; // NEW: Sum of all alarm counts
   
   filteredData.forEach(item => {
     const tr = document.createElement("tr");
@@ -613,27 +838,36 @@ function render() {
     else if (item._agingDays <= 3) d3++;
     else d4++;
     
+    // Add to total alarm count
+    const alarmCount = parseInt(item["Alarm Count"]) || 0;
+    totalAlarmCount += alarmCount;
+    
     // Format timestamp for display
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
     const updatedAt = formatDateTime(item["Updated At"]);
+    
+    // Location indicator
+    const locationIndicator = item._hasLocation 
+      ? `<span class="badge bg-success"><i class="fas fa-map-marker-alt"></i></span>`
+      : `<span class="badge bg-secondary"><i class="fas fa-map-marker-alt"></i></span>`;
     
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || "CELL UNAVAILABLE"}</span></td>
-      <td class="text-center"><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Alarm Count"] || "0"}</span></td>
+      <td class="text-center"><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif;">${alarmCount}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Source"] || ""}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${updatedAt}</td>
       <td>${getAgingBadge(item._agingDays)}</td>
+      <td class="text-center">${locationIndicator}</td>
     `;
     tbody.appendChild(tr);
   });
   
-  // Update summary
-  const total = filteredData.length;
+  // Update summary - NOW using totalAlarmCount instead of filteredData.length
   const uniqueSites = new Set(filteredData.map(d => d["SITE ID"]).filter(Boolean)).size;
-  updateSummary(total, uniqueSites, d1, d3, d4);
+  updateSummary(totalAlarmCount, uniqueSites, d1, d3, d4);
 }
 
 function formatDateTime(datetimeStr) {
@@ -671,16 +905,19 @@ function getAgingBadge(days) {
   return `<span class="badge ${badgeClass} status-badge">${text}</span>`;
 }
 
-function updateSummary(total, unique, a1, a3, a4) {
-  document.getElementById("totalAlarm").innerText = total;
+function updateSummary(totalAlarmCount, unique, a1, a3, a4) {
+  // Format total alarm count with comma separator
+  document.getElementById("totalAlarm").innerText = totalAlarmCount.toLocaleString();
   document.getElementById("uniqueSite").innerText = unique;
   document.getElementById("aging1").innerText = a1;
   document.getElementById("aging3").innerText = a3;
   document.getElementById("aging4").innerText = a4;
   
   // Update filtered count
-  document.getElementById("filteredCount").innerText = 
-    `Showing ${total} of ${rawData.length} records`;
+  const totalRecords = filteredData.length;
+  const totalAlarmCountFormatted = totalAlarmCount.toLocaleString();
+  document.getElementById("filteredCount").innerHTML = 
+    `Showing ${totalRecords} records | Total Count: ${totalAlarmCountFormatted}`;
 }
 
 function applyFilter() {
@@ -701,6 +938,11 @@ function applyFilter() {
   });
   
   render();
+  
+  // Update map if in map view
+  if (document.getElementById("mapView").classList.contains("active")) {
+    updateMap();
+  }
 }
 
 function clearFilter() {
@@ -709,6 +951,11 @@ function clearFilter() {
   document.getElementById("fSource").value = "";
   filteredData = [...rawData];
   render();
+  
+  // Update map if in map view
+  if (document.getElementById("mapView").classList.contains("active")) {
+    updateMap();
+  }
 }
 
 function sortTable(column) {
@@ -750,7 +997,7 @@ function exportCSV() {
   
   const headers = [
     "SITE ID", "Alarm Source", "Name", "Alarm Count", 
-    "First Occurred (NT)", "Source", "Updated At"
+    "First Occurred (NT)", "Source", "Updated At", "Latitude", "Longitude"
   ];
   
   const csvRows = [
@@ -780,7 +1027,7 @@ function showError(message) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = `
     <tr>
-      <td colspan="8" class="text-center py-5 text-danger">
+      <td colspan="9" class="text-center py-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
         <div style="font-family: 'Inter', sans-serif;">${message}</div>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
@@ -802,6 +1049,135 @@ function toggleAutoRefresh() {
     clearInterval(autoRefreshInterval);
     autoRefreshInterval = null;
     console.log("Auto-refresh disabled");
+  }
+}
+
+// MAP FUNCTIONS
+function initMap() {
+  if (map) return;
+  
+  // Default center to Indonesia
+  map = L.map('map').setView([-2.5489, 118.0149], 5);
+  
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  // Initialize marker cluster group
+  markers = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true
+  });
+  
+  map.addLayer(markers);
+}
+
+function updateMap() {
+  if (!map) initMap();
+  
+  // Clear existing markers
+  markers.clearLayers();
+  
+  // Filter data with locations
+  const dataWithLocations = filteredData.filter(item => item._hasLocation);
+  
+  if (dataWithLocations.length === 0) {
+    // Show message if no locations
+    L.popup()
+      .setLatLng(map.getCenter())
+      .setContent('<div style="padding: 10px; text-align: center;"><i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>No location data available</div>')
+      .openOn(map);
+    return;
+  }
+  
+  // Add markers for each site with location
+  dataWithLocations.forEach(item => {
+    const markerColor = getMarkerColor(item._agingDays);
+    const icon = L.divIcon({
+      html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+      className: 'custom-marker',
+      iconSize: [20, 20]
+    });
+    
+    const marker = L.marker([item._lat, item._lng], { icon: icon });
+    
+    // Create popup content
+    const popupContent = `
+      <div class="popup-content">
+        <h5>${item["SITE ID"] || "Unknown Site"}</h5>
+        <p><strong>Site Name:</strong> ${item["Alarm Source"] || "-"}</p>
+        <p><strong>Alarm Type:</strong> ${item["Name"] || "CELL UNAVAILABLE"}</p>
+        <p><strong>Count:</strong> ${item["Alarm Count"] || "0"}</p>
+        <p><strong>Aging:</strong> ${Math.round(item._agingDays)} days</p>
+        <p><strong>First Occurred:</strong> ${formatDateTime(item["First Occurred (NT)"])}</p>
+        <p><strong>Source:</strong> ${item["Source"] || "-"}</p>
+        <p><strong>Coordinates:</strong> ${item._lat.toFixed(6)}, ${item._lng.toFixed(6)}</p>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+    markers.addLayer(marker);
+  });
+  
+  // Fit map to bounds of all markers
+  fitMapBounds();
+}
+
+function getMarkerColor(agingDays) {
+  if (agingDays <= 1) return '#3b82f6'; // Blue
+  if (agingDays <= 3) return '#fbbf24'; // Yellow/Orange
+  return '#ef4444'; // Red
+}
+
+function fitMapBounds() {
+  if (!map || !markers) return;
+  
+  const dataWithLocations = filteredData.filter(item => item._hasLocation);
+  
+  if (dataWithLocations.length === 0) {
+    // Default view if no locations
+    map.setView([-2.5489, 118.0149], 5);
+    return;
+  }
+  
+  if (dataWithLocations.length === 1) {
+    // Zoom to single marker
+    const item = dataWithLocations[0];
+    map.setView([item._lat, item._lng], 12);
+    return;
+  }
+  
+  // Create bounds from all markers
+  const bounds = L.latLngBounds(
+    dataWithLocations.map(item => [item._lat, item._lng])
+  );
+  map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+function refreshMap() {
+  updateMap();
+}
+
+function switchView(view) {
+  // Update active tab
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.view-tab[data-view="${view}"]`).classList.add('active');
+  
+  // Show selected view
+  document.querySelectorAll('.view-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`${view}View`).classList.add('active');
+  
+  // Initialize map if switching to map view
+  if (view === 'map') {
+    initMap();
+    updateMap();
   }
 }
 
