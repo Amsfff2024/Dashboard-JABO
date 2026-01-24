@@ -2,13 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard JABO - Cell Down</title>
+<title>Dashboard JABO - Cell Down with Map</title>
 
+<!-- Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- PapaParse -->
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
@@ -39,11 +45,11 @@ body {
 }
 
 .card-summary h3 {
-  font-size: 1.75rem; /* h3 equivalent */
+  font-size: 1.75rem;
 }
 
 .card-summary h4 {
-  font-size: 1.5rem; /* h4 equivalent */
+  font-size: 1.5rem;
 }
 
 /* TABLE HEADERS */
@@ -111,7 +117,7 @@ body {
   font-size: 14px;
 }
 
-/* New styles from VIP Alarms Dashboard */
+/* Header Bar */
 .header-bar {
   background: linear-gradient(135deg, #1a2980, #26d0ce);
   color: #fff;
@@ -297,6 +303,51 @@ body {
   opacity: 0.9;
 }
 
+/* Map Styles */
+#siteMap {
+  border-radius: 0 0 16px 16px;
+}
+
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-legend {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  font-family: var(--font-inter);
+  font-size: 12px;
+}
+
+.map-controls .card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.leaflet-popup-content {
+  font-family: var(--font-inter) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.map-instructions {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-align: center;
+  font-family: var(--font-inter);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   #lastUpdate {
@@ -313,6 +364,21 @@ body {
   .header-bar h5 {
     font-size: 1.2rem !important;
   }
+  
+  .map-controls {
+    position: static !important;
+    margin-top: 10px;
+  }
+  
+  .map-controls .card {
+    width: 100% !important;
+  }
+  
+  .map-legend {
+    bottom: 10px !important;
+    right: 10px !important;
+    font-size: 10px;
+  }
 }
 
 /* Additional spacing */
@@ -323,6 +389,12 @@ body {
 .row.g-4.mb-4 {
   margin-bottom: 1.5rem !important;
 }
+
+/* Table row highlight */
+.highlight-row {
+  background-color: #fff3cd !important;
+  transition: background-color 2s ease;
+}
 </style>
 </head>
 <body>
@@ -330,7 +402,7 @@ body {
 <!-- HEADER -->
 <div class="header-bar">
   <h5 class="m-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">
-    <i class="fas fa-tower-cell me-2"></i>Dashboard JABO - Cell Down
+    <i class="fas fa-tower-cell me-2"></i>Dashboard JABO - Cell Down with Map
   </h5>
   <div>
     <div id="lastUpdate">
@@ -442,8 +514,11 @@ body {
           </div>
         </div>
         <div>
-          <button class="btn export-btn text-white" onclick="exportCSV()">
+          <button class="btn export-btn text-white me-2" onclick="exportCSV()">
             <i class="fas fa-file-export me-1"></i>Export CSV
+          </button>
+          <button class="btn btn-outline-primary" onclick="showMapSection()">
+            <i class="fas fa-map me-1"></i> Show Map
           </button>
         </div>
       </div>
@@ -481,7 +556,94 @@ body {
   </div>
 </div>
 
+<!-- Map Section -->
+<div class="row mt-4" id="mapSection" style="display: none;">
+    <div class="col-12">
+        <div class="card filter-card">
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+                    <h6 class="mb-0"><i class="fas fa-map me-2 text-primary"></i>Site Locations Map</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-info" id="mapSiteCount">0 sites</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetMapView()">
+                            <i class="fas fa-sync-alt"></i> Reset View
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleMapSection()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                </div>
+                <div class="position-relative">
+                    <div class="map-instructions">
+                        <i class="fas fa-info-circle me-1"></i> Map shows site locations with CELL UNAVAILABLE alarms. Click markers for details.
+                    </div>
+                    <div id="siteMap" style="height: 500px; border-radius: 0 0 16px 16px;"></div>
+                    <div class="map-legend" style="position: absolute; bottom: 20px; right: 20px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000;">
+                        <div class="legend-item d-flex align-items-center mb-2">
+                            <div style="width: 16px; height: 16px; background-color: #dc3545; border-radius: 50%; margin-right: 8px;"></div>
+                            <small>CELL UNAVAILABLE</small>
+                        </div>
+                        <div class="legend-item d-flex align-items-center mb-2">
+                            <div style="width: 16px; height: 16px; background-color: #fd7e14; border-radius: 50%; margin-right: 8px;"></div>
+                            <small>Uncleared Alarms</small>
+                        </div>
+                        <div class="legend-item d-flex align-items-center">
+                            <div style="width: 16px; height: 16px; background-color: #ffc107; border-radius: 50%; border: 2px solid #fff; margin-right: 8px;"></div>
+                            <small>VIP/POI Sites</small>
+                        </div>
+                    </div>
+                    <div class="map-controls" style="position: absolute; top: 70px; left: 20px; z-index: 1000;">
+                        <div class="card shadow-sm" style="width: 300px;">
+                            <div class="card-body p-3">
+                                <h6 class="mb-3"><i class="fas fa-filter me-1"></i> Map Filters</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small mb-2">Alarm Status</label>
+                                    <select class="form-select form-select-sm" id="mapStatusFilter">
+                                        <option value="all">All Status</option>
+                                        <option value="Uncleared">Uncleared Only</option>
+                                        <option value="Cleared">Cleared Only</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small mb-2">Aging</label>
+                                    <select class="form-select form-select-sm" id="mapAgingFilter">
+                                        <option value="all">All Aging</option>
+                                        <option value="≤1 Day">≤1 Day</option>
+                                        <option value="≤3 Days">≤3 Days</option>
+                                        <option value="≥4 Days">≥4 Days</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small mb-2">Source</label>
+                                    <select class="form-select form-select-sm" id="mapSourceFilter">
+                                        <option value="all">All Source</option>
+                                        <option value="MAE6">MAE6</option>
+                                        <option value="MAE7">MAE7</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small mb-2">Alarm Type</label>
+                                    <select class="form-select form-select-sm" id="mapAlarmFilter">
+                                        <option value="all">All Types</option>
+                                        <option value="CELL UNAVAILABLE">CELL UNAVAILABLE</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100" onclick="applyMapFilters()">
+                                    <i class="fas fa-filter me-1"></i> Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 // URL CSV dari Google Sheets Count_Celldown
@@ -492,6 +654,12 @@ let filteredData = [];
 let sortDir = {};
 let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
+
+// Map variables
+let map = null;
+let mapMarkers = [];
+let mapData = [];
+let mapBounds = null;
 
 function loadData() {
   // Show loading state
@@ -518,6 +686,11 @@ function loadData() {
         console.log(`Data loaded: ${rawData.length} records`);
         filteredData = [...rawData];
         render();
+        
+        // Update map jika sedang terbuka
+        if (document.getElementById('mapSection').style.display === 'block') {
+          updateMapData();
+        }
       } else {
         console.warn("No data loaded from Google Sheets");
         showError("No data available from Google Sheets");
@@ -574,10 +747,33 @@ function processData(data) {
     else if (agingDays <= 3) agingCategory = "≤3 Days";
     else agingCategory = "≥4 Days";
     
+    // Parse coordinates
+    let lat = null;
+    let long = null;
+    
+    if (item.Lat && item.Lat !== "-") {
+      try {
+        lat = parseFloat(item.Lat);
+      } catch (e) {
+        console.warn("Error parsing Lat:", item.Lat);
+      }
+    }
+    
+    if (item.Long && item.Long !== "-") {
+      try {
+        long = parseFloat(item.Long);
+      } catch (e) {
+        console.warn("Error parsing Long:", item.Long);
+      }
+    }
+    
     return {
       ...item,
       _agingDays: agingDays,
-      _agingCategory: agingCategory
+      _agingCategory: agingCategory,
+      _hasCoordinates: !isNaN(lat) && !isNaN(long),
+      _lat: lat,
+      _long: long
     };
   });
 }
@@ -625,7 +821,7 @@ function render() {
     tr.innerHTML = `
       <td class="site-id-cell">${item["SITE ID"] || ""}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
-      <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || "CELL UNAVAILABLE"}</span></td>
+      <td><span class="badge ${item["Name"] === "CELL UNAVAILABLE" ? "bg-danger" : "bg-primary"}" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || "CELL UNAVAILABLE"}</span></td>
       <td class="text-center"><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Alarm Count"] || "0"}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Source"] || ""}</span></td>
@@ -706,6 +902,11 @@ function applyFilter() {
   });
   
   render();
+  
+  // Update map jika sedang terbuka
+  if (document.getElementById('mapSection').style.display === 'block') {
+    updateMapData();
+  }
 }
 
 function clearFilter() {
@@ -714,6 +915,11 @@ function clearFilter() {
   document.getElementById("fSource").value = "";
   filteredData = [...rawData];
   render();
+  
+  // Update map jika sedang terbuka
+  if (document.getElementById('mapSection').style.display === 'block') {
+    updateMapData();
+  }
 }
 
 function sortTable(column) {
@@ -755,7 +961,7 @@ function exportCSV() {
   
   const headers = [
     "SITE ID", "Alarm Source", "Name", "Alarm Count", 
-    "First Occurred (NT)", "Source", "Updated At"
+    "First Occurred (NT)", "Source", "Updated At", "Clearance Status", "Long", "Lat"
   ];
   
   const csvRows = [
@@ -810,6 +1016,273 @@ function toggleAutoRefresh() {
   }
 }
 
+// ==================== MAP FUNCTIONS ====================
+
+function showMapSection() {
+  // Jika map belum diinisialisasi, inisialisasi terlebih dahulu
+  if (!map) {
+    initializeMap();
+  }
+  
+  // Update map data dengan data yang sedang difilter
+  updateMapData();
+  
+  // Tampilkan section map
+  document.getElementById('mapSection').style.display = 'block';
+  
+  // Scroll ke map section
+  document.getElementById('mapSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleMapSection() {
+  const mapSection = document.getElementById('mapSection');
+  mapSection.style.display = mapSection.style.display === 'none' ? 'block' : 'none';
+}
+
+function initializeMap() {
+  // Inisialisasi peta dengan view ke Indonesia (Jakarta)
+  map = L.map('siteMap').setView([-6.200, 106.816], 10);
+  
+  // Tambahkan tile layer dari OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+  
+  // Tambahkan kontrol zoom
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  
+  console.log('Map initialized');
+}
+
+function updateMapData() {
+  // Clear existing markers
+  mapMarkers.forEach(marker => marker.remove());
+  mapMarkers = [];
+  
+  // Reset bounds
+  mapBounds = L.latLngBounds();
+  
+  // Filter data untuk map
+  mapData = filteredData.filter(item => {
+    // Pastikan memiliki koordinat
+    const hasCoords = item._hasCoordinates;
+    if (!hasCoords) return false;
+    
+    // Terapkan filter tambahan dari map filter
+    const statusFilter = document.getElementById('mapStatusFilter').value;
+    const agingFilter = document.getElementById('mapAgingFilter').value;
+    const sourceFilter = document.getElementById('mapSourceFilter').value;
+    const alarmFilter = document.getElementById('mapAlarmFilter').value;
+    
+    if (statusFilter !== 'all' && item['Clearance Status'] !== statusFilter) return false;
+    if (agingFilter !== 'all' && item._agingCategory !== agingFilter) return false;
+    if (sourceFilter !== 'all' && item.Source !== sourceFilter) return false;
+    if (alarmFilter !== 'all' && item['Name'] !== alarmFilter) return false;
+    
+    return true;
+  });
+  
+  console.log(`Updating map with ${mapData.length} markers`);
+  
+  // Hitung statistik
+  const cellUnavailableCount = mapData.filter(item => item['Name'] === 'CELL UNAVAILABLE').length;
+  const vipSiteCount = mapData.filter(item => {
+    const siteName = item['Alarm Source'] || '';
+    const siteId = item['SITE ID'] || '';
+    return siteName.includes('VIP') || siteName.includes('POI') || 
+           siteId.includes('VIP') || siteId.includes('POI');
+  }).length;
+  
+  // Tambahkan marker untuk setiap site
+  mapData.forEach(item => {
+    const lat = item._lat;
+    const lng = item._long;
+    
+    // Skip jika koordinat tidak valid
+    if (isNaN(lat) || isNaN(lng)) return;
+    
+    // Tentukan warna marker
+    let markerColor = '#6c757d'; // Default gray
+    let markerSize = 8;
+    
+    // Check if VIP/POI site
+    const siteName = item['Alarm Source'] || '';
+    const siteId = item['SITE ID'] || '';
+    const isVIP = siteName.includes('VIP') || siteName.includes('POI') || 
+                  siteId.includes('VIP') || siteId.includes('POI');
+    
+    // Check alarm type
+    const isCellUnavailable = item['Name'] === 'CELL UNAVAILABLE';
+    const isUncleared = item['Clearance Status'] === 'Uncleared';
+    
+    if (isCellUnavailable) {
+      markerColor = '#dc3545'; // Red for cell down
+      markerSize = isVIP ? 14 : 10;
+    } else if (isUncleared) {
+      markerColor = '#fd7e14'; // Orange for uncleared
+      markerSize = isVIP ? 12 : 8;
+    } else if (isVIP) {
+      markerColor = '#ffc107'; // Yellow for VIP
+      markerSize = 12;
+    }
+    
+    // Buat custom icon
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color: ${markerColor}; 
+                        width: ${markerSize}px; 
+                        height: ${markerSize}px; 
+                        border-radius: 50%;
+                        border: ${isVIP ? '2px solid #fff' : '1px solid #fff'};
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        cursor: pointer;"></div>`,
+      iconSize: [markerSize, markerSize],
+      iconAnchor: [markerSize/2, markerSize/2]
+    });
+    
+    // Create marker
+    const marker = L.marker([lat, lng], { icon: customIcon })
+      .addTo(map)
+      .bindPopup(createMapPopup(item));
+    
+    mapMarkers.push(marker);
+    mapBounds.extend([lat, lng]);
+  });
+  
+  // Update site count
+  document.getElementById('mapSiteCount').textContent = `${mapData.length} sites (${cellUnavailableCount} CELL UNAVAILABLE, ${vipSiteCount} VIP)`;
+  
+  // Fit bounds jika ada markers
+  if (mapData.length > 0) {
+    map.fitBounds(mapBounds, { padding: [50, 50] });
+  }
+}
+
+function createMapPopup(item) {
+  const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+  const updatedAt = formatDateTime(item["Updated At"]);
+  const agingBadge = getAgingBadge(item._agingDays);
+  
+  // Check if VIP
+  const siteName = item['Alarm Source'] || '';
+  const siteId = item['SITE ID'] || '';
+  const isVIP = siteName.includes('VIP') || siteName.includes('POI') || 
+                siteId.includes('VIP') || siteId.includes('POI');
+  
+  const vipBadge = isVIP ? '<span class="badge bg-warning">VIP/POI</span>' : '';
+  
+  return `
+    <div style="min-width: 250px; font-family: 'Inter', sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+        <div>
+          <strong style="font-size: 14px;">${item["Alarm Source"] || "Unknown Site"}</strong><br>
+          <small style="color: #6c757d;">${item["SITE ID"] || "N/A"}</small>
+        </div>
+        <div>${vipBadge} ${agingBadge}</div>
+      </div>
+      <hr style="margin: 8px 0;">
+      <table style="width: 100%; font-size: 12px;">
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Alarm Type:</td>
+          <td style="font-weight: 500;"><span class="badge ${item["Name"] === "CELL UNAVAILABLE" ? "bg-danger" : "bg-primary"}">${item["Name"] || "N/A"}</span></td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Count:</td>
+          <td style="font-weight: 500;"><span class="badge bg-secondary">${item["Alarm Count"] || "0"}</span></td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">First Occurred:</td>
+          <td style="font-weight: 500;">${firstOccurred}</td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Source:</td>
+          <td style="font-weight: 500;"><span class="badge bg-dark">${item["Source"] || "N/A"}</span></td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Status:</td>
+          <td style="font-weight: 500;">
+            <span class="badge ${item["Clearance Status"] === "Uncleared" ? "bg-danger" : "bg-success"}">
+              ${item["Clearance Status"] || "N/A"}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Updated:</td>
+          <td style="font-weight: 500;">${updatedAt}</td>
+        </tr>
+        <tr>
+          <td style="color: #6c757d; padding: 2px 0;">Coordinates:</td>
+          <td style="font-weight: 500;">${item.Lat || "N/A"}, ${item.Long || "N/A"}</td>
+        </tr>
+      </table>
+      <hr style="margin: 8px 0;">
+      <div style="text-align: center;">
+        <button onclick="centerTableOnSite('${item["SITE ID"]}')" 
+                style="background: #3b82f6; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">
+          <i class="fas fa-search me-1"></i> Find in Table
+        </button>
+        <button onclick="showSiteOnMap('${item["SITE ID"]}')" 
+                style="background: #10b981; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+          <i class="fas fa-map-pin me-1"></i> Center Map
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function applyMapFilters() {
+  updateMapData();
+}
+
+function resetMapView() {
+  if (map && mapData.length > 0) {
+    map.fitBounds(mapBounds, { padding: [50, 50] });
+  }
+}
+
+function centerTableOnSite(siteId) {
+  // Cari site di table
+  const table = document.getElementById('tableBody');
+  const rows = table.getElementsByTagName('tr');
+  
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName('td');
+    if (cells.length > 0) {
+      const cellSiteId = cells[0].textContent.trim();
+      if (cellSiteId === siteId) {
+        // Highlight row
+        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Tambahkan highlight sementara
+        rows[i].classList.add('highlight-row');
+        setTimeout(() => {
+          rows[i].classList.remove('highlight-row');
+        }, 2000);
+        break;
+      }
+    }
+  }
+}
+
+function showSiteOnMap(siteId) {
+  // Cari site di mapData
+  const site = mapData.find(item => item["SITE ID"] === siteId);
+  
+  if (site && site._hasCoordinates) {
+    // Center map ke site
+    map.setView([site._lat, site._long], 15);
+    
+    // Buka popup untuk marker yang sesuai
+    mapMarkers.forEach(marker => {
+      const markerLatLng = marker.getLatLng();
+      if (markerLatLng.lat === site._lat && markerLatLng.lng === site._long) {
+        marker.openPopup();
+      }
+    });
+  }
+}
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", function() {
   loadData();
@@ -828,6 +1301,12 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
+  
+  // Initialize map filters with current table filters
+  const sourceFilter = document.getElementById('fSource').value;
+  if (sourceFilter) {
+    document.getElementById('mapSourceFilter').value = sourceFilter;
+  }
 });
 </script>
 
