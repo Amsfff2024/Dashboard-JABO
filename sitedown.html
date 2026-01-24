@@ -174,6 +174,24 @@ body {
   background-color: #f1f5f9;
 }
 
+/* FILTER RESULTS TABLE - DI SUMMARY */
+.filter-results-container {
+  max-height: 300px;
+  margin-top: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.filter-results-container .table thead th {
+  background: linear-gradient(135deg, #475569, #64748b);
+  font-size: 12px;
+  padding: 8px 6px;
+}
+
+.filter-results-container .table tbody td {
+  font-size: 11px;
+  padding: 6px;
+}
+
 /* SITE ID CELL */
 .site-id-cell {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
@@ -202,6 +220,7 @@ body {
 .badge.bg-danger { background-color: #dc3545 !important; }
 .badge.bg-dark { background-color: #343a40 !important; }
 .badge.bg-warning { background-color: #ffc107 !important; color: #000; }
+.badge.bg-success { background-color: #10b981 !important; }
 
 /* NE IMPACT BADGE */
 .ne-impact-badge {
@@ -352,6 +371,22 @@ body {
   border-bottom: none;
 }
 
+/* FILTER STATUS */
+.filter-status {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-status .badge {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .header-bar {
@@ -374,6 +409,12 @@ body {
   .nav-tabs-custom .nav-link {
     padding: 8px 16px;
     font-size: 14px;
+  }
+  
+  .filter-status {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 }
 
@@ -405,6 +446,63 @@ body {
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* VIEW MORE LINK */
+.view-more-link {
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #3b82f6;
+  transition: all 0.2s;
+}
+
+.view-more-link:hover {
+  color: #1d4ed8;
+  gap: 6px;
+}
+
+/* PAGINATION */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 1rem;
+}
+
+.page-link {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.page-link:hover {
+  background: #f1f5f9;
+  color: #1e40af;
+}
+
+.page-link.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 }
 </style>
 </head>
@@ -555,19 +653,58 @@ body {
         </div>
       </div>
     </div>
+
+    <!-- FILTER STATUS -->
+    <div class="filter-status" id="filterStatus" style="display: none;">
+      <div>
+        <span class="badge bg-info me-2" id="filterAppliedBadge">Filter Active</span>
+        <span id="filterDetails" style="font-size: 13px; color: #475569;">
+          Showing filtered results
+        </span>
+      </div>
+      <div>
+        <a href="#" class="view-more-link" onclick="switchTab('all-alarms'); return false;">
+          View All <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- FILTER RESULTS TABLE (ONLY SHOW IN SUMMARY WHEN FILTER ACTIVE) -->
+    <div id="filterResultsContainer" style="display: none;">
+      <div class="table-container filter-results-container">
+        <div class="table-wrapper">
+          <table class="table table-striped table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Site ID</th>
+                <th>MO Name</th>
+                <th>Alarm Name</th>
+                <th>First Occurred</th>
+                <th>OSS Source</th>
+                <th>Aging</th>
+              </tr>
+            </thead>
+            <tbody id="filterResultsBody">
+              <!-- Results will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- TAB 2: ALL ALARMS -->
+<!-- TAB 2: ALL ALARMS (FULL DATA, NO FILTER) -->
 <div class="tab-pane" id="tab-all-alarms">
   <div class="container-fluid">
     <!-- CONTROLS -->
     <div class="controls-section">
       <div class="d-flex align-items-center flex-wrap gap-3">
-        <span class="badge bg-info" id="filteredCount">Showing 0 of 0 records</span>
+        <span class="badge bg-success" id="allAlarmsCount">Loading...</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-          <label class="form-check-label" for="autoRefresh">Auto-refresh (5 min)</label>
+          <input class="form-check-input" type="checkbox" id="autoRefreshAll" checked onclick="toggleAutoRefresh()">
+          <label class="form-check-label" for="autoRefreshAll">Auto-refresh (5 min)</label>
         </div>
       </div>
       <div>
@@ -577,33 +714,38 @@ body {
       </div>
     </div>
     
-    <!-- TABLE -->
+    <!-- TABLE FOR ALL ALARMS -->
     <div class="table-container">
       <div class="table-wrapper">
         <table class="table table-striped table-hover table-bordered">
           <thead>
             <tr>
-              <th onclick="sortTable('SiteID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-              <th onclick="sortTable('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
-              <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
-              <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-              <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
-              <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS Source</th>
-              <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
+              <th onclick="sortAllAlarms('SiteID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+              <th onclick="sortAllAlarms('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
+              <th onclick="sortAllAlarms('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+              <th onclick="sortAllAlarms('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+              <th onclick="sortAllAlarms('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
+              <th onclick="sortAllAlarms('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS Source</th>
+              <th onclick="sortAllAlarms('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
             </tr>
           </thead>
-          <tbody id="tableBody">
-            <tr id="loadingRow">
+          <tbody id="allAlarmsBody">
+            <tr>
               <td colspan="7" class="loading">
                 <div class="text-center">
                   <div class="spinner-border text-danger mb-3" role="status"></div>
-                  <div>Loading site down data from Google Sheets...</div>
+                  <div>Loading all alarms data...</div>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- PAGINATION FOR ALL ALARMS -->
+    <div class="pagination" id="allAlarmsPagination" style="display: none;">
+      <!-- Pagination will be generated here -->
     </div>
   </div>
 </div>
@@ -702,13 +844,23 @@ body {
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=816283245&single=true&output=csv";
 
 let rawData = [];
-let filteredData = [];
+let filteredData = []; // For summary page filter
+let allAlarmsData = []; // For all alarms page (complete data)
 let massiveOutageData = [];
 let sortDir = {};
+let sortAllDir = {};
 let sortMassiveDir = {};
 let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
 let currentTab = 'summary';
+let currentFilter = {
+  alarmName: '',
+  siteId: '',
+  source: '',
+  isActive: false
+};
+let allAlarmsPage = 1;
+const ALL_ALARMS_PER_PAGE = 50;
 
 function switchTab(tabName) {
   currentTab = tabName;
@@ -724,6 +876,11 @@ function switchTab(tabName) {
     pane.classList.remove('active');
   });
   document.getElementById(`tab-${tabName}`).classList.add('active');
+  
+  // If switching to all-alarms tab, render it
+  if (tabName === 'all-alarms') {
+    renderAllAlarms();
+  }
 }
 
 function loadData() {
@@ -746,15 +903,17 @@ function loadData() {
       
       if (res.data && res.data.length > 0) {
         rawData = processData(res.data);
+        allAlarmsData = [...rawData]; // Store complete data
         console.log(`Site down data loaded: ${rawData.length} records`);
         
         updateSourceFilter();
-        filteredData = [...rawData];
+        filteredData = [...rawData]; // Start with all data for summary
         
         // Process massive outage data
         processMassiveOutageData();
         
-        render();
+        renderSummary();
+        renderAllAlarms();
         renderMassiveOutage();
       } else {
         console.warn("No site down data loaded from Google Sheets");
@@ -827,7 +986,6 @@ function processData(data) {
 }
 
 function processMassiveOutageData() {
-  // Group alarms by event time (within 5 minutes tolerance) and alarm name
   const groupedEvents = {};
   
   rawData.forEach(item => {
@@ -838,8 +996,7 @@ function processMassiveOutageData() {
       const eventTime = new Date(firstOccurred);
       const alarmName = item["Name"] || "Unknown Alarm";
       
-      // Create a key based on time bucket (group within 5 minutes) and alarm name
-      const timeBucket = Math.floor(eventTime.getTime() / (5 * 60 * 1000)); // 5-minute buckets
+      const timeBucket = Math.floor(eventTime.getTime() / (5 * 60 * 1000));
       const key = `${alarmName}_${timeBucket}`;
       
       if (!groupedEvents[key]) {
@@ -851,7 +1008,6 @@ function processMassiveOutageData() {
         };
       }
       
-      // Add site to this event
       groupedEvents[key].sites.push({
         siteId: item["SiteID"] || "Unknown",
         moName: item["MO Name"] || "Unknown",
@@ -860,7 +1016,6 @@ function processMassiveOutageData() {
         agingText: item._agingText || "-"
       });
       
-      // Update aging (use max aging in the group)
       if (item._agingDays > groupedEvents[key].aging) {
         groupedEvents[key].aging = item._agingDays;
       }
@@ -869,15 +1024,12 @@ function processMassiveOutageData() {
     }
   });
   
-  // Convert to array and filter for events with > 3 sites
   massiveOutageData = Object.values(groupedEvents)
     .filter(event => event.sites.length > 3)
     .map(event => {
-      // Calculate average aging
       const totalAging = event.sites.reduce((sum, site) => sum + site.aging, 0);
       const avgAging = totalAging / event.sites.length;
       
-      // Format aging text
       let agingText = "";
       if (avgAging < 1) {
         const hours = Math.floor(avgAging * 24);
@@ -896,44 +1048,141 @@ function processMassiveOutageData() {
         agingDays: avgAging
       };
     })
-    .sort((a, b) => {
-      // Sort by event time (newest first) then by aging
-      return b.eventTime - a.eventTime;
-    });
-  
-  console.log(`Massive outage data processed: ${massiveOutageData.length} events`);
+    .sort((a, b) => b.eventTime - a.eventTime);
 }
 
-function render() {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
-  
-  if (filteredData.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="text-center py-5">
-          <i class="fas fa-database fa-2x mb-3 text-muted"></i>
-          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No site down data found</div>
-          <small class="text-muted" style="font-family: 'Inter', sans-serif;">Try adjusting your filters</small>
-        </td>
-      </tr>
-    `;
-    updateSummary(0, 0, 0, 0);
-    return;
-  }
+function renderSummary() {
+  // Update summary KPI cards
+  const total = filteredData.length;
+  const uniqueSites = new Set(filteredData.map(d => d["SiteID"]).filter(Boolean)).size;
   
   let aging1Day = 0;
   let aging2Days = 0;
   
   filteredData.forEach(item => {
-    const tr = document.createElement("tr");
+    if (item._agingDays < 1) aging1Day++;
+    if (item._agingDays > 2) aging2Days++;
+  });
+  
+  document.getElementById("totalAlarm").innerText = total;
+  document.getElementById("uniqueSite").innerText = uniqueSites;
+  document.getElementById("aging1Day").innerText = aging1Day;
+  document.getElementById("agingCount").innerText = aging2Days;
+  
+  // Show/hide filter results based on whether filter is active
+  const filterStatus = document.getElementById("filterStatus");
+  const filterResultsContainer = document.getElementById("filterResultsContainer");
+  
+  if (currentFilter.isActive) {
+    // Show filter status and results
+    filterStatus.style.display = 'flex';
+    filterResultsContainer.style.display = 'block';
     
-    if (item._agingDays < 1) {
-      aging1Day++;
-    }
-    if (item._agingDays > 2) {
-      aging2Days++;
-    }
+    // Update filter details
+    let filterDetails = [];
+    if (currentFilter.alarmName) filterDetails.push(`Alarm: "${currentFilter.alarmName}"`);
+    if (currentFilter.siteId) filterDetails.push(`Site: "${currentFilter.siteId}"`);
+    if (currentFilter.source) filterDetails.push(`OSS: "${currentFilter.source}"`);
+    
+    document.getElementById("filterDetails").textContent = 
+      filterDetails.length > 0 ? filterDetails.join(' • ') : 'Showing filtered results';
+    
+    // Render filtered results (max 10 rows)
+    renderFilterResults();
+  } else {
+    // Hide filter results
+    filterStatus.style.display = 'none';
+    filterResultsContainer.style.display = 'none';
+  }
+  
+  updateMassiveOutageAlert();
+}
+
+function renderFilterResults() {
+  const tbody = document.getElementById("filterResultsBody");
+  tbody.innerHTML = "";
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-3">
+          <i class="fas fa-search fa-lg mb-2 text-muted"></i>
+          <div style="font-size: 12px;">No matching alarms found</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Show only first 10 results in summary
+  const displayData = filteredData.slice(0, 10);
+  
+  displayData.forEach(item => {
+    const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+    const agingBadge = item._agingText && item._agingText !== "-" 
+      ? `<span class="badge ${item._agingClass}">${item._agingText}</span>`
+      : "-";
+    
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="site-id-cell">${item["SiteID"] || ""}</span></td>
+      <td title="${item["MO Name"] || ""}">${truncateText(item["MO Name"] || "", 20)}</td>
+      <td><span class="badge bg-danger">${truncateText(item["Name"] || "", 25)}</span></td>
+      <td class="text-nowrap">${firstOccurred}</td>
+      <td><span class="badge bg-dark">${item["Source"] || ""}</span></td>
+      <td class="text-center">${agingBadge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  // Show "view more" message if there are more results
+  if (filteredData.length > 10) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td colspan="6" class="text-center py-2 bg-light">
+        <small class="text-muted">
+          <i class="fas fa-ellipsis-h me-1"></i>
+          ${filteredData.length - 10} more alarms match your filter
+          <a href="#" class="view-more-link ms-2" onclick="switchTab('all-alarms'); return false;">
+            View All <i class="fas fa-arrow-right"></i>
+          </a>
+        </small>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderAllAlarms() {
+  const tbody = document.getElementById("allAlarmsBody");
+  const pagination = document.getElementById("allAlarmsPagination");
+  
+  if (allAlarmsData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5">
+          <i class="fas fa-database fa-2x mb-3 text-muted"></i>
+          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No site down data found</div>
+        </td>
+      </tr>
+    `;
+    pagination.style.display = 'none';
+    return;
+  }
+  
+  // Update count badge
+  document.getElementById("allAlarmsCount").textContent = `${allAlarmsData.length} Total Alarms`;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(allAlarmsData.length / ALL_ALARMS_PER_PAGE);
+  const startIndex = (allAlarmsPage - 1) * ALL_ALARMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ALL_ALARMS_PER_PAGE, allAlarmsData.length);
+  const pageData = allAlarmsData.slice(startIndex, endIndex);
+  
+  // Render table rows
+  tbody.innerHTML = "";
+  pageData.forEach(item => {
+    const tr = document.createElement("tr");
     
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
     
@@ -959,10 +1208,41 @@ function render() {
     tbody.appendChild(tr);
   });
   
-  const total = filteredData.length;
-  const uniqueSites = new Set(filteredData.map(d => d["SiteID"]).filter(Boolean)).size;
-  updateSummary(total, uniqueSites, aging1Day, aging2Days);
-  updateMassiveOutageAlert();
+  // Render pagination if needed
+  if (totalPages > 1) {
+    pagination.style.display = 'flex';
+    let paginationHTML = '';
+    
+    // Previous button
+    if (allAlarmsPage > 1) {
+      paginationHTML += `<a href="#" class="page-link" onclick="changeAllAlarmsPage(${allAlarmsPage - 1})">&laquo;</a>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= allAlarmsPage - 2 && i <= allAlarmsPage + 2)) {
+        paginationHTML += `<a href="#" class="page-link ${i === allAlarmsPage ? 'active' : ''}" onclick="changeAllAlarmsPage(${i})">${i}</a>`;
+      } else if (i === allAlarmsPage - 3 || i === allAlarmsPage + 3) {
+        paginationHTML += `<span class="page-link" style="background: transparent; border: none;">...</span>`;
+      }
+    }
+    
+    // Next button
+    if (allAlarmsPage < totalPages) {
+      paginationHTML += `<a href="#" class="page-link" onclick="changeAllAlarmsPage(${allAlarmsPage + 1})">&raquo;</a>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+  } else {
+    pagination.style.display = 'none';
+  }
+}
+
+function changeAllAlarmsPage(page) {
+  allAlarmsPage = page;
+  renderAllAlarms();
+  // Scroll to top of table
+  document.getElementById('tab-all-alarms').scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderMassiveOutage() {
@@ -994,27 +1274,21 @@ function renderMassiveOutage() {
   
   tbody.innerHTML = "";
   
-  // Calculate statistics
   const totalEvents = massiveOutageData.length;
   const maxSites = Math.max(...massiveOutageData.map(event => event.neImpact));
   
-  // Update statistics
   document.getElementById("massiveOutageCount").textContent = `${totalEvents} events detected`;
   document.getElementById("totalOutageEvents").textContent = totalEvents;
   document.getElementById("maxSitesAffected").textContent = maxSites;
   
-  // Update timeline
   updateOutageTimeline();
   
-  // Render table rows
   massiveOutageData.forEach((event, index) => {
     const tr = document.createElement("tr");
     tr.className = index < 3 ? "massive-impact-row" : "";
     
-    // Format event time
     const eventTimeStr = formatDateTime(event.eventTime);
     
-    // Create site impact list (limited to 5 sites)
     const siteImpactList = event.sites
       .slice(0, 5)
       .map(site => 
@@ -1060,6 +1334,126 @@ function renderMassiveOutage() {
     tbody.appendChild(tr);
   });
 }
+
+function applyFilter() {
+  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
+  const siteId = document.getElementById("fSite").value.toLowerCase();
+  const source = document.getElementById("fSource").value;
+  
+  // Store current filter
+  currentFilter = {
+    alarmName: document.getElementById("fAlarm").value,
+    siteId: document.getElementById("fSite").value,
+    source: source,
+    isActive: alarmName !== '' || siteId !== '' || source !== ''
+  };
+  
+  // Apply filter to summary page data only
+  filteredData = rawData.filter(item => {
+    const alarmNameVal = (item["Name"] || "").toLowerCase();
+    const siteID = (item["SiteID"] || "").toLowerCase();
+    const sourceVal = item["Source"] || "";
+    
+    return (
+      (!alarmName || alarmNameVal.includes(alarmName)) &&
+      (!siteId || siteID.includes(siteId)) &&
+      (!source || sourceVal === source)
+    );
+  });
+  
+  renderSummary();
+}
+
+function clearFilter() {
+  document.getElementById("fAlarm").value = "";
+  document.getElementById("fSite").value = "";
+  document.getElementById("fSource").value = "";
+  
+  currentFilter = {
+    alarmName: '',
+    siteId: '',
+    source: '',
+    isActive: false
+  };
+  
+  filteredData = [...rawData];
+  renderSummary();
+}
+
+function sortTable(column) {
+  if (!sortDir[column]) sortDir[column] = 1;
+  else sortDir[column] *= -1;
+  
+  const dir = sortDir[column];
+  
+  filteredData.sort((a, b) => {
+    if (column === "_agingDays") {
+      return (a._agingDays - b._agingDays) * dir;
+    }
+    
+    let aVal = a[column] || "";
+    let bVal = b[column] || "";
+    
+    if (column.includes("First Occurred")) {
+      const aDate = aVal ? new Date(aVal).getTime() : 0;
+      const bDate = bVal ? new Date(bVal).getTime() : 0;
+      return (aDate - bDate) * dir;
+    }
+    
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
+  
+  renderSummary();
+}
+
+function sortAllAlarms(column) {
+  if (!sortAllDir[column]) sortAllDir[column] = 1;
+  else sortAllDir[column] *= -1;
+  
+  const dir = sortAllDir[column];
+  
+  allAlarmsData.sort((a, b) => {
+    if (column === "_agingDays") {
+      return (a._agingDays - b._agingDays) * dir;
+    }
+    
+    let aVal = a[column] || "";
+    let bVal = b[column] || "";
+    
+    if (column.includes("First Occurred")) {
+      const aDate = aVal ? new Date(aVal).getTime() : 0;
+      const bDate = bVal ? new Date(bVal).getTime() : 0;
+      return (aDate - bDate) * dir;
+    }
+    
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
+  
+  renderAllAlarms();
+}
+
+function sortMassiveOutage(column) {
+  if (!sortMassiveDir[column]) sortMassiveDir[column] = 1;
+  else sortMassiveDir[column] *= -1;
+  
+  const dir = sortMassiveDir[column];
+  
+  massiveOutageData.sort((a, b) => {
+    if (column === "eventTime") {
+      return (a.eventTime - b.eventTime) * dir;
+    } else if (column === "alarmName") {
+      return a.alarmName.localeCompare(b.alarmName) * dir;
+    } else if (column === "aging") {
+      return (a.agingDays - b.agingDays) * dir;
+    }
+    return 0;
+  });
+  
+  renderMassiveOutage();
+}
+
+// Other helper functions (updateOutageTimeline, getTimeAgo, getAgingClass, etc.)
+// ... [All the helper functions remain the same as before]
 
 function updateOutageTimeline() {
   const timeline = document.getElementById("outageTimeline");
@@ -1137,97 +1531,13 @@ function updateMassiveOutageAlert() {
   }
 }
 
-function updateSummary(total, unique, aging1Day, aging2Days) {
-  document.getElementById("totalAlarm").innerText = total;
-  document.getElementById("uniqueSite").innerText = unique;
-  document.getElementById("aging1Day").innerText = aging1Day;
-  document.getElementById("agingCount").innerText = aging2Days;
-  
-  document.getElementById("filteredCount").innerText = 
-    `Showing ${total} of ${rawData.length} records`;
-}
-
-function sortTable(column) {
-  if (!sortDir[column]) sortDir[column] = 1;
-  else sortDir[column] *= -1;
-  
-  const dir = sortDir[column];
-  
-  filteredData.sort((a, b) => {
-    if (column === "_agingDays") {
-      return (a._agingDays - b._agingDays) * dir;
-    }
-    
-    let aVal = a[column] || "";
-    let bVal = b[column] || "";
-    
-    if (column.includes("First Occurred")) {
-      const aDate = aVal ? new Date(aVal).getTime() : 0;
-      const bDate = bVal ? new Date(bVal).getTime() : 0;
-      return (aDate - bDate) * dir;
-    }
-    
-    return String(aVal).localeCompare(String(bVal)) * dir;
-  });
-  
-  render();
-}
-
-function sortMassiveOutage(column) {
-  if (!sortMassiveDir[column]) sortMassiveDir[column] = 1;
-  else sortMassiveDir[column] *= -1;
-  
-  const dir = sortMassiveDir[column];
-  
-  massiveOutageData.sort((a, b) => {
-    if (column === "eventTime") {
-      return (a.eventTime - b.eventTime) * dir;
-    } else if (column === "alarmName") {
-      return a.alarmName.localeCompare(b.alarmName) * dir;
-    } else if (column === "aging") {
-      return (a.agingDays - b.agingDays) * dir;
-    }
-    return 0;
-  });
-  
-  renderMassiveOutage();
-}
-
-function applyFilter() {
-  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
-  const siteId = document.getElementById("fSite").value.toLowerCase();
-  const source = document.getElementById("fSource").value;
-  
-  filteredData = rawData.filter(item => {
-    const alarmNameVal = (item["Name"] || "").toLowerCase();
-    const siteID = (item["SiteID"] || "").toLowerCase();
-    const sourceVal = item["Source"] || "";
-    
-    return (
-      (!alarmName || alarmNameVal.includes(alarmName)) &&
-      (!siteId || siteID.includes(siteId)) &&
-      (!source || sourceVal === source)
-    );
-  });
-  
-  render();
-}
-
-function clearFilter() {
-  document.getElementById("fAlarm").value = "";
-  document.getElementById("fSite").value = "";
-  document.getElementById("fSource").value = "";
-  filteredData = [...rawData];
-  render();
-}
-
 function exportCSV(type = 'all-alarms') {
   let dataToExport = [];
   let filename = "";
   
   if (type === 'all-alarms') {
-    dataToExport = filteredData;
-    filename = `site_down_alarms_${new Date().toISOString().slice(0,10)}.csv`;
+    dataToExport = allAlarmsData;
+    filename = `all_site_down_alarms_${new Date().toISOString().slice(0,10)}.csv`;
   } else if (type === 'massive-outage') {
     dataToExport = massiveOutageData.flatMap(event => 
       event.sites.map(site => ({
