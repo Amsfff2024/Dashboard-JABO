@@ -344,6 +344,12 @@ body {
   color: #1e293b;
 }
 
+/* ACTIVE MARKER */
+.active-marker {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 255, 0.7));
+  z-index: 1000 !important;
+}
+
 /* RESPONSIVE */
 @media (max-width: 992px) {
   #lastUpdate {
@@ -404,6 +410,48 @@ body {
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 8px;
+}
+
+/* MAP LOCK NOTIFICATION */
+.map-lock-notification {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-left: 4px solid #3b82f6;
+  display: none;
+}
+
+/* COLOR LEGEND */
+.color-legend {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 180px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
 }
 </style>
 </head>
@@ -479,19 +527,25 @@ body {
 <div class="quick-stats">
   <h6><i class="fas fa-chart-line me-2"></i>Quick Overview</h6>
   <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="d-flex justify-content-between">
         <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Sites with Coords:</span>
         <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #1e40af;" id="sitesWithCoords">0</span>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="d-flex justify-content-between">
+        <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">In Jawa Barat Area:</span>
+        <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #3b82f6;" id="sitesInJawaBarat">0</span>
+      </div>
+    </div>
+    <div class="col-md-3">
       <div class="d-flex justify-content-between">
         <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Avg Alarm Count:</span>
         <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #dc3545;" id="avgAlarmCount">0</span>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="d-flex justify-content-between">
         <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Uncleared Alarms:</span>
         <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #dc3545;" id="unclearedAlarms">0</span>
@@ -542,10 +596,35 @@ body {
 <!-- MAP SECTION -->
 <div class="row g-4 mb-4">
   <div class="col-12">
-    <div class="card filter-card p-4">
+    <div class="card filter-card p-4" style="position: relative;">
+      <!-- Map Lock Notification -->
+      <div class="map-lock-notification" id="mapLockNotification">
+        <i class="fas fa-lock me-1 text-primary"></i>
+        <span style="font-family: var(--font-inter); font-weight: 500;">Map locked to Jawa Barat area</span>
+      </div>
+      
+      <!-- Color Legend -->
+      <div class="color-legend" id="colorLegend">
+        <div style="font-family: var(--font-plus-jakarta); font-weight: 600; font-size: 12px; margin-bottom: 6px; color: #1e293b;">
+          <i class="fas fa-palette me-1"></i>Alarm Count
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #3b82f6;"></div>
+          <span style="font-family: var(--font-inter); font-size: 11px;">1-5 alarms</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #f97316;"></div>
+          <span style="font-family: var(--font-inter); font-size: 11px;">6-20 alarms</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #ef4444;"></div>
+          <span style="font-family: var(--font-inter); font-size: 11px;">>20 alarms</span>
+        </div>
+      </div>
+      
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="m-0" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
-          <i class="fas fa-map-marked-alt me-2"></i>MAP Site Location
+          <i class="fas fa-map-marked-alt me-2"></i>MAP Site Location (Jawa Barat Area Only)
         </h4>
         <div class="d-flex align-items-center">
           <span class="badge bg-info me-3" id="siteCount">Loading sites...</span>
@@ -569,6 +648,7 @@ body {
       <div class="controls-section d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
           <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
+          <span class="badge bg-warning" id="outsideJawaBaratCount" style="display: none;">0 sites outside Jawa Barat</span>
         </div>
         <div>
           <button class="btn export-btn text-white" onclick="exportCSV()">
@@ -592,11 +672,12 @@ body {
                 <th onclick="sortTable('Updated At')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Updated At</th>
                 <th class="text-nowrap">Aging</th>
                 <th class="text-nowrap">Map</th>
+                <th class="text-nowrap">Location</th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr id="loadingRow">
-                <td colspan="9" class="loading">
+                <td colspan="10" class="loading">
                   <div class="text-center">
                     <div class="spinner-border text-primary mb-3" role="status"></div>
                     <div style="font-family: 'Inter', sans-serif;">Loading data from Google Sheets...</div>
@@ -617,6 +698,19 @@ body {
 // URL CSV dari Google Sheets Count_Celldown
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=219697226&single=true&output=csv";
 
+// BATAS WILAYAH JAWA BARAT + JAKARTA
+const JAWA_BARAT_BOUNDS = L.latLngBounds(
+  L.latLng(-7.8, 105.5),  // Barat Daya (Banten/Lebak)
+  L.latLng(-5.8, 108.5)   // Timur Laut (Cirebon/Kuningan)
+);
+
+// BATAS ALARM COUNT UNTUK WARNA
+const ALARM_COLOR_THRESHOLDS = {
+  LOW: { max: 5, color: '#3b82f6', name: 'Blue (1-5)' },     // Biru
+  MEDIUM: { max: 20, color: '#f97316', name: 'Orange (6-20)' }, // Orange
+  HIGH: { min: 21, color: '#ef4444', name: 'Red (>20)' }     // Merah
+};
+
 let rawData = [];
 let filteredData = [];
 let sortDir = {};
@@ -628,13 +722,34 @@ let map;
 let markers = [];
 let selectedMarker = null;
 
-// Warna untuk semua marker
-const markerColor = '#ff0000'; // Merah terang tanpa border
+// Fungsi untuk menentukan warna marker berdasarkan alarm count
+function getMarkerColorByAlarmCount(count) {
+  const alarmCount = parseInt(count) || 0;
+  
+  if (alarmCount <= ALARM_COLOR_THRESHOLDS.LOW.max) {
+    return ALARM_COLOR_THRESHOLDS.LOW.color;
+  } else if (alarmCount <= ALARM_COLOR_THRESHOLDS.MEDIUM.max) {
+    return ALARM_COLOR_THRESHOLDS.MEDIUM.color;
+  } else {
+    return ALARM_COLOR_THRESHOLDS.HIGH.color;
+  }
+}
 
-// Inisialisasi peta
+// Fungsi untuk mengecek apakah koordinat dalam area Jawa Barat
+function isInJawaBaratBounds(lat, lng) {
+  if (lat === null || lng === null) return false;
+  return JAWA_BARAT_BOUNDS.contains([lat, lng]);
+}
+
+// Inisialisasi peta dengan lock ke Jawa Barat
 function initMap() {
-  // Pusat peta di Jawa Barat/Jakarta (area data sample)
-  map = L.map('map').setView([-6.2, 106.8], 9);
+  // Buat peta dengan view default di Jawa Barat
+  map = L.map('map', {
+    maxBounds: JAWA_BARAT_BOUNDS,
+    maxBoundsViscosity: 1.0, // Lock kuat, tidak bisa drag keluar
+    minZoom: 8,
+    maxZoom: 15
+  }).setView([-6.6, 107.5], 9); // Center di tengah Jawa Barat
   
   // Tambahkan tile layer dari OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -642,9 +757,21 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
   
+  // Tampilkan notifikasi map lock
+  document.getElementById('mapLockNotification').style.display = 'block';
+  
   // Tampilkan debug info
   document.getElementById('debugInfo').style.display = 'block';
   document.getElementById('debugInfo').innerHTML = 'Memuat data...';
+  
+  // Event untuk menunjukkan batas jika user mencoba drag keluar
+  map.on('drag', function() {
+    const center = map.getCenter();
+    if (!JAWA_BARAT_BOUNDS.contains(center)) {
+      // Kembalikan ke dalam bounds
+      map.panTo(map.getCenter().wrap());
+    }
+  });
 }
 
 // Fungsi untuk mem-parsing koordinat
@@ -690,7 +817,6 @@ function loadData() {
       if (res.data && res.data.length > 0) {
         rawData = processData(res.data);
         console.log(`Data loaded: ${rawData.length} records`);
-        console.log('Kolom yang tersedia:', Object.keys(rawData[0]));
         
         filteredData = [...rawData];
         renderTable();
@@ -737,6 +863,13 @@ function updateQuickStats() {
     site._parsedLong !== null && site._parsedLat !== null
   ).length;
   
+  // Hitung sites dalam Jawa Barat
+  const sitesInJawaBarat = rawData.filter(site => 
+    site._parsedLong !== null && 
+    site._parsedLat !== null &&
+    isInJawaBaratBounds(site._parsedLat, site._parsedLong)
+  ).length;
+  
   // Hitung rata-rata alarm count
   const totalAlarms = rawData.reduce((sum, item) => {
     return sum + (parseInt(item["Alarm Count"]) || 0);
@@ -750,6 +883,7 @@ function updateQuickStats() {
   
   // Update UI
   document.getElementById('sitesWithCoords').textContent = sitesWithCoords;
+  document.getElementById('sitesInJawaBarat').textContent = sitesInJawaBarat;
   document.getElementById('avgAlarmCount').textContent = avgAlarmCount;
   document.getElementById('unclearedAlarms').textContent = unclearedAlarms;
 }
@@ -784,37 +918,61 @@ function processData(data) {
     const parsedLong = parseCoordinate(longValue);
     const parsedLat = parseCoordinate(latValue);
     
+    // Check if in Jawa Barat area
+    const inJawaBarat = isInJawaBaratBounds(parsedLat, parsedLong);
+    
     return {
       ...item,
       _agingDays: agingDays,
       _agingCategory: agingCategory,
       _parsedLong: parsedLong,
-      _parsedLat: parsedLat
+      _parsedLat: parsedLat,
+      _inJawaBarat: inJawaBarat
     };
   });
 }
 
-// Menambahkan marker ke peta
+// Menambahkan marker ke peta (HANYA untuk Jawa Barat)
 function addMarkersToMap() {
   // Hapus marker lama
   clearMarkers();
   
-  // Filter hanya data yang memiliki koordinat valid
-  const sitesWithCoords = rawData.filter(site => 
-    site._parsedLong !== null && site._parsedLat !== null
+  // Filter hanya data yang memiliki koordinat valid DAN dalam Jawa Barat
+  const sitesInJawaBarat = rawData.filter(site => 
+    site._parsedLong !== null && 
+    site._parsedLat !== null &&
+    site._inJawaBarat === true
   );
   
-  document.getElementById('siteCount').textContent = `${sitesWithCoords.length} sites with coordinates`;
+  // Hitung sites luar Jawa Barat untuk info
+  const sitesOutsideJawaBarat = rawData.filter(site => 
+    site._parsedLong !== null && 
+    site._parsedLat !== null &&
+    site._inJawaBarat === false
+  ).length;
+  
+  // Update UI
+  document.getElementById('siteCount').textContent = `${sitesInJawaBarat.length} sites in Jawa Barat`;
+  
+  if (sitesOutsideJawaBarat > 0) {
+    document.getElementById('outsideJawaBaratCount').style.display = 'inline-block';
+    document.getElementById('outsideJawaBaratCount').textContent = `${sitesOutsideJawaBarat} sites outside Jawa Barat`;
+  } else {
+    document.getElementById('outsideJawaBaratCount').style.display = 'none';
+  }
   
   let bounds = L.latLngBounds([]);
   
-  sitesWithCoords.forEach(site => {
+  sitesInJawaBarat.forEach(site => {
     const lat = site._parsedLat;
     const lng = site._parsedLong;
     const alarmCount = parseInt(site['Alarm Count']) || 0;
     const siteId = site['SITE ID'] || 'Unknown';
     const alarmSource = site['Alarm Source'] || 'Unknown';
     const firstOccurred = site['First Occurred (NT)'] || '-';
+    
+    // Dapatkan warna berdasarkan alarm count
+    const markerColor = getMarkerColorByAlarmCount(alarmCount);
     
     // Tentukan ukuran marker berdasarkan alarm count
     let markerSize;
@@ -829,7 +987,7 @@ function addMarkersToMap() {
     else if (alarmCount > 9) fontSize = '11px';
     else fontSize = '12px';
     
-    // Buat custom icon dengan alarm count di tengah - TANPA BORDER HITAM
+    // Buat custom icon dengan warna berdasarkan alarm count
     const customIcon = L.divIcon({
       html: `
         <div style="
@@ -844,6 +1002,8 @@ function addMarkersToMap() {
           color: white;
           font-size: ${fontSize};
           opacity: 0.9;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         ">
           ${alarmCount > 99 ? '99+' : alarmCount}
         </div>`,
@@ -852,7 +1012,7 @@ function addMarkersToMap() {
       iconAnchor: [markerSize/2, markerSize/2]
     });
     
-    // Buat konten popup SEDERHANA: hanya Site ID, Alarm Source, First Occurred
+    // Buat konten popup
     const formattedFirstOccurred = formatDateTime(firstOccurred);
     const popupContent = `
       <div class="popup-header">
@@ -866,7 +1026,13 @@ function addMarkersToMap() {
         </div>
         <div class="popup-item">
           <span class="popup-label">Alarm Count:</span>
-          <span class="popup-value" style="color: #dc3545; font-weight: bold;">${alarmCount}</span>
+          <span class="popup-value" style="color: ${markerColor}; font-weight: bold;">${alarmCount}</span>
+        </div>
+        <div class="popup-item">
+          <span class="popup-label">Location Status:</span>
+          <span class="popup-value" style="color: #10b981; font-weight: bold;">
+            <i class="fas fa-check-circle me-1"></i>Dalam Jawa Barat
+          </span>
         </div>
       </div>
     `;
@@ -896,12 +1062,13 @@ function addMarkersToMap() {
     bounds.extend([lat, lng]);
   });
   
-  // Fit bounds jika ada data dengan koordinat
-  if (bounds.isValid() && sitesWithCoords.length > 0) {
+  // Fit bounds jika ada data dalam Jawa Barat
+  if (bounds.isValid() && sitesInJawaBarat.length > 0) {
     map.fitBounds(bounds, { padding: [50, 50] });
   }
   
-  document.getElementById('debugInfo').innerHTML = `Menampilkan ${sitesWithCoords.length} markers`;
+  document.getElementById('debugInfo').innerHTML = 
+    `Menampilkan ${sitesInJawaBarat.length} markers di Jawa Barat`;
 }
 
 // Hapus semua marker dari peta
@@ -913,14 +1080,17 @@ function clearMarkers() {
   selectedMarker = null;
 }
 
-// Fungsi untuk zoom ke marker dari tabel
+// Fungsi untuk zoom ke marker dari tabel (HANYA jika dalam Jawa Barat)
 function zoomToMarker(siteId) {
   const marker = markers.find(m => {
     const lat = m.getLatLng().lat;
     const lng = m.getLatLng().lng;
     // Cari data yang sesuai
     const siteData = rawData.find(s => 
-      s._parsedLat === lat && s._parsedLong === lng && s['SITE ID'] === siteId
+      s._parsedLat === lat && 
+      s._parsedLong === lng && 
+      s['SITE ID'] === siteId &&
+      s._inJawaBarat === true
     );
     return siteData !== undefined;
   });
@@ -942,6 +1112,9 @@ function zoomToMarker(siteId) {
     map.setView(marker.getLatLng(), 13);
     
     document.getElementById('debugInfo').innerHTML = `Zoom to: ${siteId}`;
+  } else {
+    // Jika site tidak ada di map (luar Jawa Barat)
+    alert(`Site ${siteId} is not in Jawa Barat area and cannot be displayed on the map.`);
   }
 }
 
@@ -952,7 +1125,7 @@ function renderTable() {
   if (filteredData.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center py-5">
+        <td colspan="10" class="text-center py-5">
           <i class="fas fa-database fa-2x mb-3 text-muted"></i>
           <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No data found</div>
           <small class="text-muted" style="font-family: 'Inter', sans-serif;">Try adjusting your filters</small>
@@ -985,27 +1158,41 @@ function renderTable() {
     const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
     const updatedAt = formatDateTime(item["Updated At"]);
     
-    // Check if site has coordinates
+    // Check site location status
     const hasCoords = item._parsedLong !== null && item._parsedLat !== null;
+    const inJawaBarat = item._inJawaBarat === true;
     const siteId = item["SITE ID"] || "";
+    
+    // Determine location badge
+    let locationBadge = '';
+    if (!hasCoords) {
+      locationBadge = '<span class="badge bg-secondary">No Coords</span>';
+    } else if (inJawaBarat) {
+      locationBadge = '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Jawa Barat</span>';
+    } else {
+      locationBadge = '<span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i>Outside Area</span>';
+    }
     
     tr.innerHTML = `
       <td class="site-id-cell">${siteId}</td>
       <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || "CELL UNAVAILABLE"}</span></td>
-      <td class="text-center"><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Alarm Count"] || "0"}</span></td>
+      <td class="text-center"><span class="badge" style="font-family: 'Plus Jakarta Sans', sans-serif; background-color: ${getMarkerColorByAlarmCount(cellCount)}; color: white;">${item["Alarm Count"] || "0"}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Source"] || ""}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${updatedAt}</td>
       <td>${getAgingBadge(item._agingDays)}</td>
       <td class="text-center">
-        ${hasCoords ? 
+        ${hasCoords && inJawaBarat ? 
           `<button class="btn btn-sm btn-outline-primary" onclick="zoomToMarker('${siteId}')" title="Show on map">
             <i class="fas fa-map-marker-alt"></i>
           </button>` : 
-          `<span class="text-muted">No coords</span>`
+          `<button class="btn btn-sm btn-outline-secondary" disabled title="${!hasCoords ? 'No coordinates' : 'Outside Jawa Barat area'}">
+            <i class="fas fa-ban"></i>
+          </button>`
         }
       </td>
+      <td>${locationBadge}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1130,14 +1317,19 @@ function exportCSV() {
   
   const headers = [
     "SITE ID", "Alarm Source", "Name", "Alarm Count", 
-    "First Occurred (NT)", "Source", "Updated At", "Long", "Lat"
+    "First Occurred (NT)", "Source", "Updated At", "Long", "Lat", "In Jawa Barat"
   ];
   
   const csvRows = [
     headers.join(","),
     ...filteredData.map(row => 
       headers.map(header => {
-        const cell = row[header] || "";
+        let cell;
+        if (header === "In Jawa Barat") {
+          cell = row._inJawaBarat ? "Yes" : "No";
+        } else {
+          cell = row[header] || "";
+        }
         const escaped = String(cell).replace(/"/g, '""');
         return escaped.includes(",") ? `"${escaped}"` : escaped;
       }).join(",")
@@ -1160,7 +1352,7 @@ function showError(message) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = `
     <tr>
-      <td colspan="9" class="text-center py-5 text-danger">
+      <td colspan="10" class="text-center py-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
         <div style="font-family: 'Inter', sans-serif;">${message}</div>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
