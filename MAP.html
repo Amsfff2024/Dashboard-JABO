@@ -286,10 +286,10 @@ body {
   font-family: var(--font-plus-jakarta);
 }
 
-/* POPUP STYLES */
+/* SIMPLE POPUP STYLES */
 .leaflet-popup-content {
   font-family: var(--font-inter);
-  min-width: 250px;
+  min-width: 180px;
   margin: 0;
   padding: 0;
 }
@@ -297,29 +297,29 @@ body {
 .popup-header {
   background: var(--secondary-gradient);
   color: white;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-radius: 4px 4px 0 0;
 }
 
 .popup-title {
   font-family: var(--font-plus-jakarta);
   font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
+  font-size: 1rem;
+  margin-bottom: 2px;
 }
 
 .popup-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   opacity: 0.9;
 }
 
 .popup-content {
-  padding: 16px;
+  padding: 10px;
 }
 
 .popup-item {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -332,29 +332,16 @@ body {
 .popup-label {
   font-family: var(--font-plus-jakarta);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #475569;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .popup-value {
   font-family: var(--font-inter);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #1e293b;
-}
-
-.popup-alarm-count {
-  font-family: var(--font-plus-jakarta);
-  font-weight: 800;
-  font-size: 1.3rem;
-  color: #dc3545;
-  text-align: center;
-  margin: 12px 0;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 2px solid #dc3545;
 }
 
 /* RESPONSIVE */
@@ -400,6 +387,23 @@ body {
   font-size: 12px;
   z-index: 1000;
   font-family: var(--font-inter);
+}
+
+/* Quick stats */
+.quick-stats {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-left: 4px solid #3b82f6;
+}
+
+.quick-stats h6 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
 }
 </style>
 </head>
@@ -471,41 +475,47 @@ body {
   </div>
 </div>
 
-<!-- MAP SECTION -->
-<div class="row g-4 mb-4">
-  <div class="col-12">
-    <div class="card filter-card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="m-0" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
-          <i class="fas fa-map-marked-alt me-2"></i>Cell Down Map
-        </h4>
-        <div class="d-flex align-items-center">
-          <span class="badge bg-info me-3" id="siteCount">Loading sites...</span>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-            <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
-          </div>
-        </div>
+<!-- QUICK STATS -->
+<div class="quick-stats">
+  <h6><i class="fas fa-chart-line me-2"></i>Quick Overview</h6>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="d-flex justify-content-between">
+        <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Sites with Coords:</span>
+        <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #1e40af;" id="sitesWithCoords">0</span>
       </div>
-      <div id="map"></div>
-      <div class="debug-info" id="debugInfo" style="display: none;"></div>
+    </div>
+    <div class="col-md-4">
+      <div class="d-flex justify-content-between">
+        <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Avg Alarm Count:</span>
+        <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #dc3545;" id="avgAlarmCount">0</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="d-flex justify-content-between">
+        <span style="font-family: var(--font-inter); font-size: 0.9rem; color: #64748b;">Uncleared Alarms:</span>
+        <span style="font-family: var(--font-plus-jakarta); font-weight: 600; color: #dc3545;" id="unclearedAlarms">0</span>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- FILTER -->
+<!-- SEARCH FILTER (DIATAS MAP) -->
 <div class="card filter-card p-4 mb-4">
+  <h4 class="mb-3" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+    <i class="fas fa-search me-2"></i>Search Sites
+  </h4>
   <div class="row g-3">
-    <div class="col-md-3">
-      <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-search"></i></span>
-        <input id="fAlarm" class="form-control" placeholder="Site Name" style="height: 46px;">
-      </div>
-    </div>
     <div class="col-md-3">
       <div class="input-group">
         <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
         <input id="fSite" class="form-control" placeholder="Site ID" style="height: 46px;">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-search"></i></span>
+        <input id="fAlarm" class="form-control" placeholder="Site Name" style="height: 46px;">
       </div>
     </div>
     <div class="col-md-3">
@@ -525,6 +535,28 @@ body {
       <button class="btn btn-secondary w-100" onclick="clearFilter()" style="height: 46px;">
         <i class="fas fa-eraser me-1"></i>Clear
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAP SECTION -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card filter-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="m-0" style="font-family: var(--font-plus-jakarta); font-weight: 600;">
+          <i class="fas fa-map-marked-alt me-2"></i>MAP Site Location
+        </h4>
+        <div class="d-flex align-items-center">
+          <span class="badge bg-info me-3" id="siteCount">Loading sites...</span>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
+            <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
+          </div>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="debug-info" id="debugInfo" style="display: none;"></div>
     </div>
   </div>
 </div>
@@ -663,6 +695,7 @@ function loadData() {
         filteredData = [...rawData];
         renderTable();
         addMarkersToMap();
+        updateQuickStats();
       } else {
         console.warn("No data loaded from Google Sheets");
         showError("No data available from Google Sheets");
@@ -696,6 +729,29 @@ function updateLastUpdateTime() {
     </div>
     <div class="last-update-date">${dateString}</div>
   `;
+}
+
+function updateQuickStats() {
+  // Hitung sites dengan koordinat
+  const sitesWithCoords = rawData.filter(site => 
+    site._parsedLong !== null && site._parsedLat !== null
+  ).length;
+  
+  // Hitung rata-rata alarm count
+  const totalAlarms = rawData.reduce((sum, item) => {
+    return sum + (parseInt(item["Alarm Count"]) || 0);
+  }, 0);
+  const avgAlarmCount = rawData.length > 0 ? (totalAlarms / rawData.length).toFixed(1) : 0;
+  
+  // Hitung uncleared alarms
+  const unclearedAlarms = rawData.filter(item => 
+    item["Clearance Status"] === "Uncleared"
+  ).length;
+  
+  // Update UI
+  document.getElementById('sitesWithCoords').textContent = sitesWithCoords;
+  document.getElementById('avgAlarmCount').textContent = avgAlarmCount;
+  document.getElementById('unclearedAlarms').textContent = unclearedAlarms;
 }
 
 function processData(data) {
@@ -758,9 +814,7 @@ function addMarkersToMap() {
     const alarmCount = parseInt(site['Alarm Count']) || 0;
     const siteId = site['SITE ID'] || 'Unknown';
     const alarmSource = site['Alarm Source'] || 'Unknown';
-    const clearanceStatus = site['Clearance Status'] || 'Unknown';
     const firstOccurred = site['First Occurred (NT)'] || '-';
-    const neType = site['NE Type'] || '-';
     
     // Tentukan ukuran marker berdasarkan alarm count
     let markerSize;
@@ -798,37 +852,21 @@ function addMarkersToMap() {
       iconAnchor: [markerSize/2, markerSize/2]
     });
     
-    // Buat konten popup
+    // Buat konten popup SEDERHANA: hanya Site ID, Alarm Source, First Occurred
+    const formattedFirstOccurred = formatDateTime(firstOccurred);
     const popupContent = `
       <div class="popup-header">
         <div class="popup-title">${siteId}</div>
         <div class="popup-subtitle">${alarmSource}</div>
       </div>
       <div class="popup-content">
-        <div class="popup-alarm-count">Alarm Count: ${alarmCount}</div>
-        <div class="popup-item">
-          <span class="popup-label">SITE ID:</span>
-          <span class="popup-value">${siteId}</span>
-        </div>
-        <div class="popup-item">
-          <span class="popup-label">Alarm Source:</span>
-          <span class="popup-value">${alarmSource}</span>
-        </div>
-        <div class="popup-item">
-          <span class="popup-label">Status:</span>
-          <span class="popup-value">${clearanceStatus}</span>
-        </div>
         <div class="popup-item">
           <span class="popup-label">First Occurred:</span>
-          <span class="popup-value">${formatDateTime(firstOccurred)}</span>
+          <span class="popup-value">${formattedFirstOccurred}</span>
         </div>
         <div class="popup-item">
-          <span class="popup-label">NE Type:</span>
-          <span class="popup-value">${neType}</span>
-        </div>
-        <div class="popup-item">
-          <span class="popup-label">Coordinates:</span>
-          <span class="popup-value">${lat.toFixed(4)}, ${lng.toFixed(4)}</span>
+          <span class="popup-label">Alarm Count:</span>
+          <span class="popup-value" style="color: #dc3545; font-weight: bold;">${alarmCount}</span>
         </div>
       </div>
     `;
