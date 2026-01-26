@@ -1,0 +1,3116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Down Alarms Dashboard with Map</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+:root {
+  --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f8fafc;
+  font-family: var(--font-inter);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* HEADER */
+.header-bar {
+  background: linear-gradient(135deg, #1a2980, #26d0ce);
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.header-bar h5 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 700;
+  font-size: 1.5rem !important;
+  margin: 0;
+}
+
+/* SUMMARY CARDS */
+.card-summary {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  transition: all 0.3s ease;
+  border: none;
+  overflow: hidden;
+  height: 100%;
+  padding: 1.5rem !important;
+}
+
+.card-summary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+
+.card-summary h3, .card-summary h4 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 800;
+  color: #1e293b;
+  margin-top: 0.75rem;
+}
+
+.card-summary h3 { font-size: 1.75rem; }
+.card-summary h4 { font-size: 1.5rem; }
+
+/* TAB NAVIGATION */
+.nav-tabs-custom {
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 15px;
+}
+
+.nav-tabs-custom .nav-link {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  color: #64748b;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px 10px 0 0;
+  margin-right: 4px;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs-custom .nav-link:hover {
+  color: #3b82f6;
+  background-color: #f1f5f9;
+}
+
+.nav-tabs-custom .nav-link.active {
+  color: #3b82f6;
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  border-bottom: 2px solid white;
+  position: relative;
+  top: 2px;
+}
+
+/* TAB CONTENT */
+.tab-content {
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 15px;
+}
+
+/* TABLES */
+.table-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 0;
+  border: none;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.table-wrapper {
+  overflow: auto;
+  max-height: 500px;
+  border-radius: 16px;
+}
+
+.table-wrapper.massive-outage {
+  max-height: 400px;
+}
+
+.table {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+
+.table thead th {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border: none;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  font-family: var(--font-inter);
+  font-weight: 400;
+  font-size: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  line-height: 1.3;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8fafc;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* FILTER RESULTS TABLE - DI SUMMARY */
+.filter-results-container {
+  max-height: 300px;
+  margin-top: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.filter-results-container .table thead th {
+  background: linear-gradient(135deg, #475569, #64748b);
+  font-size: 12px;
+  padding: 8px 6px;
+}
+
+.filter-results-container .table tbody td {
+  font-size: 11px;
+  padding: 6px;
+}
+
+/* SITE ID CELL */
+.site-id-cell {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  color: #1e40af;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+/* BADGES */
+.badge {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+
+.aging-badge-1 { background-color: #d1ecf1; color: #0c5460; }
+.aging-badge-2 { background-color: #fff3cd; color: #856404; }
+.aging-badge-3 { background-color: #f8d7da; color: #721c24; }
+
+.badge.bg-danger { background-color: #dc3545 !important; }
+.badge.bg-dark { background-color: #343a40 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #000; }
+.badge.bg-success { background-color: #10b981 !important; }
+
+/* NE IMPACT BADGE */
+.ne-impact-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* FILTER CARD */
+.filter-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: none;
+  max-width: 1500px;
+  margin: 0 auto 1.5rem;
+  padding: 1.5rem;
+}
+
+/* CONTROLS SECTION */
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 1500px;
+  margin: 0 auto 1rem;
+  width: 100%;
+  padding: 0 15px;
+}
+
+/* BUTTONS */
+.btn {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #475569);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.export-btn {
+  background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.export-btn:hover {
+  background: linear-gradient(135deg, #0da271, #2bbd88);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* LAST UPDATE */
+#lastUpdate {
+  font-family: var(--font-inter);
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.last-update-time {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.last-update-date {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* LOADING */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+  font-size: 18px;
+  color: #64748b;
+  font-family: var(--font-inter);
+}
+
+/* UTILITIES */
+.text-truncate-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* MASSIVE OUTAGE SPECIFIC */
+.massive-impact-row {
+  background-color: #fff7ed !important;
+  border-left: 4px solid #f59e0b;
+}
+
+.massive-impact-row:hover {
+  background-color: #ffedd5 !important;
+}
+
+.site-impact-list {
+  max-height: 100px;
+  overflow-y: auto;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 6px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.site-impact-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.site-impact-list li:last-child {
+  border-bottom: none;
+}
+
+/* FILTER STATUS */
+.filter-status {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-status .badge {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* PETA STYLES */
+.map-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  height: 600px;
+  position: relative;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.map-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-btn {
+  background: white;
+  border: none;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+}
+
+.map-btn:hover {
+  background-color: #f1f5f9;
+  transform: scale(1.05);
+}
+
+.map-sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-details-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.map-no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9ca3af;
+  text-align: center;
+  font-family: var(--font-inter);
+}
+
+.map-no-selection i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.map-site-details {
+  display: none;
+}
+
+.map-detail-item {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.map-detail-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.map-detail-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-inter);
+  font-weight: 500;
+}
+
+.map-detail-value {
+  font-size: 1rem;
+  color: #1f2937;
+  word-break: break-word;
+  font-family: var(--font-inter);
+}
+
+.map-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-plus-jakarta);
+}
+
+.map-status-fully {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.map-status-partial {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.map-status-uncleared {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.map-legend {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.map-legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.map-legend-text {
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-family: var(--font-inter);
+}
+
+.map-stats-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.map-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.map-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.map-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.map-stat-info h3 {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.map-stat-info .count {
+  font-family: var(--font-plus-jakarta);
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: #1f2937;
+}
+
+.map-filters-panel {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.map-filter-group {
+  margin-bottom: 20px;
+}
+
+.map-filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-family: var(--font-inter);
+}
+
+.map-filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 0.95rem;
+  color: #374151;
+  transition: border-color 0.2s;
+  font-family: var(--font-inter);
+}
+
+.map-filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.map-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.map-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.3s;
+  font-family: var(--font-inter);
+}
+
+.map-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .header-bar {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 12px 16px;
+  }
+  
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .nav-tabs-custom {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  
+  .nav-tabs-custom .nav-link {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .filter-status {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .map-container {
+    height: 400px;
+  }
+  
+  .map-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1500px) {
+  .tab-content, .controls-section, .filter-card {
+    padding: 0;
+  }
+  
+  .nav-tabs-custom {
+    padding: 0;
+  }
+}
+
+/* CUSTOM SCROLLBAR */
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* VIEW MORE LINK */
+.view-more-link {
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #3b82f6;
+  transition: all 0.2s;
+}
+
+.view-more-link:hover {
+  color: #1d4ed8;
+  gap: 6px;
+}
+
+/* PAGINATION */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 1rem;
+}
+
+.page-link {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.page-link:hover {
+  background: #f1f5f9;
+  color: #1e40af;
+}
+
+.page-link.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="map-loading-overlay" id="loading-overlay">
+  <div class="map-loading-spinner"></div>
+  <div id="loading-text">Memuat data site down...</div>
+</div>
+
+<!-- HEADER -->
+<div class="header-bar">
+  <h5>
+    <i class="fas fa-exclamation-triangle me-2"></i>Site Down Alarms Dashboard
+  </h5>
+  <div class="d-flex align-items-center">
+    <div id="lastUpdate">
+      <div class="last-update-time">
+        <i class="fas fa-clock me-1"></i> Loading...
+      </div>
+      <div class="last-update-date">-</div>
+    </div>
+    <button class="btn btn-sm btn-light ms-2" onclick="loadData()">
+      <i class="fas fa-sync-alt me-1"></i>Refresh
+    </button>
+  </div>
+</div>
+
+<!-- TAB NAVIGATION -->
+<ul class="nav nav-tabs-custom" id="dashboardTabs">
+  <li class="nav-item">
+    <a class="nav-link active" href="#tab-summary" onclick="switchTab('summary')">
+      <i class="fas fa-chart-bar me-2"></i>Summary
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#tab-all-alarms" onclick="switchTab('all-alarms')">
+      <i class="fas fa-list me-2"></i>All Alarms
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#tab-massive-outage" onclick="switchTab('massive-outage')">
+      <i class="fas fa-bolt me-2"></i>Massive Outage
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#tab-map" onclick="switchTab('map')">
+      <i class="fas fa-map me-2"></i>Peta Sebaran
+    </a>
+  </li>
+</ul>
+
+<!-- TAB CONTENT -->
+<div class="tab-content" id="tabContent">
+
+<!-- TAB 1: SUMMARY -->
+<div class="tab-pane active" id="tab-summary">
+  <div class="container-fluid">
+    <!-- SUMMARY ROW -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="card card-summary">
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
+              <i class="fas fa-bell me-2 text-danger"></i>Total Site Down Alarms
+            </span>
+          </div>
+          <h3 id="totalAlarm">0</h3>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card card-summary">
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
+            <i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Sites
+          </div>
+          <h3 id="uniqueSite">0</h3>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card card-summary" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb);">
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #1565c0;">
+            <i class="fas fa-clock me-2"></i>Aging &lt; 1 Day
+          </div>
+          <h4 id="aging1Day">0</h4>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="card card-summary" style="background: linear-gradient(135deg, #fce4ec, #f8bbd9);">
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #ad1457;">
+            <i class="fas fa-clock me-2"></i>Aging &gt; 2 Days
+          </div>
+          <h4 id="agingCount">0</h4>
+        </div>
+      </div>
+    </div>
+
+    <!-- MASSIVE OUTAGE ALERT -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card" style="border-left: 6px solid #f59e0b;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="card-title mb-1">
+                  <i class="fas fa-bolt text-warning me-2"></i>
+                  Massive Outage Detection
+                </h5>
+                <p class="card-text text-muted mb-0" id="massiveOutageAlert">
+                  No massive outages detected (NE Impact &gt; 3)
+                </p>
+              </div>
+              <div>
+                <button class="btn btn-warning" onclick="switchTab('massive-outage')">
+                  <i class="fas fa-external-link-alt me-1"></i>View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input id="fAlarm" class="form-control" placeholder="Alarm Name" style="height: 46px;">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+            <input id="fSite" class="form-control" placeholder="Site ID" style="height: 46px;">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-satellite-dish"></i></span>
+            <select id="fSource" class="form-control" style="height: 46px;">
+              <option value="">All OSS</option>
+              <option value="MAE6">MAE6</option>
+              <option value="MAE7">MAE7</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button class="btn btn-primary w-100" onclick="applyFilter()" style="height: 46px;">
+            <i class="fas fa-filter me-1"></i>Filter
+          </button>
+          <button class="btn btn-secondary w-100" onclick="clearFilter()" style="height: 46px;">
+            <i class="fas fa-eraser me-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER STATUS -->
+    <div class="filter-status" id="filterStatus" style="display: none;">
+      <div>
+        <span class="badge bg-info me-2" id="filterAppliedBadge">Filter Active</span>
+        <span id="filterDetails" style="font-size: 13px; color: #475569;">
+          Showing filtered results
+        </span>
+      </div>
+      <div>
+        <a href="#" class="view-more-link" onclick="switchTab('all-alarms'); return false;">
+          View All <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- FILTER RESULTS TABLE (ONLY SHOW IN SUMMARY WHEN FILTER ACTIVE) -->
+    <div id="filterResultsContainer" style="display: none;">
+      <div class="table-container filter-results-container">
+        <div class="table-wrapper">
+          <table class="table table-striped table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Site ID</th>
+                <th>MO Name</th>
+                <th>Alarm Name</th>
+                <th>First Occurred</th>
+                <th>OSS Source</th>
+                <th>Aging</th>
+              </tr>
+            </thead>
+            <tbody id="filterResultsBody">
+              <!-- Results will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB 2: ALL ALARMS (FULL DATA, NO FILTER) -->
+<div class="tab-pane" id="tab-all-alarms">
+  <div class="container-fluid">
+    <!-- CONTROLS -->
+    <div class="controls-section">
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <span class="badge bg-success" id="allAlarmsCount">Loading...</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="autoRefreshAll" checked onclick="toggleAutoRefresh()">
+          <label class="form-check-label" for="autoRefreshAll">Auto-refresh (5 min)</label>
+        </div>
+      </div>
+      <div>
+        <button class="btn export-btn text-white" onclick="exportCSV('all-alarms')">
+          <i class="fas fa-file-export me-1"></i>Export CSV
+        </button>
+      </div>
+    </div>
+    
+    <!-- TABLE FOR ALL ALARMS -->
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="table table-striped table-hover table-bordered">
+          <thead>
+            <tr>
+              <th onclick="sortAllAlarms('SiteID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
+              <th onclick="sortAllAlarms('MO Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>MO Name</th>
+              <th onclick="sortAllAlarms('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+              <th onclick="sortAllAlarms('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
+              <th onclick="sortAllAlarms('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
+              <th onclick="sortAllAlarms('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>OSS Source</th>
+              <th onclick="sortAllAlarms('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
+            </tr>
+          </thead>
+          <tbody id="allAlarmsBody">
+            <tr>
+              <td colspan="7" class="loading">
+                <div class="text-center">
+                  <div class="spinner-border text-danger mb-3" role="status"></div>
+                  <div>Loading all alarms data...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINATION FOR ALL ALARMS -->
+    <div class="pagination" id="allAlarmsPagination" style="display: none;">
+      <!-- Pagination will be generated here -->
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: MASSIVE OUTAGE -->
+<div class="tab-pane" id="tab-massive-outage">
+  <div class="container-fluid">
+    <!-- CONTROLS -->
+    <div class="controls-section">
+      <div class="d-flex align-items-center">
+        <span class="badge bg-warning me-3">
+          <i class="fas fa-exclamation-triangle me-1"></i>
+          Showing outages with NE Impact &gt; 3
+        </span>
+        <span class="badge bg-info" id="massiveOutageCount">0 events detected</span>
+      </div>
+      <div>
+        <button class="btn export-btn text-white" onclick="exportCSV('massive-outage')">
+          <i class="fas fa-file-export me-1"></i>Export CSV
+        </button>
+      </div>
+    </div>
+    
+    <!-- MASSIVE OUTAGE TABLE -->
+    <div class="table-container">
+      <div class="table-wrapper massive-outage">
+        <table class="table table-striped table-hover table-bordered">
+          <thead>
+            <tr>
+              <th onclick="sortMassiveOutage('eventTime')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Event Time</th>
+              <th onclick="sortMassiveOutage('alarmName')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
+              <th class="text-nowrap"><i class="fas fa-sitemap me-1"></i>NE Impact</th>
+              <th class="text-nowrap"><i class="fas fa-map-marker-alt me-1"></i>Site Impact</th>
+              <th onclick="sortMassiveOutage('aging')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging</th>
+            </tr>
+          </thead>
+          <tbody id="massiveOutageBody">
+            <tr>
+              <td colspan="5" class="text-center py-5">
+                <i class="fas fa-search fa-2x mb-3 text-muted"></i>
+                <div style="font-family: 'Inter', sans-serif; font-weight: 500;">
+                  Loading massive outage data...
+                </div>
+                <small class="text-muted">
+                  Showing events where 3+ sites down at same time
+                </small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- STATISTICS -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-chart-pie me-2 text-primary"></i>
+              Outage Statistics
+            </h6>
+            <div class="row mt-3">
+              <div class="col-6">
+                <small class="text-muted d-block">Total Outage Events</small>
+                <h4 id="totalOutageEvents">0</h4>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Max Sites Affected</small>
+                <h4 id="maxSitesAffected">0</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-history me-2 text-info"></i>
+              Recent Outage Timeline
+            </h6>
+            <div id="outageTimeline" class="mt-3">
+              <p class="text-muted mb-0">No outage events detected yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: MAP (PETA SEBARAN) -->
+<div class="tab-pane" id="tab-map">
+  <div class="container-fluid">
+    <!-- CONTROLS -->
+    <div class="controls-section">
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <span class="badge bg-primary" id="mapSiteCount">0 sites on map</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="autoRefreshMap" checked onclick="toggleMapAutoRefresh()">
+          <label class="form-check-label" for="autoRefreshMap">Auto-refresh (5 min)</label>
+        </div>
+      </div>
+      <div>
+        <button class="btn export-btn text-white" onclick="exportMapCSV()">
+          <i class="fas fa-file-export me-1"></i>Export Map CSV
+        </button>
+        <button class="btn btn-primary ms-2" onclick="refreshMapData()">
+          <i class="fas fa-sync-alt me-1"></i>Refresh Map
+        </button>
+      </div>
+    </div>
+    
+    <!-- MAP STATS -->
+    <div class="map-stats-card">
+      <div class="map-stats-grid">
+        <div class="map-stat-item">
+          <div class="map-stat-icon" style="background-color: #fee2e2; color: #dc2626;">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="map-stat-info">
+            <h3>FULLY DOWN</h3>
+            <div class="count" id="map-fully-down-count">0</div>
+          </div>
+        </div>
+        <div class="map-stat-item">
+          <div class="map-stat-icon" style="background-color: #fef3c7; color: #d97706;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="map-stat-info">
+            <h3>PARTIAL DOWN</h3>
+            <div class="count" id="map-partial-down-count">0</div>
+          </div>
+        </div>
+        <div class="map-stat-item">
+          <div class="map-stat-icon" style="background-color: #dbeafe; color: #1d4ed8;">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <div class="map-stat-info">
+            <h3>TOTAL SITE</h3>
+            <div class="count" id="map-total-site-count">0</div>
+          </div>
+        </div>
+        <div class="map-stat-item">
+          <div class="map-stat-icon" style="background-color: #d1fae5; color: #059669;">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="map-stat-info">
+            <h3>TERAKHIR UPDATE</h3>
+            <div class="count" id="map-last-update">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MAP FILTERS -->
+    <div class="map-filters-panel">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="map-filter-group">
+            <label for="map-status-filter">Status Down</label>
+            <select id="map-status-filter" class="map-filter-select">
+              <option value="all">Semua Status</option>
+              <option value="Fully Down">Fully Down</option>
+              <option value="Partial Down">Partial Down</option>
+              <option value="Down">Down</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="map-filter-group">
+            <label for="map-alarm-filter">Tipe Alarm</label>
+            <select id="map-alarm-filter" class="map-filter-select">
+              <option value="all">Semua Alarm</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="map-filter-group">
+            <label for="map-clearance-filter">Status Clearance</label>
+            <select id="map-clearance-filter" class="map-filter-select">
+              <option value="all">Semua</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="map-filter-group">
+            <label for="map-source-filter">OSS Source</label>
+            <select id="map-source-filter" class="map-filter-select">
+              <option value="all">Semua OSS</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="map-btn-group">
+        <button class="btn btn-primary w-100" onclick="applyMapFilter()">
+          <i class="fas fa-filter me-1"></i>Terapkan Filter
+        </button>
+        <button class="btn btn-secondary w-100" onclick="resetMapFilter()">
+          <i class="fas fa-eraser me-1"></i>Reset Filter
+        </button>
+      </div>
+    </div>
+    
+    <!-- MAIN MAP LAYOUT -->
+    <div class="row g-4">
+      <!-- MAP -->
+      <div class="col-md-8">
+        <div class="map-container">
+          <div id="map"></div>
+          <div class="map-controls">
+            <button class="map-btn" id="zoom-in" title="Zoom In">+</button>
+            <button class="map-btn" id="zoom-out" title="Zoom Out">−</button>
+            <button class="map-btn" id="reset-view" title="Reset View">⟲</button>
+            <button class="map-btn" id="fit-markers" title="Zoom ke Semua Marker">📍</button>
+          </div>
+        </div>
+        
+        <!-- LEGEND -->
+        <div class="map-legend mt-3">
+          <div class="map-legend-items">
+            <div class="map-legend-item">
+              <div class="map-legend-color" style="background-color: #dc2626;"></div>
+              <div class="map-legend-text">Fully Down / Down</div>
+            </div>
+            <div class="map-legend-item">
+              <div class="map-legend-color" style="background-color: #d97706;"></div>
+              <div class="map-legend-text">Partial Down</div>
+            </div>
+            <div class="map-legend-item">
+              <div class="map-legend-color" style="background-color: #6b7280;"></div>
+              <div class="map-legend-text">Status Lainnya</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SIDEBAR -->
+      <div class="col-md-4">
+        <div class="map-sidebar">
+          <div class="panel-title" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+            <h3 style="font-size: 1.2rem; color: #1f2937; font-family: var(--font-plus-jakarta); margin: 0;">Detail Site</h3>
+          </div>
+          
+          <div class="map-details-content">
+            <div class="map-no-selection" id="map-no-selection">
+              <div><i class="fas fa-map-marker-alt"></i></div>
+              <h3>Pilih Site</h3>
+              <p>Klik pada marker di peta atau baris di tabel untuk melihat detail site</p>
+            </div>
+            
+            <div class="map-site-details" id="map-site-details">
+              <div class="map-detail-item">
+                <div class="map-detail-label">Site ID</div>
+                <div class="map-detail-value" id="map-detail-siteid">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">MO Name</div>
+                <div class="map-detail-value" id="map-detail-mo">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Status Down</div>
+                <div class="map-detail-value" id="map-detail-status">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Tipe Alarm</div>
+                <div class="map-detail-value" id="map-detail-alarm">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Koordinat</div>
+                <div class="map-detail-value" id="map-detail-coords">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">First Occurred</div>
+                <div class="map-detail-value" id="map-detail-first">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Clearance Status</div>
+                <div class="map-detail-value" id="map-detail-clearance">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Remark</div>
+                <div class="map-detail-value" id="map-detail-remark">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">Alarm Source</div>
+                <div class="map-detail-value" id="map-detail-alarm-source">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">NE Type</div>
+                <div class="map-detail-value" id="map-detail-ne-type">-</div>
+              </div>
+              <div class="map-detail-item">
+                <div class="map-detail-label">OSS Source</div>
+                <div class="map-detail-value" id="map-detail-source">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MAP DATA TABLE -->
+    <div class="table-container mt-4">
+      <div class="table-wrapper" style="max-height: 300px;">
+        <table class="table table-striped table-hover table-bordered">
+          <thead>
+            <tr>
+              <th>Site ID</th>
+              <th>MO Name</th>
+              <th>Status Down</th>
+              <th>Tipe Alarm</th>
+              <th>Koordinat</th>
+              <th>First Occurred</th>
+              <th>OSS Source</th>
+            </tr>
+          </thead>
+          <tbody id="map-table-body">
+            <!-- Data akan diisi oleh JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+</div>
+
+<!-- JavaScript Libraries -->
+<!-- Hapus PapaParse karena kita akan gunakan fetch biasa -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Ganti URL dengan menggunakan CORS proxy
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=816283245&single=true&output=csv";
+
+// CORS Proxy URL (gunakan salah satu)
+const PROXY_URL = "https://api.allorigins.win/raw?url=";
+// const PROXY_URL = "https://corsproxy.io/?";
+
+// Dashboard variables
+let rawData = [];
+let filteredData = []; // For summary page filter
+let allAlarmsData = []; // For all alarms page (complete data)
+let massiveOutageData = [];
+let sortDir = {};
+let sortAllDir = {};
+let sortMassiveDir = {};
+let autoRefreshInterval = null;
+let autoRefreshEnabled = true;
+let currentTab = 'summary';
+let currentFilter = {
+  alarmName: '',
+  siteId: '',
+  source: '',
+  isActive: false
+};
+let allAlarmsPage = 1;
+const ALL_ALARMS_PER_PAGE = 50;
+
+// Map variables
+let map;
+let markers = [];
+let mapFilteredData = [];
+let selectedSite = null;
+let uniqueAlarmTypes = new Set();
+let uniqueClearanceStatuses = new Set();
+let uniqueSources = new Set();
+let mapAutoRefreshInterval = null;
+let mapAutoRefreshEnabled = true;
+
+// ===========================================
+// DASHBOARD FUNCTIONS
+// ===========================================
+
+function switchTab(tabName) {
+  currentTab = tabName;
+  
+  // Update tab navigation
+  document.querySelectorAll('.nav-tabs-custom .nav-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  document.querySelector(`[href="#tab-${tabName}"]`).classList.add('active');
+  
+  // Update tab content
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.classList.remove('active');
+  });
+  document.getElementById(`tab-${tabName}`).classList.add('active');
+  
+  // If switching to all-alarms tab, render it
+  if (tabName === 'all-alarms') {
+    renderAllAlarms();
+  }
+  
+  // If switching to map tab, initialize map if not already
+  if (tabName === 'map' && !map) {
+    initMap();
+  }
+}
+
+function loadData() {
+  document.getElementById("loading-text").textContent = "Memuat data site down...";
+  document.getElementById("loading-overlay").style.display = "flex";
+  
+  document.getElementById("lastUpdate").innerHTML = `
+    <div class="last-update-time">
+      <i class="fas fa-spinner fa-spin me-1"></i> Loading...
+    </div>
+    <div class="last-update-date">-</div>
+  `;
+  
+  // Coba beberapa metode untuk menghindari CORS
+  loadDataWithFallback();
+}
+
+function loadDataWithFallback() {
+  // Coba metode 1: Direct fetch dengan mode 'no-cors' (untuk testing)
+  fetch(CSV_URL, { 
+    mode: 'no-cors',
+    headers: {
+      'Accept': 'text/csv'
+    }
+  })
+  .then(response => {
+    if (response.ok || response.type === 'opaque') {
+      // Jika berhasil, coba parse
+      return response.text();
+    }
+    throw new Error('Direct fetch failed');
+  })
+  .then(csvText => {
+    processCSVData(csvText);
+  })
+  .catch(error => {
+    console.log("Direct fetch failed, trying proxy...", error);
+    
+    // Coba metode 2: Menggunakan proxy
+    fetch(PROXY_URL + encodeURIComponent(CSV_URL))
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Proxy fetch failed: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then(csvText => {
+        processCSVData(csvText);
+      })
+      .catch(proxyError => {
+        console.log("Proxy fetch failed, using sample data...", proxyError);
+        
+        // Metode 3: Gunakan data sample
+        useSampleData();
+      });
+  });
+}
+
+function processCSVData(csvText) {
+  try {
+    // Parse CSV
+    const rows = csvText.split('\n');
+    if (rows.length < 2) {
+      throw new Error('CSV file is empty or has no data rows');
+    }
+    
+    // Parse header
+    const headers = parseCSVRow(rows[0]);
+    
+    // Parse data rows
+    const data = [];
+    for (let i = 1; i < rows.length; i++) {
+      if (!rows[i].trim()) continue;
+      
+      const values = parseCSVRow(rows[i]);
+      if (values.length < headers.length) continue;
+      
+      const rowData = {};
+      headers.forEach((header, index) => {
+        rowData[header] = values[index] ? values[index].trim() : '';
+      });
+      
+      data.push(rowData);
+    }
+    
+    if (data.length === 0) {
+      throw new Error('No valid data found in CSV');
+    }
+    
+    // Process the data
+    rawData = processData(data);
+    allAlarmsData = [...rawData];
+    
+    console.log(`Site down data loaded: ${rawData.length} records`);
+    
+    updateSourceFilter();
+    filteredData = [...rawData];
+    
+    // Process massive outage data
+    processMassiveOutageData();
+    
+    // Also update map data if map is initialized
+    if (map) {
+      updateMapData(rawData);
+    }
+    
+    renderSummary();
+    renderAllAlarms();
+    renderMassiveOutage();
+    updateLastUpdateTime();
+    
+    // Hide loading overlay
+    document.getElementById('loading-overlay').style.display = 'none';
+    
+  } catch (error) {
+    console.error("Error processing CSV data:", error);
+    showError("Failed to process CSV data. Using sample data instead.");
+    useSampleData();
+  }
+}
+
+// Function to parse CSV row (handling commas in quotes)
+function parseCSVRow(row) {
+  const values = [];
+  let currentValue = '';
+  let insideQuotes = false;
+  
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === ',' && !insideQuotes) {
+      values.push(currentValue);
+      currentValue = '';
+    } else {
+      currentValue += char;
+    }
+  }
+  
+  values.push(currentValue);
+  return values;
+}
+
+function useSampleData() {
+  // Sample data for testing
+  const sampleData = [
+    {
+      "Name": "NE IS DISCONNECTED",
+      "Alarm Source": "OSS",
+      "First Occurred (NT)": "2026-01-24 18:44:42",
+      "Event Alarm": "2026-01-24 18:44",
+      "Cleared On (NT)": "-",
+      "NE Type": "OSS",
+      "SiteID": "11TGN0090",
+      "Down": "Fully Down",
+      "Remark": "Down Bersamaan (7 Site)",
+      "Longitude": "106.4541",
+      "Latitude": "-6.2935",
+      "MO Name": "BANTAR_PANJANG2_ST",
+      "Clearance Status": "Uncleared",
+      "Source": "MAE6",
+      "Updated At": "2026-01-25 16:26:36"
+    },
+    {
+      "Name": "NE IS DISCONNECTED",
+      "Alarm Source": "OSS",
+      "First Occurred (NT)": "2026-01-24 18:44:27",
+      "Event Alarm": "2026-01-24 18:44",
+      "Cleared On (NT)": "-",
+      "NE Type": "OSS",
+      "SiteID": "13KRW0705",
+      "Down": "Fully Down",
+      "Remark": "Down Bersamaan (7 Site)",
+      "Longitude": "107.4297",
+      "Latitude": "-6.1147",
+      "MO Name": "CILEBAR_CITARUM_TB",
+      "Clearance Status": "Uncleared",
+      "Source": "MAE6",
+      "Updated At": "2026-01-25 16:26:36"
+    },
+    {
+      "Name": "NE IS DISCONNECTED",
+      "Alarm Source": "OSS",
+      "First Occurred (NT)": "2026-01-24 18:44:26",
+      "Event Alarm": "2026-01-24 18:44",
+      "Cleared On (NT)": "-",
+      "NE Type": "OSS",
+      "SiteID": "13KRW0365",
+      "Down": "Partial Down",
+      "Remark": "Down Bersamaan (7 Site)",
+      "Longitude": "107.3947",
+      "Latitude": "-6.0966",
+      "MO Name": "POJOK_LABAN_TB_FE",
+      "Clearance Status": "Uncleared",
+      "Source": "MAE6",
+      "Updated At": "2026-01-25 16:26:36"
+    },
+    {
+      "Name": "CSL FAULT",
+      "Alarm Source": "BJKN_PONDOK_GEDE_01/PUSAKAJAYA_KRW_TB_2G",
+      "First Occurred (NT)": "2026-01-24 18:41:10",
+      "Event Alarm": "2026-01-24 18:41",
+      "Cleared On (NT)": "-",
+      "NE Type": "GBTS",
+      "SiteID": "13KRW0412",
+      "Down": "Fully Down",
+      "Remark": "Down Bersamaan (4 Site)",
+      "Longitude": "107.4287",
+      "Latitude": "-6.0912",
+      "MO Name": "PUSAKAJAYA_KRW_TB_2G",
+      "Clearance Status": "Uncleared",
+      "Source": "MAE6",
+      "Updated At": "2026-01-25 16:26:36"
+    },
+    {
+      "Name": "CSL FAULT",
+      "Alarm Source": "BJKN_PONDOK_GEDE_01/SUNGAIBUNTU_EP_2G",
+      "First Occurred (NT)": "2026-01-24 18:41:09",
+      "Event Alarm": "2026-01-24 18:41",
+      "Cleared On (NT)": "-",
+      "NE Type": "GBTS",
+      "SiteID": "13KRW0392",
+      "Down": "Fully Down",
+      "Remark": "Down Bersamaan (4 Site)",
+      "Longitude": "107.4127",
+      "Latitude": "-6.0577",
+      "MO Name": "SUNGAIBUNTU_EP_2G",
+      "Clearance Status": "Uncleared",
+      "Source": "MAE6",
+      "Updated At": "2026-01-25 16:26:36"
+    }
+  ];
+  
+  rawData = processData(sampleData);
+  allAlarmsData = [...rawData];
+  
+  console.log(`Using sample data: ${rawData.length} records`);
+  
+  updateSourceFilter();
+  filteredData = [...rawData];
+  
+  // Process massive outage data
+  processMassiveOutageData();
+  
+  // Also update map data if map is initialized
+  if (map) {
+    updateMapData(rawData);
+  }
+  
+  renderSummary();
+  renderAllAlarms();
+  renderMassiveOutage();
+  updateLastUpdateTime();
+  
+  // Hide loading overlay
+  document.getElementById('loading-overlay').style.display = 'none';
+  
+  // Show info about using sample data
+  showNotification('Menggunakan data sample untuk demo', 'info');
+}
+
+function processData(data) {
+  return data.map(item => {
+    const firstOccurred = item["First Occurred (NT)"];
+    let agingDays = 0;
+    let agingText = "";
+    let agingClass = "";
+    
+    if (firstOccurred && firstOccurred !== "-") {
+      try {
+        const firstDate = new Date(firstOccurred);
+        const now = new Date();
+        agingDays = (now - firstDate) / (1000 * 3600 * 24);
+        agingDays = Math.max(0, agingDays);
+        
+        if (agingDays < 1) {
+          const hours = Math.floor(agingDays * 24);
+          const minutes = Math.floor((agingDays * 24 * 60) % 60);
+          agingText = `${hours}h ${minutes}m`;
+          agingClass = "aging-badge-1";
+        } else {
+          const days = Math.floor(agingDays);
+          const hours = Math.floor((agingDays - days) * 24);
+          agingText = `${days}d ${hours}h`;
+          
+          if (agingDays < 1) {
+            agingClass = "aging-badge-1";
+          } else if (agingDays <= 2) {
+            agingClass = "aging-badge-2";
+          } else {
+            agingClass = "aging-badge-3";
+          }
+        }
+      } catch (e) {
+        agingText = "-";
+        agingClass = "";
+      }
+    } else {
+      agingText = "-";
+      agingClass = "";
+    }
+    
+    // Convert string coordinates to numbers
+    const longitude = parseFloat(item.Longitude) || 0;
+    const latitude = parseFloat(item.Latitude) || 0;
+    
+    return {
+      ...item,
+      Longitude: longitude,
+      Latitude: latitude,
+      _agingDays: agingDays,
+      _agingText: agingText,
+      _agingClass: agingClass
+    };
+  });
+}
+
+function processMassiveOutageData() {
+  const groupedEvents = {};
+  
+  rawData.forEach(item => {
+    const firstOccurred = item["First Occurred (NT)"];
+    if (!firstOccurred || firstOccurred === "-") return;
+    
+    try {
+      const eventTime = new Date(firstOccurred);
+      const alarmName = item["Name"] || "Unknown Alarm";
+      
+      const timeBucket = Math.floor(eventTime.getTime() / (5 * 60 * 1000));
+      const key = `${alarmName}_${timeBucket}`;
+      
+      if (!groupedEvents[key]) {
+        groupedEvents[key] = {
+          eventTime: eventTime,
+          alarmName: alarmName,
+          sites: [],
+          aging: 0
+        };
+      }
+      
+      groupedEvents[key].sites.push({
+        siteId: item["SiteID"] || "Unknown",
+        moName: item["MO Name"] || "Unknown",
+        firstOccurred: firstOccurred,
+        aging: item._agingDays || 0,
+        agingText: item._agingText || "-"
+      });
+      
+      if (item._agingDays > groupedEvents[key].aging) {
+        groupedEvents[key].aging = item._agingDays;
+      }
+    } catch (e) {
+      console.warn("Error processing massive outage data:", e);
+    }
+  });
+  
+  massiveOutageData = Object.values(groupedEvents)
+    .filter(event => event.sites.length > 3)
+    .map(event => {
+      const totalAging = event.sites.reduce((sum, site) => sum + site.aging, 0);
+      const avgAging = totalAging / event.sites.length;
+      
+      let agingText = "";
+      if (avgAging < 1) {
+        const hours = Math.floor(avgAging * 24);
+        const minutes = Math.floor((avgAging * 24 * 60) % 60);
+        agingText = `${hours}h ${minutes}m`;
+      } else {
+        const days = Math.floor(avgAging);
+        const hours = Math.floor((avgAging - days) * 24);
+        agingText = `${days}d ${hours}h`;
+      }
+      
+      return {
+        ...event,
+        neImpact: event.sites.length,
+        agingText: agingText,
+        agingDays: avgAging
+      };
+    })
+    .sort((a, b) => b.eventTime - a.eventTime);
+}
+
+function renderSummary() {
+  // Update summary KPI cards
+  const total = filteredData.length;
+  const uniqueSites = new Set(filteredData.map(d => d["SiteID"]).filter(Boolean)).size;
+  
+  let aging1Day = 0;
+  let aging2Days = 0;
+  
+  filteredData.forEach(item => {
+    if (item._agingDays < 1) aging1Day++;
+    if (item._agingDays > 2) aging2Days++;
+  });
+  
+  document.getElementById("totalAlarm").innerText = total;
+  document.getElementById("uniqueSite").innerText = uniqueSites;
+  document.getElementById("aging1Day").innerText = aging1Day;
+  document.getElementById("agingCount").innerText = aging2Days;
+  
+  // Show/hide filter results based on whether filter is active
+  const filterStatus = document.getElementById("filterStatus");
+  const filterResultsContainer = document.getElementById("filterResultsContainer");
+  
+  if (currentFilter.isActive) {
+    // Show filter status and results
+    filterStatus.style.display = 'flex';
+    filterResultsContainer.style.display = 'block';
+    
+    // Update filter details
+    let filterDetails = [];
+    if (currentFilter.alarmName) filterDetails.push(`Alarm: "${currentFilter.alarmName}"`);
+    if (currentFilter.siteId) filterDetails.push(`Site: "${currentFilter.siteId}"`);
+    if (currentFilter.source) filterDetails.push(`OSS: "${currentFilter.source}"`);
+    
+    document.getElementById("filterDetails").textContent = 
+      filterDetails.length > 0 ? filterDetails.join(' • ') : 'Showing filtered results';
+    
+    // Render filtered results (max 10 rows)
+    renderFilterResults();
+  } else {
+    // Hide filter results
+    filterStatus.style.display = 'none';
+    filterResultsContainer.style.display = 'none';
+  }
+  
+  updateMassiveOutageAlert();
+}
+
+function renderFilterResults() {
+  const tbody = document.getElementById("filterResultsBody");
+  tbody.innerHTML = "";
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-3">
+          <i class="fas fa-search fa-lg mb-2 text-muted"></i>
+          <div style="font-size: 12px;">No matching alarms found</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Show only first 10 results in summary
+  const displayData = filteredData.slice(0, 10);
+  
+  displayData.forEach(item => {
+    const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+    const agingBadge = item._agingText && item._agingText !== "-" 
+      ? `<span class="badge ${item._agingClass}">${item._agingText}</span>`
+      : "-";
+    
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="site-id-cell">${item["SiteID"] || ""}</span></td>
+      <td title="${item["MO Name"] || ""}">${truncateText(item["MO Name"] || "", 20)}</td>
+      <td><span class="badge bg-danger">${truncateText(item["Name"] || "", 25)}</span></td>
+      <td class="text-nowrap">${firstOccurred}</td>
+      <td><span class="badge bg-dark">${item["Source"] || ""}</span></td>
+      <td class="text-center">${agingBadge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  // Show "view more" message if there are more results
+  if (filteredData.length > 10) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td colspan="6" class="text-center py-2 bg-light">
+        <small class="text-muted">
+          <i class="fas fa-ellipsis-h me-1"></i>
+          ${filteredData.length - 10} more alarms match your filter
+          <a href="#" class="view-more-link ms-2" onclick="switchTab('all-alarms'); return false;">
+            View All <i class="fas fa-arrow-right"></i>
+          </a>
+        </small>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderAllAlarms() {
+  const tbody = document.getElementById("allAlarmsBody");
+  const pagination = document.getElementById("allAlarmsPagination");
+  
+  if (allAlarmsData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5">
+          <i class="fas fa-database fa-2x mb-3 text-muted"></i>
+          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No site down data found</div>
+        </td>
+      </tr>
+    `;
+    pagination.style.display = 'none';
+    return;
+  }
+  
+  // Update count badge
+  document.getElementById("allAlarmsCount").textContent = `${allAlarmsData.length} Total Alarms`;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(allAlarmsData.length / ALL_ALARMS_PER_PAGE);
+  const startIndex = (allAlarmsPage - 1) * ALL_ALARMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ALL_ALARMS_PER_PAGE, allAlarmsData.length);
+  const pageData = allAlarmsData.slice(startIndex, endIndex);
+  
+  // Render table rows
+  tbody.innerHTML = "";
+  pageData.forEach(item => {
+    const tr = document.createElement("tr");
+    
+    const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+    
+    let agingBadge = "";
+    if (item._agingText && item._agingText !== "-") {
+      agingBadge = `<span class="badge aging-badge ${item._agingClass}">${item._agingText}</span>`;
+    } else {
+      agingBadge = "-";
+    }
+    
+    const moName = truncateText(item["MO Name"] || "", 25);
+    const alarmName = truncateText(item["Name"] || "", 30);
+    
+    tr.innerHTML = `
+      <td><span class="site-id-cell">${item["SiteID"] || ""}</span></td>
+      <td title="${item["MO Name"] || ""}">${moName}</td>
+      <td title="${item["Name"] || ""}"><span class="badge bg-danger">${alarmName}</span></td>
+      <td class="text-nowrap">${firstOccurred}</td>
+      <td>${item["Alarm Source"] || ""}</td>
+      <td><span class="badge bg-dark">${item["Source"] || ""}</span></td>
+      <td class="text-center">${agingBadge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  // Render pagination if needed
+  if (totalPages > 1) {
+    pagination.style.display = 'flex';
+    let paginationHTML = '';
+    
+    // Previous button
+    if (allAlarmsPage > 1) {
+      paginationHTML += `<a href="#" class="page-link" onclick="changeAllAlarmsPage(${allAlarmsPage - 1})">&laquo;</a>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= allAlarmsPage - 2 && i <= allAlarmsPage + 2)) {
+        paginationHTML += `<a href="#" class="page-link ${i === allAlarmsPage ? 'active' : ''}" onclick="changeAllAlarmsPage(${i})">${i}</a>`;
+      } else if (i === allAlarmsPage - 3 || i === allAlarmsPage + 3) {
+        paginationHTML += `<span class="page-link" style="background: transparent; border: none;">...</span>`;
+      }
+    }
+    
+    // Next button
+    if (allAlarmsPage < totalPages) {
+      paginationHTML += `<a href="#" class="page-link" onclick="changeAllAlarmsPage(${allAlarmsPage + 1})">&raquo;</a>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+  } else {
+    pagination.style.display = 'none';
+  }
+}
+
+function changeAllAlarmsPage(page) {
+  allAlarmsPage = page;
+  renderAllAlarms();
+  // Scroll to top of table
+  document.getElementById('tab-all-alarms').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderMassiveOutage() {
+  const tbody = document.getElementById("massiveOutageBody");
+  
+  if (massiveOutageData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center py-5">
+          <i class="fas fa-check-circle fa-2x mb-3 text-success"></i>
+          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">
+            No massive outages detected
+          </div>
+          <small class="text-muted">
+            All events have 3 or less sites affected simultaneously
+          </small>
+        </td>
+      </tr>
+    `;
+    
+    document.getElementById("massiveOutageCount").textContent = "0 events detected";
+    document.getElementById("totalOutageEvents").textContent = "0";
+    document.getElementById("maxSitesAffected").textContent = "0";
+    document.getElementById("outageTimeline").innerHTML = 
+      '<p class="text-muted mb-0">No outage events detected yet</p>';
+    
+    return;
+  }
+  
+  tbody.innerHTML = "";
+  
+  const totalEvents = massiveOutageData.length;
+  const maxSites = Math.max(...massiveOutageData.map(event => event.neImpact));
+  
+  document.getElementById("massiveOutageCount").textContent = `${totalEvents} events detected`;
+  document.getElementById("totalOutageEvents").textContent = totalEvents;
+  document.getElementById("maxSitesAffected").textContent = maxSites;
+  
+  updateOutageTimeline();
+  
+  massiveOutageData.forEach((event, index) => {
+    const tr = document.createElement("tr");
+    tr.className = index < 3 ? "massive-impact-row" : "";
+    
+    const eventTimeStr = formatDateTime(event.eventTime);
+    
+    const siteImpactList = event.sites
+      .slice(0, 5)
+      .map(site => 
+        `<li>
+          <span class="font-monospace">${site.siteId}</span>
+          <span class="text-muted">${truncateText(site.moName, 15)}</span>
+        </li>`
+      )
+      .join('');
+    
+    const moreSites = event.sites.length > 5 ? 
+      `<li class="text-center text-muted">+${event.sites.length - 5} more sites</li>` : '';
+    
+    const agingClass = getAgingClass(event.agingDays);
+    
+    tr.innerHTML = `
+      <td class="text-nowrap">
+        <i class="fas fa-calendar-alt me-1 text-muted"></i>
+        ${eventTimeStr}
+      </td>
+      <td>
+        <span class="badge bg-danger">${truncateText(event.alarmName, 25)}</span>
+      </td>
+      <td class="text-center">
+        <span class="badge ne-impact-badge">
+          <i class="fas fa-sitemap me-1"></i>
+          ${event.neImpact} sites
+        </span>
+      </td>
+      <td>
+        <ul class="site-impact-list list-unstyled mb-0">
+          ${siteImpactList}
+          ${moreSites}
+        </ul>
+      </td>
+      <td class="text-center">
+        <span class="badge ${agingClass}">
+          ${event.agingText}
+        </span>
+      </td>
+    `;
+    
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilter() {
+  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
+  const siteId = document.getElementById("fSite").value.toLowerCase();
+  const source = document.getElementById("fSource").value;
+  
+  // Store current filter
+  currentFilter = {
+    alarmName: document.getElementById("fAlarm").value,
+    siteId: document.getElementById("fSite").value,
+    source: source,
+    isActive: alarmName !== '' || siteId !== '' || source !== ''
+  };
+  
+  // Apply filter to summary page data only
+  filteredData = rawData.filter(item => {
+    const alarmNameVal = (item["Name"] || "").toLowerCase();
+    const siteID = (item["SiteID"] || "").toLowerCase();
+    const sourceVal = item["Source"] || "";
+    
+    return (
+      (!alarmName || alarmNameVal.includes(alarmName)) &&
+      (!siteId || siteID.includes(siteId)) &&
+      (!source || sourceVal === source)
+    );
+  });
+  
+  renderSummary();
+}
+
+function clearFilter() {
+  document.getElementById("fAlarm").value = "";
+  document.getElementById("fSite").value = "";
+  document.getElementById("fSource").value = "";
+  
+  currentFilter = {
+    alarmName: '',
+    siteId: '',
+    source: '',
+    isActive: false
+  };
+  
+  filteredData = [...rawData];
+  renderSummary();
+}
+
+function sortTable(column) {
+  if (!sortDir[column]) sortDir[column] = 1;
+  else sortDir[column] *= -1;
+  
+  const dir = sortDir[column];
+  
+  filteredData.sort((a, b) => {
+    if (column === "_agingDays") {
+      return (a._agingDays - b._agingDays) * dir;
+    }
+    
+    let aVal = a[column] || "";
+    let bVal = b[column] || "";
+    
+    if (column.includes("First Occurred")) {
+      const aDate = aVal ? new Date(aVal).getTime() : 0;
+      const bDate = bVal ? new Date(bVal).getTime() : 0;
+      return (aDate - bDate) * dir;
+    }
+    
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
+  
+  renderSummary();
+}
+
+function sortAllAlarms(column) {
+  if (!sortAllDir[column]) sortAllDir[column] = 1;
+  else sortAllDir[column] *= -1;
+  
+  const dir = sortAllDir[column];
+  
+  allAlarmsData.sort((a, b) => {
+    if (column === "_agingDays") {
+      return (a._agingDays - b._agingDays) * dir;
+    }
+    
+    let aVal = a[column] || "";
+    let bVal = b[column] || "";
+    
+    if (column.includes("First Occurred")) {
+      const aDate = aVal ? new Date(aVal).getTime() : 0;
+      const bDate = bVal ? new Date(bVal).getTime() : 0;
+      return (aDate - bDate) * dir;
+    }
+    
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
+  
+  renderAllAlarms();
+}
+
+function sortMassiveOutage(column) {
+  if (!sortMassiveDir[column]) sortMassiveDir[column] = 1;
+  else sortMassiveDir[column] *= -1;
+  
+  const dir = sortMassiveDir[column];
+  
+  massiveOutageData.sort((a, b) => {
+    if (column === "eventTime") {
+      return (a.eventTime - b.eventTime) * dir;
+    } else if (column === "alarmName") {
+      return a.alarmName.localeCompare(b.alarmName) * dir;
+    } else if (column === "aging") {
+      return (a.agingDays - b.agingDays) * dir;
+    }
+    return 0;
+  });
+  
+  renderMassiveOutage();
+}
+
+function updateOutageTimeline() {
+  const timeline = document.getElementById("outageTimeline");
+  const recentEvents = massiveOutageData.slice(0, 3);
+  
+  if (recentEvents.length === 0) {
+    timeline.innerHTML = '<p class="text-muted mb-0">No outage events detected yet</p>';
+    return;
+  }
+  
+  let timelineHTML = '';
+  recentEvents.forEach((event, index) => {
+    const timeAgo = getTimeAgo(event.eventTime);
+    timelineHTML += `
+      <div class="d-flex mb-3">
+        <div class="me-3">
+          <span class="badge bg-warning rounded-circle p-2">
+            <i class="fas fa-bolt"></i>
+          </span>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0" style="font-size: 14px;">
+            ${event.neImpact} sites affected
+          </h6>
+          <small class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            ${timeAgo} • ${event.alarmName}
+          </small>
+        </div>
+      </div>
+    `;
+  });
+  
+  timeline.innerHTML = timelineHTML;
+}
+
+function getTimeAgo(eventTime) {
+  const now = new Date();
+  const diffMs = now - eventTime;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  
+  if (diffHours < 1) {
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    return `${diffMinutes} minutes ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hours ago`;
+  } else {
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} days ago`;
+  }
+}
+
+function getAgingClass(agingDays) {
+  if (agingDays < 1) return "aging-badge-1";
+  if (agingDays <= 2) return "aging-badge-2";
+  return "aging-badge-3";
+}
+
+function updateMassiveOutageAlert() {
+  const alertElement = document.getElementById("massiveOutageAlert");
+  
+  if (massiveOutageData.length === 0) {
+    alertElement.innerHTML = 'No massive outages detected (NE Impact > 3)';
+    alertElement.style.color = '';
+  } else {
+    const eventCount = massiveOutageData.length;
+    const maxSites = Math.max(...massiveOutageData.map(event => event.neImpact));
+    const latestEvent = massiveOutageData[0];
+    const timeAgo = getTimeAgo(latestEvent.eventTime);
+    
+    alertElement.innerHTML = `
+      <span class="text-danger fw-bold">${eventCount} massive outage(s) detected!</span>
+      Latest: ${latestEvent.neImpact} sites affected ${timeAgo}
+    `;
+  }
+}
+
+function exportCSV(type = 'all-alarms') {
+  let dataToExport = [];
+  let filename = "";
+  
+  if (type === 'all-alarms') {
+    dataToExport = allAlarmsData;
+    filename = `all_site_down_alarms_${new Date().toISOString().slice(0,10)}.csv`;
+  } else if (type === 'massive-outage') {
+    dataToExport = massiveOutageData.flatMap(event => 
+      event.sites.map(site => ({
+        "Event Time": formatDateTime(event.eventTime),
+        "Alarm Name": event.alarmName,
+        "NE Impact": event.neImpact,
+        "Site ID": site.siteId,
+        "MO Name": site.moName,
+        "First Occurred": site.firstOccurred,
+        "Aging": site.agingText
+      }))
+    );
+    filename = `massive_outage_events_${new Date().toISOString().slice(0,10)}.csv`;
+  }
+  
+  if (dataToExport.length === 0) {
+    alert(`No data to export for ${type === 'massive-outage' ? 'massive outage' : 'all alarms'}!`);
+    return;
+  }
+  
+  const headers = Object.keys(dataToExport[0]);
+  const csvRows = [
+    headers.join(","),
+    ...dataToExport.map(row => 
+      headers.map(header => {
+        const cell = row[header] || "";
+        const escaped = String(cell).replace(/"/g, '""');
+        return escaped.includes(",") ? `"${escaped}"` : escaped;
+      }).join(",")
+    )
+  ];
+  
+  const csvString = csvRows.join("\n");
+  const blob = new Blob([csvString], {type: "text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function updateSourceFilter() {
+  const sources = new Set();
+  rawData.forEach(item => {
+    const source = item["Source"];
+    if (source && source.trim() !== "") {
+      sources.add(source.trim());
+    }
+  });
+  
+  const sourceSelect = document.getElementById("fSource");
+  const allOSSoption = sourceSelect.options[0];
+  sourceSelect.innerHTML = '';
+  sourceSelect.appendChild(allOSSoption);
+  
+  if (sources.has("MAE6")) {
+    const option = document.createElement("option");
+    option.value = "MAE6";
+    option.textContent = "MAE6";
+    sourceSelect.appendChild(option);
+  }
+  
+  if (sources.has("MAE7")) {
+    const option = document.createElement("option");
+    option.value = "MAE7";
+    option.textContent = "MAE7";
+    sourceSelect.appendChild(option);
+  }
+  
+  sources.forEach(source => {
+    if (source !== "MAE6" && source !== "MAE7") {
+      const option = document.createElement("option");
+      option.value = source;
+      option.textContent = source;
+      sourceSelect.appendChild(option);
+    }
+  });
+}
+
+function updateLastUpdateTime() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+  const dateString = now.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'});
+  
+  document.getElementById("lastUpdate").innerHTML = `
+    <div class="last-update-time">
+      <i class="fas fa-clock me-1"></i> ${timeString}
+    </div>
+    <div class="last-update-date">${dateString}</div>
+  `;
+}
+
+function formatDateTime(datetimeStr) {
+  if (!datetimeStr || datetimeStr === "-") return "-";
+  try {
+    const date = new Date(datetimeStr);
+    if (isNaN(date.getTime())) return datetimeStr;
+    return date.toLocaleString([], { 
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    return datetimeStr;
+  }
+}
+
+function truncateText(text, maxLength) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+
+function showError(message) {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="7" class="text-center py-5 text-danger">
+        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+        <div style="font-family: 'Inter', sans-serif;">${message}</div>
+        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
+          <i class="fas fa-redo me-1"></i>Retry
+        </button>
+      </td>
+    </tr>
+  `;
+}
+
+function showNotification(message, type = 'info') {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+    font-family: var(--font-inter);
+  `;
+  
+  if (type === 'success') {
+    notification.style.backgroundColor = '#10b981';
+  } else if (type === 'error') {
+    notification.style.backgroundColor = '#ef4444';
+  } else {
+    notification.style.backgroundColor = '#3b82f6';
+  }
+  
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+  
+  // Add CSS for animations
+  if (!document.querySelector('#notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+function toggleAutoRefresh() {
+  const checkbox = document.getElementById("autoRefreshAll");
+  autoRefreshEnabled = checkbox.checked;
+  
+  if (autoRefreshEnabled && !autoRefreshInterval) {
+    autoRefreshInterval = setInterval(loadData, 300000);
+    console.log("Auto-refresh enabled");
+  } else if (!autoRefreshEnabled && autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    console.log("Auto-refresh disabled");
+  }
+}
+
+// ===========================================
+// MAP FUNCTIONS
+// ===========================================
+
+function initMap() {
+  // Initialize map with view to Indonesia
+  map = L.map('map').setView([-2.5, 118.0], 5);
+  
+  // Add tile layer (base map)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18
+  }).addTo(map);
+  
+  // Add zoom control
+  L.control.zoom({
+    position: 'bottomright'
+  }).addTo(map);
+  
+  // Setup map controls
+  setupMapControls();
+  
+  // Load data for map
+  updateMapData(rawData);
+}
+
+function updateMapData(data) {
+  // Filter data to only include sites with valid coordinates
+  const sitesWithCoordinates = data.filter(site => {
+    const longitude = site.Longitude;
+    const latitude = site.Latitude;
+    return longitude !== 0 && latitude !== 0 && !isNaN(longitude) && !isNaN(latitude);
+  });
+  
+  // Clear unique sets
+  uniqueAlarmTypes.clear();
+  uniqueClearanceStatuses.clear();
+  uniqueSources.clear();
+  
+  // Collect unique values for filters
+  sitesWithCoordinates.forEach(site => {
+    if (site["Name"]) uniqueAlarmTypes.add(site["Name"]);
+    if (site["Clearance Status"]) uniqueClearanceStatuses.add(site["Clearance Status"]);
+    if (site["Source"]) uniqueSources.add(site["Source"]);
+  });
+  
+  // Update filter options
+  updateMapFilterOptions();
+  
+  // Set initial filtered data
+  mapFilteredData = [...sitesWithCoordinates];
+  
+  // Display markers
+  displayMapMarkers(mapFilteredData);
+  
+  // Hide loading overlay
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function updateMapFilterOptions() {
+  const alarmFilter = document.getElementById("map-alarm-filter");
+  const clearanceFilter = document.getElementById("map-clearance-filter");
+  const sourceFilter = document.getElementById("map-source-filter");
+  
+  // Clear existing options (except first option)
+  while (alarmFilter.options.length > 1) {
+    alarmFilter.remove(1);
+  }
+  
+  while (clearanceFilter.options.length > 1) {
+    clearanceFilter.remove(1);
+  }
+  
+  while (sourceFilter.options.length > 1) {
+    sourceFilter.remove(1);
+  }
+  
+  // Add unique alarm types
+  uniqueAlarmTypes.forEach(alarmType => {
+    if (alarmType) {
+      const option = document.createElement("option");
+      option.value = alarmType;
+      option.textContent = truncateText(alarmType, 30);
+      alarmFilter.appendChild(option);
+    }
+  });
+  
+  // Add unique clearance statuses
+  uniqueClearanceStatuses.forEach(clearanceStatus => {
+    if (clearanceStatus) {
+      const option = document.createElement("option");
+      option.value = clearanceStatus;
+      option.textContent = clearanceStatus;
+      clearanceFilter.appendChild(option);
+    }
+  });
+  
+  // Add unique sources
+  uniqueSources.forEach(source => {
+    if (source) {
+      const option = document.createElement("option");
+      option.value = source;
+      option.textContent = source;
+      sourceFilter.appendChild(option);
+    }
+  });
+}
+
+function createMapMarkerIcon(status) {
+  let color = '#6b7280'; // Default gray
+  
+  if (status === 'Fully Down' || status === 'Down') {
+    color = '#dc2626'; // Red
+  } else if (status === 'Partial Down') {
+    color = '#d97706'; // Orange
+  }
+  
+  // Create SVG for marker icon
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30">
+      <path fill="${color}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+  `;
+  
+  return L.divIcon({
+    html: svg,
+    className: 'custom-marker',
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30]
+  });
+}
+
+function displayMapMarkers(data) {
+  // Clear previous markers
+  clearMapMarkers();
+  
+  if (data.length === 0) {
+    // Show message if no data
+    L.popup()
+      .setLatLng([-2.5, 118.0])
+      .setContent('<div style="padding: 10px;"><strong>Tidak ada data</strong><br>Tidak ada site yang sesuai dengan filter.</div>')
+      .openOn(map);
+    
+    updateMapStats(data);
+    updateMapTable(data);
+    return;
+  }
+  
+  // Display individual markers (NO CLUSTERING)
+  data.forEach(site => {
+    const marker = L.marker([site.Latitude, site.Longitude], {
+      icon: createMapMarkerIcon(site.Down),
+      title: site["MO Name"] || site.SiteID || 'Unknown Site'
+    }).bindPopup(createMapPopupContent(site));
+    
+    marker.siteData = site;
+    marker.on('click', function() {
+      showMapSiteDetails(site);
+    });
+    
+    marker.addTo(map);
+    markers.push(marker);
+  });
+  
+  // Fit bounds to all markers
+  if (data.length > 0) {
+    fitBoundsToMarkers();
+  }
+  
+  // Update UI
+  updateMapStats(data);
+  updateMapTable(data);
+}
+
+function fitBoundsToMarkers() {
+  if (markers.length === 0) return;
+  
+  const group = new L.featureGroup(markers);
+  map.fitBounds(group.getBounds().pad(0.1));
+}
+
+function clearMapMarkers() {
+  markers.forEach(marker => {
+    map.removeLayer(marker);
+  });
+  markers = [];
+}
+
+function createMapPopupContent(site) {
+  const statusClass = (site.Down === 'Fully Down' || site.Down === 'Down') ? 'map-status-fully' : 
+                    site.Down === 'Partial Down' ? 'map-status-partial' : '';
+  
+  const clearanceClass = site["Clearance Status"] === 'Uncleared' ? 'map-status-uncleared' : '';
+  
+  return `
+    <div style="min-width: 250px; padding: 5px; font-family: var(--font-inter);">
+      <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #1f2937; font-family: var(--font-plus-jakarta);">
+        ${site["MO Name"] || site.SiteID || 'Unknown Site'}
+      </div>
+      <div style="margin-bottom: 5px;"><strong>Site ID:</strong> ${site.SiteID || 'N/A'}</div>
+      <div style="margin-bottom: 5px;"><strong>Status:</strong> <span class="map-status-badge ${statusClass}">${site.Down || 'N/A'}</span></div>
+      <div style="margin-bottom: 5px;"><strong>Clearance:</strong> <span class="map-status-badge ${clearanceClass}">${site["Clearance Status"] || 'N/A'}</span></div>
+      <div style="margin-bottom: 10px;"><strong>Terjadi:</strong> ${formatDateTime(site["First Occurred (NT)"])}</div>
+      <button onclick="window.selectMapSite('${site.SiteID || site["MO Name"] || ''}')" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 14px; font-family: var(--font-plus-jakarta); font-weight: 600;">Lihat Detail</button>
+    </div>
+  `;
+}
+
+function showMapSiteDetails(site) {
+  selectedSite = site;
+  
+  // Update UI
+  document.getElementById('map-no-selection').style.display = 'none';
+  document.getElementById('map-site-details').style.display = 'block';
+  
+  // Fill site details
+  document.getElementById('map-detail-siteid').textContent = site.SiteID || 'Tidak tersedia';
+  document.getElementById('map-detail-mo').textContent = site["MO Name"] || 'Tidak tersedia';
+  
+  // Status Down
+  const statusBadge = site.Down ? 
+    `<span class="map-status-badge ${(site.Down === 'Fully Down' || site.Down === 'Down') ? 'map-status-fully' : (site.Down === 'Partial Down' ? 'map-status-partial' : '')}">${site.Down}</span>` : 
+    'Tidak tersedia';
+  document.getElementById('map-detail-status').innerHTML = statusBadge;
+  
+  document.getElementById('map-detail-alarm').textContent = site.Name || 'Tidak tersedia';
+  document.getElementById('map-detail-coords').textContent = `${site.Latitude?.toFixed(4) || 'N/A'}, ${site.Longitude?.toFixed(4) || 'N/A'}`;
+  document.getElementById('map-detail-first').textContent = formatDateTime(site["First Occurred (NT)"]) || 'Tidak tersedia';
+  
+  // Clearance Status
+  const clearanceBadge = site["Clearance Status"] ? 
+    `<span class="map-status-badge ${site["Clearance Status"] === 'Uncleared' ? 'map-status-uncleared' : ''}">${site["Clearance Status"]}</span>` : 
+    'Tidak tersedia';
+  document.getElementById('map-detail-clearance').innerHTML = clearanceBadge;
+  
+  document.getElementById('map-detail-remark').textContent = site.Remark || 'Tidak ada catatan';
+  document.getElementById('map-detail-alarm-source').textContent = site["Alarm Source"] || 'Tidak tersedia';
+  document.getElementById('map-detail-ne-type').textContent = site["NE Type"] || 'Tidak tersedia';
+  document.getElementById('map-detail-source').textContent = site["Source"] || 'Tidak tersedia';
+  
+  // Highlight selected marker
+  highlightSelectedMapMarker(site);
+  
+  // Zoom to site location
+  map.setView([site.Latitude, site.Longitude], 13);
+}
+
+function highlightSelectedMapMarker(site) {
+  // Reset all markers
+  markers.forEach(marker => {
+    if (marker.siteData.SiteID === site.SiteID || marker.siteData["MO Name"] === site["MO Name"]) {
+      // Add highlight effect
+      marker.setZIndexOffset(1000);
+      
+      // Open popup
+      marker.openPopup();
+    } else {
+      marker.setZIndexOffset(0);
+    }
+  });
+}
+
+function updateMapStats(data) {
+  const fullyDown = data.filter(site => 
+    site.Down === 'Fully Down' || site.Down === 'Down'
+  ).length;
+  
+  const partialDown = data.filter(site => site.Down === 'Partial Down').length;
+  const total = data.length;
+  
+  document.getElementById("map-fully-down-count").textContent = fullyDown;
+  document.getElementById("map-partial-down-count").textContent = partialDown;
+  document.getElementById("map-total-site-count").textContent = total;
+  document.getElementById("mapSiteCount").textContent = `${total} sites on map`;
+  
+  // Update last update time
+  if (data.length > 0) {
+    const dates = data
+      .map(site => {
+        try {
+          return new Date(site["Updated At"] || site["First Occurred (NT)"]);
+        } catch {
+          return null;
+        }
+      })
+      .filter(date => date && !isNaN(date.getTime()));
+    
+    if (dates.length > 0) {
+      const latestUpdate = dates.reduce((latest, date) => date > latest ? date : latest);
+      document.getElementById("map-last-update").textContent = formatDateTime(latestUpdate);
+    } else {
+      document.getElementById("map-last-update").textContent = '-';
+    }
+  } else {
+    document.getElementById("map-last-update").textContent = '-';
+  }
+}
+
+function updateMapTable(data) {
+  const tbody = document.getElementById("map-table-body");
+  tbody.innerHTML = "";
+  
+  if (data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-3">
+          <i class="fas fa-search fa-lg mb-2 text-muted"></i>
+          <div style="font-size: 12px; font-family: var(--font-inter);">Tidak ada site yang sesuai dengan filter</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Show only first 20 results
+  const displayData = data.slice(0, 20);
+  
+  displayData.forEach(site => {
+    const row = document.createElement("tr");
+    row.className = 'clickable-row';
+    row.onclick = () => showMapSiteDetails(site);
+    
+    const statusBadge = site.Down ? 
+      `<span class="map-status-badge ${(site.Down === 'Fully Down' || site.Down === 'Down') ? 'map-status-fully' : (site.Down === 'Partial Down' ? 'map-status-partial' : '')}">${site.Down}</span>` : 
+      '<span class="map-status-badge">N/A</span>';
+    
+    const alarmName = truncateText(site.Name || "", 25);
+    
+    row.innerHTML = `
+      <td><span class="site-id-cell">${site.SiteID || 'N/A'}</span></td>
+      <td title="${site["MO Name"] || ""}">${truncateText(site["MO Name"] || "", 20)}</td>
+      <td>${statusBadge}</td>
+      <td>${alarmName}</td>
+      <td>${site.Latitude?.toFixed(4) || 'N/A'}, ${site.Longitude?.toFixed(4) || 'N/A'}</td>
+      <td class="text-nowrap">${formatDateTime(site["First Occurred (NT)"]) || 'N/A'}</td>
+      <td><span class="badge bg-dark">${site["Source"] || 'N/A'}</span></td>
+    `;
+    
+    tbody.appendChild(row);
+  });
+  
+  // Show "view more" message if there are more results
+  if (data.length > 20) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td colspan="7" class="text-center py-2 bg-light">
+        <small class="text-muted">
+          <i class="fas fa-ellipsis-h me-1"></i>
+          ${data.length - 20} site lainnya sesuai filter
+        </small>
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function applyMapFilter() {
+  const statusFilter = document.getElementById("map-status-filter").value;
+  const alarmFilter = document.getElementById("map-alarm-filter").value;
+  const clearanceFilter = document.getElementById("map-clearance-filter").value;
+  const sourceFilter = document.getElementById("map-source-filter").value;
+  
+  // Get all data with valid coordinates
+  const sitesWithCoordinates = rawData.filter(site => {
+    const longitude = site.Longitude;
+    const latitude = site.Latitude;
+    return longitude !== 0 && latitude !== 0 && !isNaN(longitude) && !isNaN(latitude);
+  });
+  
+  // Apply filters
+  mapFilteredData = sitesWithCoordinates.filter(site => {
+    // Filter by status
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'Fully Down') {
+        if (site.Down !== 'Fully Down' && site.Down !== 'Down') {
+          return false;
+        }
+      } else if (site.Down !== statusFilter) {
+        return false;
+      }
+    }
+    
+    // Filter by alarm type
+    if (alarmFilter !== 'all' && site.Name !== alarmFilter) {
+      return false;
+    }
+    
+    // Filter by clearance status
+    if (clearanceFilter !== 'all' && site["Clearance Status"] !== clearanceFilter) {
+      return false;
+    }
+    
+    // Filter by source
+    if (sourceFilter !== 'all' && site["Source"] !== sourceFilter) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // Display filtered markers
+  displayMapMarkers(mapFilteredData);
+  
+  // Reset details panel if selected site is not in filtered results
+  if (selectedSite && !mapFilteredData.some(site => 
+    site.SiteID === selectedSite.SiteID || site["MO Name"] === selectedSite["MO Name"])) {
+    resetMapDetailsPanel();
+  }
+}
+
+function resetMapFilter() {
+  document.getElementById("map-status-filter").value = 'all';
+  document.getElementById("map-alarm-filter").value = 'all';
+  document.getElementById("map-clearance-filter").value = 'all';
+  document.getElementById("map-source-filter").value = 'all';
+  
+  // Reset to all data with valid coordinates
+  const sitesWithCoordinates = rawData.filter(site => {
+    const longitude = site.Longitude;
+    const latitude = site.Latitude;
+    return longitude !== 0 && latitude !== 0 && !isNaN(longitude) && !isNaN(latitude);
+  });
+  
+  mapFilteredData = [...sitesWithCoordinates];
+  displayMapMarkers(mapFilteredData);
+  resetMapDetailsPanel();
+}
+
+function resetMapDetailsPanel() {
+  selectedSite = null;
+  document.getElementById('map-no-selection').style.display = 'flex';
+  document.getElementById('map-site-details').style.display = 'none';
+  
+  // Close all popups
+  markers.forEach(marker => {
+    marker.closePopup();
+  });
+}
+
+function setupMapControls() {
+  document.getElementById('zoom-in').addEventListener('click', () => {
+    map.zoomIn();
+  });
+  
+  document.getElementById('zoom-out').addEventListener('click', () => {
+    map.zoomOut();
+  });
+  
+  document.getElementById('reset-view').addEventListener('click', () => {
+    map.setView([-2.5, 118.0], 5);
+  });
+  
+  document.getElementById('fit-markers').addEventListener('click', () => {
+    fitBoundsToMarkers();
+  });
+}
+
+function refreshMapData() {
+  // Show loading overlay
+  document.getElementById('loading-text').textContent = "Memuat ulang data map...";
+  document.getElementById('loading-overlay').style.display = 'flex';
+  
+  // Reload data
+  loadData();
+}
+
+function exportMapCSV() {
+  if (mapFilteredData.length === 0) {
+    alert('Tidak ada data peta untuk diexport.');
+    return;
+  }
+  
+  try {
+    // Prepare data for export
+    const dataToExport = mapFilteredData.map(site => ({
+      "SiteID": site.SiteID || "",
+      "MO Name": site["MO Name"] || "",
+      "Status Down": site.Down || "",
+      "Alarm Name": site.Name || "",
+      "First Occurred": site["First Occurred (NT)"] || "",
+      "Clearance Status": site["Clearance Status"] || "",
+      "Longitude": site.Longitude || "",
+      "Latitude": site.Latitude || "",
+      "Remark": site.Remark || "",
+      "Alarm Source": site["Alarm Source"] || "",
+      "NE Type": site["NE Type"] || "",
+      "OSS Source": site["Source"] || ""
+    }));
+    
+    const headers = Object.keys(dataToExport[0]);
+    const csvRows = [
+      headers.join(","),
+      ...dataToExport.map(row => 
+        headers.map(header => {
+          const cell = row[header] || "";
+          const escaped = String(cell).replace(/"/g, '""');
+          return escaped.includes(",") ? `"${escaped}"` : escaped;
+        }).join(",")
+      )
+    ];
+    
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], {type: "text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `peta_site_down_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show notification
+    showNotification('Data peta berhasil di-export ke CSV', 'success');
+  } catch (error) {
+    console.error('Export error:', error);
+    showNotification('Gagal mengekspor data peta', 'error');
+  }
+}
+
+function toggleMapAutoRefresh() {
+  const checkbox = document.getElementById("autoRefreshMap");
+  mapAutoRefreshEnabled = checkbox.checked;
+  
+  if (mapAutoRefreshEnabled && !mapAutoRefreshInterval) {
+    mapAutoRefreshInterval = setInterval(refreshMapData, 300000);
+    console.log("Map auto-refresh enabled");
+  } else if (!mapAutoRefreshEnabled && mapAutoRefreshInterval) {
+    clearInterval(mapAutoRefreshInterval);
+    mapAutoRefreshInterval = null;
+    console.log("Map auto-refresh disabled");
+  }
+}
+
+// Global function for popup
+window.selectMapSite = function(siteIdentifier) {
+  const site = mapFilteredData.find(s => 
+    s.SiteID === siteIdentifier || s["MO Name"] === siteIdentifier
+  );
+  
+  if (site) {
+    showMapSiteDetails(site);
+  }
+};
+
+// ===========================================
+// INITIALIZATION
+// ===========================================
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", function() {
+  // Load data immediately
+  loadData();
+  
+  // Setup auto-refresh if enabled
+  if (autoRefreshEnabled) {
+    autoRefreshInterval = setInterval(loadData, 300000);
+  }
+  
+  // Add enter key support for filter inputs
+  const filterInputs = document.querySelectorAll('#fAlarm, #fSite');
+  filterInputs.forEach(input => {
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilter();
+      }
+    });
+  });
+  
+  // Set default tab
+  switchTab('summary');
+});
+</script>
+
+</body>
+</html>
