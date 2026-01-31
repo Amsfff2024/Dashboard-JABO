@@ -1,728 +1,1435 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>License Alarms Dashboard</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-<style>
-/* ... (CSS tetap sama seperti sebelumnya) ... */
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Alarms Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #06d6a0;
+            --warning-color: #ffd166;
+            --danger-color: #ef476f;
+            --info-color: #118ab2;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.16);
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header-bar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title i {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .last-update {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .last-update:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .last-update-time {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .last-update-date {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .btn-refresh {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            padding: 2rem;
+            max-width: 100%;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-200);
+        }
+
+        .summary-card.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .summary-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--success-color), #06b48a);
+        }
+
+        .summary-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+        }
+
+        .summary-card:nth-child(4)::before {
+            background: linear-gradient(90deg, var(--warning-color), #ffb142);
+        }
+
+        .summary-card:nth-child(5)::before {
+            background: linear-gradient(90deg, var(--danger-color), #e63946);
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .summary-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-value {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 2.5rem;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .summary-trend {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .card-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary-color);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-label {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .filter-buttons {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+            transform: translateY(-2px);
+        }
+
+        /* Distribution Table */
+        .distribution-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .distribution-table::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .distribution-table::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
+        }
+
+        .distribution-table::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 10px;
+        }
+
+        .distribution-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .distribution-table th {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.75rem 1rem;
+            background: var(--gray-50);
+            border-bottom: 2px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+        }
+
+        .distribution-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .distribution-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .count-badge {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* Main Table Section */
+        .table-section {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            height: 100%;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .table-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .record-count {
+            background: var(--gray-100);
+            padding: 6px 12px;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .table-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--success-color) 0%, #06b48a 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Table */
+        .main-table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .main-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .main-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .main-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            color: var(--gray-700);
+            text-align: left;
+            border-bottom: 2px solid var(--gray-300);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .main-table th:hover {
+            background: var(--gray-200);
+        }
+
+        .main-table th i {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+        }
+
+        .main-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .main-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .main-table tbody tr:hover {
+            background: linear-gradient(90deg, rgba(67, 97, 238, 0.05) 0%, rgba(67, 97, 238, 0.02) 100%);
+            transform: scale(1.002);
+        }
+
+        /* Aging Badges */
+        .aging-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .aging-badge-1 {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .aging-badge-2 {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .aging-badge-3 {
+            background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem !important;
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem !important;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-bar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .summary-value {
+                font-size: 2rem;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .main-table-container {
+                font-size: 0.9rem;
+            }
+            
+            .main-table th, 
+            .main-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-info {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+    </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div class="header-bar">
-  <h5 class="m-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">
-    <i class="fas fa-license me-2"></i>License Alarms Dashboard
-  </h5>
-  <div>
-    <div id="lastUpdate">
-      <div class="last-update-time">
-        <i class="fas fa-clock me-1"></i> Loading...
-      </div>
-      <div class="last-update-date">-</div>
-    </div>
-    <button class="btn btn-sm btn-light ms-2" onclick="loadData()" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
-      <i class="fas fa-sync-alt me-1"></i>Refresh
-    </button>
-  </div>
-</div>
-
-<div class="container-fluid p-4 dashboard-content">
-
-<!-- SUMMARY ROW -->
-<div class="row g-4 mb-4">
-  <div class="col-md-3">
-    <div class="card card-summary p-4" id="totalCard" onclick="filterByAging('all')">
-      <div class="d-flex justify-content-between align-items-center">
-        <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
-          <i class="fas fa-bell me-2 text-primary"></i>Total Alarms
-        </span>
-      </div>
-      <h3 id="totalAlarm" class="mt-3">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card card-summary p-4" id="uniqueCard">
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #4b5563;">
-        <i class="fas fa-map-marker-alt me-2 text-success"></i>Unique Site ID
-      </div>
-      <h3 id="uniqueSite" class="mt-3">0</h3>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging1Card" onclick="filterByAging('1')" style="background: linear-gradient(135deg, #dbeafe, #93c5fd);">
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #1e40af;">
-        <i class="fas fa-clock me-2"></i>≤ 1 Day
-      </div>
-      <h4 id="aging1" class="mt-2">0</h4>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging3Card" onclick="filterByAging('3')" style="background: linear-gradient(135deg, #fef3c7, #fbbf24);">
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #92400e;">
-        <i class="fas fa-clock me-2"></i>≥ 1 & ≤ 4 Days
-      </div>
-      <h4 id="aging3" class="mt-2">0</h4>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card card-summary p-3 aging-card" id="aging4Card" onclick="filterByAging('4')" style="background: linear-gradient(135deg, #fee2e2, #f87171);">
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; color: #991b1b;">
-        <i class="fas fa-clock me-2"></i>≥ 5 Days
-      </div>
-      <h4 id="aging4" class="mt-2">0</h4>
-    </div>
-  </div>
-</div>
-
-<!-- FILTER AND DISTRIBUTION ROW -->
-<div class="row mb-4 flex-grow-0">
-  <div class="col-12">
-    <div class="horizontal-sidebar">
-      <!-- FILTER CARD -->
-      <div class="card filter-card p-4">
-        <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
-        <div class="filter-section">
-          <div class="filter-fields">
-            <div class="mb-3">
-              <label class="form-label"><i class="fas fa-search me-1"></i> Alarm Name</label>
-              <input id="fAlarm" class="form-control" placeholder="Search alarm name...">
+    <!-- Header -->
+    <div class="header-bar">
+        <div class="header-title">
+            <i class="fas fa-shield-alt"></i>
+            License Alarms Dashboard
+        </div>
+        <div class="header-controls">
+            <div class="last-update">
+                <div class="last-update-time">
+                    <i class="fas fa-clock"></i>
+                    <span id="lastUpdateTime">Loading...</span>
+                </div>
+                <div class="last-update-date" id="lastUpdateDate">-</div>
             </div>
-            <div class="mb-3">
-              <label class="form-label"><i class="fas fa-id-badge me-1"></i> Site ID</label>
-              <input id="fSite" class="form-control" placeholder="Search site ID...">
-            </div>
-            <div class="mb-3">
-              <label class="form-label"><i class="fas fa-network-wired me-1"></i> Region</label>
-              <select id="fRegion" class="form-control">
-                <option value="">All Regions</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label"><i class="fas fa-microchip me-1"></i> Source</label>
-              <select id="fSource" class="form-control">
-                <option value="">All Sources</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label"><i class="fas fa-users me-1"></i> Circle</label>
-              <select id="fCircle" class="form-control">
-                <option value="">All Circles</option>
-              </select>
-            </div>
-          </div>
-          <div class="filter-buttons d-grid gap-2">
-            <button class="btn btn-primary" onclick="applyFilter()">
-              <i class="fas fa-filter me-1"></i>Apply Filters
+            <button class="btn-refresh" onclick="loadData()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Data
             </button>
-            <button class="btn btn-secondary" onclick="clearFilter()">
-              <i class="fas fa-eraser me-1"></i>Clear All
-            </button>
-          </div>
         </div>
-      </div>
-      
-      <!-- ALARM DISTRIBUTION CARD -->
-      <div class="card distribution-card p-4">
-        <div class="distribution-content">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
-            <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
-          </div>
-          <div class="distribution-table-container">
-            <div class="distribution-table-wrapper">
-              <table class="table table-sm table-hover distribution-table mb-0">
-                <thead>
-                  <tr>
-                    <th>Alarm Name</th>
-                    <th class="text-end">Count</th>
-                  </tr>
-                </thead>
-                <tbody id="distributionBody">
-                  <tr>
-                    <td colspan="2" class="text-center text-muted py-4">Loading...</td>
-                  </tr>
-                </tbody>
-              </table>
+    </div>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card active" id="totalCard" onclick="filterByAging('all')">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <i class="fas fa-bell"></i>
+                        Total Alarms
+                    </div>
+                    <div class="summary-trend">All</div>
+                </div>
+                <div class="summary-value" id="totalAlarm">0</div>
             </div>
-          </div>
+
+            <div class="summary-card" id="uniqueCard">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Unique Sites
+                    </div>
+                </div>
+                <div class="summary-value" id="uniqueSite">0</div>
+            </div>
+
+            <div class="summary-card" id="aging1Card" onclick="filterByAging('1')">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <i class="fas fa-clock"></i>
+                        ≤ 1 Day
+                    </div>
+                </div>
+                <div class="summary-value" id="aging1">0</div>
+            </div>
+
+            <div class="summary-card" id="aging3Card" onclick="filterByAging('3')">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <i class="fas fa-clock"></i>
+                        1-4 Days
+                    </div>
+                </div>
+                <div class="summary-value" id="aging3">0</div>
+            </div>
+
+            <div class="summary-card" id="aging4Card" onclick="filterByAging('4')">
+                <div class="summary-header">
+                    <div class="summary-title">
+                        <i class="fas fa-clock"></i>
+                        ≥ 5 Days
+                    </div>
+                </div>
+                <div class="summary-value" id="aging4">0</div>
+            </div>
         </div>
-      </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Filter Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-filter"></i>
+                            Filters
+                        </div>
+                    </div>
+                    <div class="filter-section">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-search"></i>
+                                Alarm Name
+                            </label>
+                            <input type="text" id="fAlarm" class="form-control" placeholder="Search alarm name...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-id-badge"></i>
+                                Site ID
+                            </label>
+                            <input type="text" id="fSite" class="form-control" placeholder="Search site ID...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-network-wired"></i>
+                                Region
+                            </label>
+                            <select id="fRegion" class="form-select">
+                                <option value="">All Regions</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-microchip"></i>
+                                Source
+                            </label>
+                            <select id="fSource" class="form-select">
+                                <option value="">All Sources</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-users"></i>
+                                Circle
+                            </label>
+                            <select id="fCircle" class="form-select">
+                                <option value="">All Circles</option>
+                            </select>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="btn btn-primary" onclick="applyFilter()">
+                                <i class="fas fa-filter"></i>
+                                Apply Filters
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearFilter()">
+                                <i class="fas fa-eraser"></i>
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribution Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Alarm Distribution
+                        </div>
+                        <span class="count-badge" id="distTotalCount">0</span>
+                    </div>
+                    <div class="distribution-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Alarm Name</th>
+                                    <th class="text-end">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="distributionBody">
+                                <tr>
+                                    <td colspan="2" class="empty-state">
+                                        <i class="fas fa-chart-pie"></i>
+                                        <div>Loading distribution...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Table Section -->
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-info">
+                        <span class="record-count">
+                            <i class="fas fa-database"></i>
+                            <span id="filteredCount">Showing 0 of 0 records</span>
+                        </span>
+                        <div class="auto-refresh-toggle">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
+                            <label class="form-check-label" for="autoRefresh">Auto-refresh (5 min)</label>
+                        </div>
+                    </div>
+                    <div class="table-controls">
+                        <button class="btn-export" onclick="exportCSV()">
+                            <i class="fas fa-file-export"></i>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="main-table-container">
+                    <table class="main-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('SiteID')">
+                                    <i class="fas fa-sort"></i> Site ID
+                                </th>
+                                <th onclick="sortTable('Alarm Source')">
+                                    <i class="fas fa-sort"></i> Alarm Source
+                                </th>
+                                <th onclick="sortTable('Name')">
+                                    <i class="fas fa-sort"></i> Alarm Name
+                                </th>
+                                <th onclick="sortTable('First Occurred (NT)')">
+                                    <i class="fas fa-sort"></i> First Occurred
+                                </th>
+                                <th onclick="sortTable('_agingDays')">
+                                    <i class="fas fa-sort"></i> Aging
+                                </th>
+                                <th onclick="sortTable('Source')">
+                                    <i class="fas fa-sort"></i> Source
+                                </th>
+                                <th onclick="sortTable('Circle')">
+                                    <i class="fas fa-sort"></i> Circle
+                                </th>
+                                <th onclick="sortTable('Region')">
+                                    <i class="fas fa-sort"></i> Region
+                                </th>
+                                <th onclick="sortTable('Micro Cluster')">
+                                    <i class="fas fa-sort"></i> Micro Cluster
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="9" class="loading">
+                                    <div class="spinner"></div>
+                                    <div>Loading license alarms data...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- MAIN TABLE ROW -->
-<div class="row flex-grow-1">
-  <div class="col-12">
-    <div class="main-table-section">
-      <div class="controls-section d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <span class="badge bg-info me-3" id="filteredCount">Showing 0 of 0 records</span>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="autoRefresh" checked onclick="toggleAutoRefresh()">
-            <label class="form-check-label" for="autoRefresh" style="font-family: 'Inter', sans-serif; font-weight: 500;">Auto-refresh (5 min)</label>
-          </div>
-        </div>
-        <div>
-          <button class="btn export-btn text-white" onclick="exportCSV()">
-            <i class="fas fa-file-export me-1"></i>Export CSV
-          </button>
-        </div>
-      </div>
-      
-      <div class="main-table-container">
-        <div class="main-table-wrapper">
-          <table class="table table-striped table-hover table-bordered">
-            <thead>
-              <tr>
-                <th onclick="sortTable('SiteID')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Site ID</th>
-                <th onclick="sortTable('Alarm Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Source</th>
-                <th onclick="sortTable('Name')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Alarm Name</th>
-                <th onclick="sortTable('First Occurred (NT)')" class="text-nowrap"><i class="fas fa-sort me-1"></i>First Occurred</th>
-                <th onclick="sortTable('_agingDays')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Aging (Days)</th>
-                <th onclick="sortTable('Source')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Source</th>
-                <th onclick="sortTable('Circle')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Circle</th>
-                <th onclick="sortTable('Region')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Region</th>
-                <th onclick="sortTable('Micro Cluster')" class="text-nowrap"><i class="fas fa-sort me-1"></i>Micro Cluster</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr id="loadingRow">
-                <td colspan="9" class="loading">
-                  <div class="text-center">
-                    <div class="spinner-border text-primary mb-3" role="status"></div>
-                    <div style="font-family: 'Inter', sans-serif;">Loading license alarms data...</div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    <script>
+        // URL CSV dari Google Sheets
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=2106442205&single=true&output=csv";
 
-</div>
+        let rawData = [];
+        let filteredData = [];
+        let sortDir = {};
+        let autoRefreshInterval = null;
+        let autoRefreshEnabled = true;
+        let currentAgingFilter = 'all';
 
-<script>
-// URL CSV yang benar dari Google Sheets
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vReYyDGCMuGVv6quqOtRns55K-nHRF9Jc_9qmN9tNHACirvFr7YLPN3ZR3voorWD0opy7f1GflJ9eEC/pub?gid=2106442205&single=true&output=csv";
+        function loadData() {
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="loading">
+                        <div class="spinner"></div>
+                        <div>Loading license alarms data...</div>
+                    </td>
+                </tr>
+            `;
 
-let rawData = [];
-let filteredData = [];
-let sortDir = {};
-let autoRefreshInterval = null;
-let autoRefreshEnabled = true;
-let currentAgingFilter = 'all';
+            document.getElementById("lastUpdateTime").innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById("lastUpdateDate").textContent = "-";
 
-function loadData() {
-  const loadingRow = document.getElementById("loadingRow");
-  if (loadingRow) loadingRow.style.display = "";
-  
-  document.getElementById("lastUpdate").innerHTML = `
-    <div class="last-update-time">
-      <i class="fas fa-spinner fa-spin me-1"></i> Loading...
-    </div>
-    <div class="last-update-date">-</div>
-  `;
-  
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(res) {
-      if (loadingRow) loadingRow.style.display = "none";
-      
-      if (res.data && res.data.length > 0) {
-        rawData = processData(res.data);
-        console.log(`Data loaded: ${rawData.length} records`);
-        
-        // Populate filter dropdowns
-        populateFilterOptions();
-        
-        // Apply current aging filter
-        applyAgingFilter(currentAgingFilter);
-        render();
-        
-        // Update distribution table
-        updateDistributionTable();
-      } else {
-        console.warn("No data loaded from Google Sheets");
-        showError("No data available from Google Sheets");
-      }
-      
-      updateLastUpdateTime();
-    },
-    error: function(err) {
-      console.error("Error loading data:", err);
-      showError("Failed to load data from Google Sheets");
-      document.getElementById("lastUpdate").innerHTML = `
-        <div class="last-update-time">
-          <i class="fas fa-exclamation-triangle me-1 text-warning"></i> Failed to load
-        </div>
-        <div class="last-update-date">-</div>
-      `;
-    }
-  });
-}
-
-function processData(data) {
-  return data.map(item => {
-    // Standardize column names
-    const standardizedItem = {};
-    
-    // Map columns - sesuaikan dengan data aktual
-    Object.keys(item).forEach(key => {
-      // Normalize column names
-      const normalizedKey = key.trim();
-      standardizedItem[normalizedKey] = item[key];
-    });
-    
-    // Calculate aging
-    const firstOccurred = standardizedItem["First Occurred (NT)"] || standardizedItem["First Occurred (NT)"];
-    let agingDays = 0;
-    let agingText = "";
-    let agingClass = "";
-    
-    if (firstOccurred && firstOccurred !== "-") {
-      try {
-        const firstDate = new Date(firstOccurred);
-        const now = new Date();
-        agingDays = (now - firstDate) / (1000 * 3600 * 24);
-        agingDays = Math.max(0, agingDays);
-        
-        // Format aging text
-        if (agingDays < 1) {
-          const hours = Math.floor(agingDays * 24);
-          agingText = `${hours}h`;
-          agingClass = "aging-badge-1";
-        } else {
-          agingText = `${Math.floor(agingDays)}d`;
-          if (agingDays <= 1) {
-            agingClass = "aging-badge-1";
-          } else if (agingDays >= 1 && agingDays <= 4) {
-            agingClass = "aging-badge-2";
-          } else {
-            agingClass = "aging-badge-3";
-          }
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(res) {
+                    if (res.data && res.data.length > 0) {
+                        rawData = processData(res.data);
+                        console.log(`Data loaded: ${rawData.length} records`);
+                        
+                        populateFilterOptions();
+                        applyAgingFilter(currentAgingFilter);
+                        render();
+                        updateDistributionTable();
+                    } else {
+                        showError("No data available from Google Sheets");
+                    }
+                    
+                    updateLastUpdateTime();
+                },
+                error: function(err) {
+                    console.error("Error loading data:", err);
+                    showError("Failed to load data from Google Sheets");
+                    document.getElementById("lastUpdateTime").innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed';
+                }
+            });
         }
-      } catch (e) {
-        console.warn("Error parsing date:", firstOccurred);
-        agingText = "-";
-        agingClass = "";
-      }
-    } else {
-      agingText = "-";
-      agingClass = "";
-    }
-    
-    return {
-      ...standardizedItem,
-      _agingDays: agingDays,
-      _agingText: agingText,
-      _agingClass: agingClass
-    };
-  });
-}
 
-function populateFilterOptions() {
-  // Extract unique values for each filter
-  const regions = new Set();
-  const sources = new Set();
-  const circles = new Set();
-  
-  rawData.forEach(item => {
-    if (item.Region) regions.add(item.Region);
-    if (item.Source) sources.add(item.Source);
-    if (item.Circle) circles.add(item.Circle);
-  });
-  
-  // Populate Region dropdown
-  const regionSelect = document.getElementById("fRegion");
-  regionSelect.innerHTML = '<option value="">All Regions</option>';
-  Array.from(regions).sort().forEach(region => {
-    const option = document.createElement("option");
-    option.value = region;
-    option.textContent = region;
-    regionSelect.appendChild(option);
-  });
-  
-  // Populate Source dropdown
-  const sourceSelect = document.getElementById("fSource");
-  sourceSelect.innerHTML = '<option value="">All Sources</option>';
-  Array.from(sources).sort().forEach(source => {
-    const option = document.createElement("option");
-    option.value = source;
-    option.textContent = source;
-    sourceSelect.appendChild(option);
-  });
-  
-  // Populate Circle dropdown
-  const circleSelect = document.getElementById("fCircle");
-  circleSelect.innerHTML = '<option value="">All Circles</option>';
-  Array.from(circles).sort().forEach(circle => {
-    const option = document.createElement("option");
-    option.value = circle;
-    option.textContent = circle;
-    circleSelect.appendChild(option);
-  });
-}
-
-function render() {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
-  
-  if (filteredData.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="text-center py-5">
-          <i class="fas fa-database fa-2x mb-3 text-muted"></i>
-          <div style="font-family: 'Inter', sans-serif; font-weight: 500;">No data found</div>
-          <small class="text-muted" style="font-family: 'Inter', sans-serif;">Try adjusting your filters</small>
-        </td>
-      </tr>
-    `;
-    updateSummary(0, 0, 0, 0, 0);
-    return;
-  }
-  
-  let d1 = 0, d3 = 0, d4 = 0;
-  
-  filteredData.forEach(item => {
-    const tr = document.createElement("tr");
-    
-    // Update aging counters
-    const agingDays = item._agingDays;
-    if (agingDays <= 1) {
-      d1++;
-    } else if (agingDays >= 1 && agingDays <= 4) {
-      d3++;
-    } else if (agingDays >= 5) {
-      d4++;
-    }
-    
-    // Format timestamp
-    const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
-    
-    // Create aging badge
-    let agingBadge = "";
-    if (item._agingText && item._agingText !== "-") {
-      agingBadge = `<span class="badge ${item._agingClass}" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item._agingText}</span>`;
-    } else {
-      agingBadge = "-";
-    }
-    
-    // Table columns based on data structure
-    tr.innerHTML = `
-      <td class="site-id-cell">${item.SiteID || ""}</td>
-      <td style="font-family: 'Inter', sans-serif;">${item["Alarm Source"] || ""}</td>
-      <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item.Name || ""}</span></td>
-      <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
-      <td class="text-center">${agingBadge}</td>
-      <td><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item.Source || ""}</span></td>
-      <td style="font-family: 'Inter', sans-serif;">${item.Circle || ""}</td>
-      <td style="font-family: 'Inter', sans-serif;">${item.Region || ""}</td>
-      <td style="font-family: 'Inter', sans-serif;">${item["Micro Cluster"] || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-  
-  // Update summary
-  const total = filteredData.length;
-  const uniqueSites = new Set(filteredData.map(d => d.SiteID).filter(Boolean)).size;
-  updateSummary(total, uniqueSites, d1, d3, d4);
-}
-
-function updateSummary(total, unique, a1, a3, a4) {
-  document.getElementById("totalAlarm").innerText = total;
-  document.getElementById("uniqueSite").innerText = unique;
-  document.getElementById("aging1").innerText = a1;
-  document.getElementById("aging3").innerText = a3;
-  document.getElementById("aging4").innerText = a4;
-  
-  document.getElementById("filteredCount").innerText = 
-    `Showing ${total} of ${rawData.length} records`;
-}
-
-function applyFilter() {
-  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
-  const siteId = document.getElementById("fSite").value.toLowerCase();
-  const region = document.getElementById("fRegion").value;
-  const source = document.getElementById("fSource").value;
-  const circle = document.getElementById("fCircle").value;
-  
-  filteredData = rawData.filter(item => {
-    const alarmNameVal = (item.Name || "").toLowerCase();
-    const siteID = (item.SiteID || "").toLowerCase();
-    const regionVal = item.Region || "";
-    const sourceVal = item.Source || "";
-    const circleVal = item.Circle || "";
-    
-    return (
-      (!alarmName || alarmNameVal.includes(alarmName)) &&
-      (!siteId || siteID.includes(siteId)) &&
-      (!region || regionVal === region) &&
-      (!source || sourceVal === source) &&
-      (!circle || circleVal === circle)
-    );
-  });
-  
-  render();
-  updateDistributionTable();
-}
-
-function filterByAging(type) {
-  currentAgingFilter = type;
-  
-  // Remove active class from all aging cards
-  document.querySelectorAll('.aging-card').forEach(card => {
-    card.classList.remove('active');
-  });
-  document.getElementById('totalCard').classList.remove('active');
-  
-  // Add active class to clicked card
-  if (type === 'all') {
-    document.getElementById('totalCard').classList.add('active');
-  } else {
-    document.getElementById(`aging${type}Card`).classList.add('active');
-  }
-  
-  // Apply the filter
-  applyAgingFilter(type);
-  updateDistributionTable();
-}
-
-function applyAgingFilter(type) {
-  switch(type) {
-    case '1':
-      filteredData = rawData.filter(item => item._agingDays <= 1);
-      break;
-    case '3':
-      filteredData = rawData.filter(item => item._agingDays >= 1 && item._agingDays <= 4);
-      break;
-    case '4':
-      filteredData = rawData.filter(item => item._agingDays >= 5);
-      break;
-    case 'all':
-    default:
-      filteredData = [...rawData];
-      break;
-  }
-  render();
-}
-
-function clearFilter() {
-  document.getElementById("fAlarm").value = "";
-  document.getElementById("fSite").value = "";
-  document.getElementById("fRegion").value = "";
-  document.getElementById("fSource").value = "";
-  document.getElementById("fCircle").value = "";
-  
-  currentAgingFilter = 'all';
-  document.querySelectorAll('.aging-card').forEach(card => {
-    card.classList.remove('active');
-  });
-  document.getElementById('totalCard').classList.add('active');
-  
-  filteredData = [...rawData];
-  render();
-  updateDistributionTable();
-}
-
-function updateDistributionTable() {
-  const distributionBody = document.getElementById("distributionBody");
-  const distTotalCount = document.getElementById("distTotalCount");
-  
-  if (filteredData.length === 0) {
-    distributionBody.innerHTML = `
-      <tr>
-        <td colspan="2" class="text-center text-muted py-4" style="font-family: 'Inter', sans-serif;">No data available</td>
-      </tr>
-    `;
-    distTotalCount.textContent = "0 alarms";
-    return;
-  }
-  
-  // Count alarm occurrences
-  const alarmCounts = {};
-  filteredData.forEach(item => {
-    const alarmName = item.Name || "Unknown";
-    alarmCounts[alarmName] = (alarmCounts[alarmName] || 0) + 1;
-  });
-  
-  // Sort by count (descending)
-  const sortedAlarms = Object.entries(alarmCounts)
-    .sort((a, b) => b[1] - a[1]);
-  
-  distTotalCount.textContent = `${filteredData.length} alarms`;
-  
-  // Update table
-  distributionBody.innerHTML = "";
-  
-  sortedAlarms.forEach(([alarmName, count]) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="font-family: 'Inter', sans-serif;">${alarmName}</td>
-      <td class="text-end">
-        <span class="badge bg-primary rounded-pill" style="font-family: 'Plus Jakarta Sans', sans-serif;">${count}</span>
-      </td>
-    `;
-    distributionBody.appendChild(tr);
-  });
-}
-
-function formatDateTime(datetimeStr) {
-  if (!datetimeStr || datetimeStr === "-") return "-";
-  try {
-    const date = new Date(datetimeStr);
-    if (isNaN(date.getTime())) return datetimeStr;
-    return date.toLocaleString([], { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (e) {
-    return datetimeStr;
-  }
-}
-
-function sortTable(column) {
-  if (!sortDir[column]) sortDir[column] = 1;
-  else sortDir[column] *= -1;
-  
-  const dir = sortDir[column];
-  
-  filteredData.sort((a, b) => {
-    if (column === "_agingDays") {
-      return (a._agingDays - b._agingDays) * dir;
-    }
-    
-    let aVal = a[column] || "";
-    let bVal = b[column] || "";
-    
-    if (column.includes("First Occurred")) {
-      const aDate = aVal ? new Date(aVal).getTime() : 0;
-      const bDate = bVal ? new Date(bVal).getTime() : 0;
-      return (aDate - bDate) * dir;
-    }
-    
-    return String(aVal).localeCompare(String(bVal)) * dir;
-  });
-  
-  render();
-}
-
-function exportCSV() {
-  if (filteredData.length === 0) {
-    alert("No data to export!");
-    return;
-  }
-  
-  const headers = [
-    "SiteID", "Alarm Source", "Name", "First Occurred (NT)", 
-    "Aging (Days)", "Source", "Circle", "Region", "Micro Cluster"
-  ];
-  
-  const csvRows = [
-    headers.join(","),
-    ...filteredData.map(row => 
-      headers.map(header => {
-        let cell;
-        if (header === "Aging (Days)") {
-          cell = row._agingText || "";
-        } else if (header === "First Occurred (NT)") {
-          cell = row["First Occurred (NT)"] || "";
-        } else {
-          cell = row[header] || "";
+        function processData(data) {
+            return data.map(item => {
+                const standardizedItem = {};
+                
+                Object.keys(item).forEach(key => {
+                    const normalizedKey = key.trim();
+                    standardizedItem[normalizedKey] = item[key];
+                });
+                
+                const firstOccurred = standardizedItem["First Occurred (NT)"] || standardizedItem["First Occurred (NT)"];
+                let agingDays = 0;
+                let agingText = "";
+                let agingClass = "";
+                
+                if (firstOccurred && firstOccurred !== "-") {
+                    try {
+                        const firstDate = new Date(firstOccurred);
+                        const now = new Date();
+                        agingDays = (now - firstDate) / (1000 * 3600 * 24);
+                        agingDays = Math.max(0, agingDays);
+                        
+                        if (agingDays < 1) {
+                            const hours = Math.floor(agingDays * 24);
+                            agingText = `${hours}h`;
+                            agingClass = "aging-badge-1";
+                        } else {
+                            agingText = `${Math.floor(agingDays)}d`;
+                            if (agingDays <= 1) {
+                                agingClass = "aging-badge-1";
+                            } else if (agingDays >= 1 && agingDays <= 4) {
+                                agingClass = "aging-badge-2";
+                            } else {
+                                agingClass = "aging-badge-3";
+                            }
+                        }
+                    } catch (e) {
+                        agingText = "-";
+                        agingClass = "";
+                    }
+                } else {
+                    agingText = "-";
+                    agingClass = "";
+                }
+                
+                return {
+                    ...standardizedItem,
+                    _agingDays: agingDays,
+                    _agingText: agingText,
+                    _agingClass: agingClass
+                };
+            });
         }
-        const escaped = String(cell).replace(/"/g, '""');
-        return escaped.includes(",") ? `"${escaped}"` : escaped;
-      }).join(",")
-    )
-  ];
-  
-  const csvString = csvRows.join("\n");
-  const blob = new Blob([csvString], {type: "text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `license_alarms_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
 
-function showError(message) {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="9" class="text-center py-5 text-danger">
-        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-        <div style="font-family: 'Inter', sans-serif;">${message}</div>
-        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
-          <i class="fas fa-redo me-1"></i>Retry
-        </button>
-      </td>
-    </tr>
-  `;
-}
+        function populateFilterOptions() {
+            const regions = new Set();
+            const sources = new Set();
+            const circles = new Set();
+            
+            rawData.forEach(item => {
+                if (item.Region) regions.add(item.Region);
+                if (item.Source) sources.add(item.Source);
+                if (item.Circle) circles.add(item.Circle);
+            });
+            
+            const regionSelect = document.getElementById("fRegion");
+            regionSelect.innerHTML = '<option value="">All Regions</option>';
+            Array.from(regions).sort().forEach(region => {
+                const option = document.createElement("option");
+                option.value = region;
+                option.textContent = region;
+                regionSelect.appendChild(option);
+            });
+            
+            const sourceSelect = document.getElementById("fSource");
+            sourceSelect.innerHTML = '<option value="">All Sources</option>';
+            Array.from(sources).sort().forEach(source => {
+                const option = document.createElement("option");
+                option.value = source;
+                option.textContent = source;
+                sourceSelect.appendChild(option);
+            });
+            
+            const circleSelect = document.getElementById("fCircle");
+            circleSelect.innerHTML = '<option value="">All Circles</option>';
+            Array.from(circles).sort().forEach(circle => {
+                const option = document.createElement("option");
+                option.value = circle;
+                option.textContent = circle;
+                circleSelect.appendChild(option);
+            });
+        }
 
-function updateLastUpdateTime() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-  const dateString = now.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'});
-  
-  document.getElementById("lastUpdate").innerHTML = `
-    <div class="last-update-time">
-      <i class="fas fa-clock me-1"></i> ${timeString}
-    </div>
-    <div class="last-update-date">${dateString}</div>
-  `;
-}
+        function render() {
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = "";
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-database"></i>
+                            <div>No data found</div>
+                            <small class="text-muted">Try adjusting your filters</small>
+                        </td>
+                    </tr>
+                `;
+                updateSummary(0, 0, 0, 0, 0);
+                return;
+            }
+            
+            let d1 = 0, d3 = 0, d4 = 0;
+            
+            filteredData.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.className = "fade-in";
+                
+                const agingDays = item._agingDays;
+                if (agingDays <= 1) {
+                    d1++;
+                } else if (agingDays >= 1 && agingDays <= 4) {
+                    d3++;
+                } else if (agingDays >= 5) {
+                    d4++;
+                }
+                
+                const firstOccurred = formatDateTime(item["First Occurred (NT)"]);
+                
+                let agingBadge = "";
+                if (item._agingText && item._agingText !== "-") {
+                    agingBadge = `<span class="aging-badge ${item._agingClass}">${item._agingText}</span>`;
+                } else {
+                    agingBadge = "-";
+                }
+                
+                tr.innerHTML = `
+                    <td><strong>${item.SiteID || ""}</strong></td>
+                    <td>${item["Alarm Source"] || ""}</td>
+                    <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px 8px; border-radius: 4px;">${item.Name || ""}</span></td>
+                    <td>${firstOccurred}</td>
+                    <td class="text-center">${agingBadge}</td>
+                    <td><span class="badge bg-info" style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px 8px; border-radius: 4px;">${item.Source || ""}</span></td>
+                    <td>${item.Circle || ""}</td>
+                    <td>${item.Region || ""}</td>
+                    <td>${item["Micro Cluster"] || ""}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            const total = filteredData.length;
+            const uniqueSites = new Set(filteredData.map(d => d.SiteID).filter(Boolean)).size;
+            updateSummary(total, uniqueSites, d1, d3, d4);
+        }
 
-function toggleAutoRefresh() {
-  const checkbox = document.getElementById("autoRefresh");
-  autoRefreshEnabled = checkbox.checked;
-  
-  if (autoRefreshEnabled && !autoRefreshInterval) {
-    autoRefreshInterval = setInterval(loadData, 300000); // 5 minutes
-    console.log("Auto-refresh enabled");
-  } else if (!autoRefreshEnabled && autoRefreshInterval) {
-    clearInterval(autoRefreshInterval);
-    autoRefreshInterval = null;
-    console.log("Auto-refresh disabled");
-  }
-}
+        function updateSummary(total, unique, a1, a3, a4) {
+            document.getElementById("totalAlarm").textContent = total;
+            document.getElementById("uniqueSite").textContent = unique;
+            document.getElementById("aging1").textContent = a1;
+            document.getElementById("aging3").textContent = a3;
+            document.getElementById("aging4").textContent = a4;
+            
+            document.getElementById("filteredCount").textContent = 
+                `Showing ${total} of ${rawData.length} records`;
+        }
 
-// Initialize on page load
-document.addEventListener("DOMContentLoaded", function() {
-  loadData();
-  document.getElementById('totalCard').classList.add('active');
-  
-  if (autoRefreshEnabled) {
-    autoRefreshInterval = setInterval(loadData, 300000);
-  }
-  
-  // Add enter key support for filter inputs
-  const filterInputs = document.querySelectorAll('#fAlarm, #fSite');
-  filterInputs.forEach(input => {
-    input.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        applyFilter();
-      }
-    });
-  });
-});
-</script>
+        function applyFilter() {
+            const alarmName = document.getElementById("fAlarm").value.toLowerCase();
+            const siteId = document.getElementById("fSite").value.toLowerCase();
+            const region = document.getElementById("fRegion").value;
+            const source = document.getElementById("fSource").value;
+            const circle = document.getElementById("fCircle").value;
+            
+            filteredData = rawData.filter(item => {
+                const alarmNameVal = (item.Name || "").toLowerCase();
+                const siteID = (item.SiteID || "").toLowerCase();
+                const regionVal = item.Region || "";
+                const sourceVal = item.Source || "";
+                const circleVal = item.Circle || "";
+                
+                return (
+                    (!alarmName || alarmNameVal.includes(alarmName)) &&
+                    (!siteId || siteID.includes(siteId)) &&
+                    (!region || regionVal === region) &&
+                    (!source || sourceVal === source) &&
+                    (!circle || circleVal === circle)
+                );
+            });
+            
+            render();
+            updateDistributionTable();
+        }
 
+        function filterByAging(type) {
+            currentAgingFilter = type;
+            
+            document.querySelectorAll('.summary-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            if (type === 'all') {
+                document.getElementById('totalCard').classList.add('active');
+            } else {
+                document.getElementById(`aging${type}Card`).classList.add('active');
+            }
+            
+            applyAgingFilter(type);
+            updateDistributionTable();
+        }
+
+        function applyAgingFilter(type) {
+            switch(type) {
+                case '1':
+                    filteredData = rawData.filter(item => item._agingDays <= 1);
+                    break;
+                case '3':
+                    filteredData = rawData.filter(item => item._agingDays >= 1 && item._agingDays <= 4);
+                    break;
+                case '4':
+                    filteredData = rawData.filter(item => item._agingDays >= 5);
+                    break;
+                case 'all':
+                default:
+                    filteredData = [...rawData];
+                    break;
+            }
+            render();
+        }
+
+        function clearFilter() {
+            document.getElementById("fAlarm").value = "";
+            document.getElementById("fSite").value = "";
+            document.getElementById("fRegion").value = "";
+            document.getElementById("fSource").value = "";
+            document.getElementById("fCircle").value = "";
+            
+            currentAgingFilter = 'all';
+            document.querySelectorAll('.summary-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.getElementById('totalCard').classList.add('active');
+            
+            filteredData = [...rawData];
+            render();
+            updateDistributionTable();
+        }
+
+        function updateDistributionTable() {
+            const distributionBody = document.getElementById("distributionBody");
+            const distTotalCount = document.getElementById("distTotalCount");
+            
+            if (filteredData.length === 0) {
+                distributionBody.innerHTML = `
+                    <tr>
+                        <td colspan="2" class="empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <div>No data available</div>
+                        </td>
+                    </tr>
+                `;
+                distTotalCount.textContent = "0";
+                return;
+            }
+            
+            const alarmCounts = {};
+            filteredData.forEach(item => {
+                const alarmName = item.Name || "Unknown";
+                alarmCounts[alarmName] = (alarmCounts[alarmName] || 0) + 1;
+            });
+            
+            const sortedAlarms = Object.entries(alarmCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            distTotalCount.textContent = `${filteredData.length}`;
+            
+            distributionBody.innerHTML = "";
+            
+            sortedAlarms.forEach(([alarmName, count]) => {
+                const tr = document.createElement("tr");
+                tr.className = "fade-in";
+                tr.innerHTML = `
+                    <td>${alarmName}</td>
+                    <td class="text-end">
+                        <span class="count-badge">${count}</span>
+                    </td>
+                `;
+                distributionBody.appendChild(tr);
+            });
+        }
+
+        function formatDateTime(datetimeStr) {
+            if (!datetimeStr || datetimeStr === "-") return "-";
+            try {
+                const date = new Date(datetimeStr);
+                if (isNaN(date.getTime())) return datetimeStr;
+                return date.toLocaleString([], { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return datetimeStr;
+            }
+        }
+
+        function sortTable(column) {
+            if (!sortDir[column]) sortDir[column] = 1;
+            else sortDir[column] *= -1;
+            
+            const dir = sortDir[column];
+            
+            filteredData.sort((a, b) => {
+                if (column === "_agingDays") {
+                    return (a._agingDays - b._agingDays) * dir;
+                }
+                
+                let aVal = a[column] || "";
+                let bVal = b[column] || "";
+                
+                if (column.includes("First Occurred")) {
+                    const aDate = aVal ? new Date(aVal).getTime() : 0;
+                    const bDate = bVal ? new Date(bVal).getTime() : 0;
+                    return (aDate - bDate) * dir;
+                }
+                
+                return String(aVal).localeCompare(String(bVal)) * dir;
+            });
+            
+            render();
+        }
+
+        function exportCSV() {
+            if (filteredData.length === 0) {
+                alert("No data to export!");
+                return;
+            }
+            
+            const headers = [
+                "SiteID", "Alarm Source", "Name", "First Occurred (NT)", 
+                "Aging (Days)", "Source", "Circle", "Region", "Micro Cluster"
+            ];
+            
+            const csvRows = [
+                headers.join(","),
+                ...filteredData.map(row => 
+                    headers.map(header => {
+                        let cell;
+                        if (header === "Aging (Days)") {
+                            cell = row._agingText || "";
+                        } else if (header === "First Occurred (NT)") {
+                            cell = row["First Occurred (NT)"] || "";
+                        } else {
+                            cell = row[header] || "";
+                        }
+                        const escaped = String(cell).replace(/"/g, '""');
+                        return escaped.includes(",") ? `"${escaped}"` : escaped;
+                    }).join(",")
+                )
+            ];
+            
+            const csvString = csvRows.join("\n");
+            const blob = new Blob([csvString], {type: "text/csv;charset=utf-8;"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `license_alarms_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty-state">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        <div class="text-danger">${message}</div>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadData()">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            const dateString = now.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'});
+            
+            document.getElementById("lastUpdateTime").innerHTML = `<i class="fas fa-clock"></i> ${timeString}`;
+            document.getElementById("lastUpdateDate").textContent = dateString;
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById("autoRefresh");
+            autoRefreshEnabled = checkbox.checked;
+            
+            if (autoRefreshEnabled && !autoRefreshInterval) {
+                autoRefreshInterval = setInterval(loadData, 300000);
+                console.log("Auto-refresh enabled");
+            } else if (!autoRefreshEnabled && autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                console.log("Auto-refresh disabled");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadData();
+            document.getElementById('totalCard').classList.add('active');
+            
+            if (autoRefreshEnabled) {
+                autoRefreshInterval = setInterval(loadData, 300000);
+            }
+            
+            const filterInputs = document.querySelectorAll('#fAlarm, #fSite');
+            filterInputs.forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        applyFilter();
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
