@@ -2,36 +2,748 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>License Alarms Dashboard</title>
+
+<!-- Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- PapaParse -->
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+
 <style>
-/* ... (CSS tetap sama seperti sebelumnya) ... */
+/* ============================================
+   GLOBAL STYLES & VARIABLES
+   ============================================ */
+:root {
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary-color: #8b5cf6;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --dark-color: #1f2937;
+  --light-color: #f9fafb;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+  color: #334155;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   HEADER STYLES - Modern Gradient
+   ============================================ */
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 50%;
+  transform: translate(30%, -30%);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  background: rgba(255, 255, 255, 0.2);
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.brand-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0;
+  color: white;
+}
+
+.brand-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.status-dot.active {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.status-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.update-info {
+  text-align: right;
+}
+
+.update-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+.update-time {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+}
+
+.update-time .time {
+  font-size: 1.1rem;
+  display: block;
+}
+
+.update-time .date {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-refresh {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-settings {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-settings:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(30deg);
+}
+
+/* ============================================
+   DASHBOARD CONTENT
+   ============================================ */
+.dashboard-content {
+  padding: 2rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   SUMMARY CARDS
+   ============================================ */
+.card-summary {
+  border: none;
+  border-radius: 16px;
+  background: white;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  height: 100%;
+  border-left: 4px solid transparent;
+}
+
+.card-summary:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-summary.active {
+  border-left-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#totalCard { border-left-color: var(--primary-color); }
+#aging1Card { border-left-color: var(--success-color); }
+#aging3Card { border-left-color: var(--warning-color); }
+#aging4Card { border-left-color: var(--danger-color); }
+
+.card-summary h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+.card-summary h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+.aging-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.aging-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(40px, -40px);
+}
+
+/* ============================================
+   FILTER & DISTRIBUTION SECTION
+   ============================================ */
+.horizontal-sidebar {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.filter-card, .distribution-card {
+  border: none;
+  border-radius: 16px;
+  background: white;
+  box-shadow: var(--shadow-md);
+  flex: 1;
+  min-width: 300px;
+}
+
+.filter-card {
+  flex: 1.2;
+}
+
+.distribution-card {
+  flex: 0.8;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.filter-fields {
+  flex: 1;
+}
+
+.filter-buttons {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.form-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Distribution Table */
+.distribution-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.distribution-table-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.distribution-table-wrapper {
+  height: 300px;
+  overflow-y: auto;
+}
+
+.distribution-table {
+  margin: 0;
+}
+
+.distribution-table thead th {
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  color: var(--dark-color);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.distribution-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* ============================================
+   MAIN TABLE SECTION
+   ============================================ */
+.main-table-section {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.controls-section {
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.export-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.main-table-container {
+  overflow: hidden;
+}
+
+.main-table-wrapper {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.table {
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  color: var(--dark-color);
+  border-bottom: 2px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+  padding: 1rem;
+  white-space: nowrap;
+}
+
+.table thead th:hover {
+  background: #e2e8f0;
+}
+
+.table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #fafafa;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f0f9ff !important;
+}
+
+/* Aging Badges */
+.badge {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+}
+
+.aging-badge-1 {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+.aging-badge-2 {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.aging-badge-3 {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* Site ID Cell */
+.site-id-cell {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+/* ============================================
+   LOADING & ERROR STATES
+   ============================================ */
+.loading {
+  text-align: center;
+  padding: 3rem !important;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1200px) {
+  .horizontal-sidebar {
+    flex-direction: column;
+  }
+  
+  .filter-card, .distribution-card {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 1rem;
+  }
+  
+  .header-controls {
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  
+  .update-info {
+    display: none;
+  }
+  
+  .status-indicator {
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .brand-title {
+    font-size: 1.2rem;
+  }
+  
+  .brand-subtitle {
+    display: none;
+  }
+  
+  .table thead th, .table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-container {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .controls-section {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch !important;
+  }
+  
+  .export-btn {
+    width: 100%;
+  }
+  
+  .row.g-4 > div {
+    margin-bottom: 1rem;
+  }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-summary, .filter-card, .distribution-card, .main-table-section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.text-nowrap {
+  white-space: nowrap;
+}
+
+.text-end {
+  text-align: end;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+.ms-2 {
+  margin-left: 0.5rem !important;
+}
+
+.d-none {
+  display: none !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.g-4 {
+  gap: 1.5rem !important;
+}
+
+.row {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+}
+
+.col-md-3, .col-md-2, .col-12 {
+  padding-right: calc(var(--bs-gutter-x) * .5);
+  padding-left: calc(var(--bs-gutter-x) * .5);
+}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header-bar">
-  <h5 class="m-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">
-    <i class="fas fa-license me-2"></i>License Alarms Dashboard
-  </h5>
-  <div>
-    <div id="lastUpdate">
-      <div class="last-update-time">
-        <i class="fas fa-clock me-1"></i> Loading...
+<!-- HEADER - MODERN GRADIENT -->
+<header class="dashboard-header">
+  <div class="container-fluid">
+    <div class="header-container">
+      <!-- Logo & Title -->
+      <div class="header-brand">
+        <div class="logo-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="brand-content">
+          <h1 class="brand-title">License Alarms Dashboard</h1>
+          <p class="brand-subtitle">Real-time monitoring & analytics</p>
+        </div>
       </div>
-      <div class="last-update-date">-</div>
+      
+      <!-- Status & Controls -->
+      <div class="header-controls">
+        <!-- Status Badge -->
+        <div class="status-indicator">
+          <span class="status-dot active"></span>
+          <span class="status-text">Live Data</span>
+        </div>
+        
+        <!-- Last Update -->
+        <div class="update-info">
+          <div class="update-label">
+            <i class="fas fa-history"></i> Last Updated
+          </div>
+          <div id="lastUpdate" class="update-time">
+            <span class="time">Loading...</span>
+            <span class="date">-</span>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="header-actions">
+          <button class="btn-refresh" onclick="loadData()">
+            <i class="fas fa-sync-alt"></i>
+            <span>Refresh</span>
+          </button>
+          <button class="btn-settings" onclick="toggleSettings()">
+            <i class="fas fa-cog"></i>
+          </button>
+        </div>
+      </div>
     </div>
-    <button class="btn btn-sm btn-light ms-2" onclick="loadData()" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
-      <i class="fas fa-sync-alt me-1"></i>Refresh
-    </button>
   </div>
-</div>
+</header>
 
-<div class="container-fluid p-4 dashboard-content">
+<!-- MAIN CONTENT -->
+<div class="container-fluid dashboard-content">
 
 <!-- SUMMARY ROW -->
 <div class="row g-4 mb-4">
@@ -225,12 +937,20 @@ function loadData() {
   const loadingRow = document.getElementById("loadingRow");
   if (loadingRow) loadingRow.style.display = "";
   
-  document.getElementById("lastUpdate").innerHTML = `
-    <div class="last-update-time">
-      <i class="fas fa-spinner fa-spin me-1"></i> Loading...
-    </div>
-    <div class="last-update-date">-</div>
-  `;
+  // Update header loading state
+  const lastUpdateEl = document.getElementById("lastUpdate");
+  if (lastUpdateEl) {
+    lastUpdateEl.innerHTML = `
+      <span class="time"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
+      <span class="date">-</span>
+    `;
+  }
+  
+  // Update status indicator
+  const statusDot = document.querySelector('.status-dot');
+  const statusText = document.querySelector('.status-text');
+  if (statusDot) statusDot.style.background = '#fbbf24';
+  if (statusText) statusText.textContent = 'Updating...';
   
   Papa.parse(CSV_URL, {
     download: true,
@@ -252,9 +972,17 @@ function loadData() {
         
         // Update distribution table
         updateDistributionTable();
+        
+        // Update status indicator
+        if (statusDot) statusDot.style.background = '#4ade80';
+        if (statusText) statusText.textContent = 'Live Data';
       } else {
         console.warn("No data loaded from Google Sheets");
         showError("No data available from Google Sheets");
+        
+        // Update status indicator
+        if (statusDot) statusDot.style.background = '#ef4444';
+        if (statusText) statusText.textContent = 'No Data';
       }
       
       updateLastUpdateTime();
@@ -262,12 +990,20 @@ function loadData() {
     error: function(err) {
       console.error("Error loading data:", err);
       showError("Failed to load data from Google Sheets");
-      document.getElementById("lastUpdate").innerHTML = `
-        <div class="last-update-time">
-          <i class="fas fa-exclamation-triangle me-1 text-warning"></i> Failed to load
-        </div>
-        <div class="last-update-date">-</div>
-      `;
+      
+      // Update header error state
+      if (lastUpdateEl) {
+        lastUpdateEl.innerHTML = `
+          <span class="time"><i class="fas fa-exclamation-triangle"></i> Failed to load</span>
+          <span class="date">-</span>
+        `;
+      }
+      
+      // Update status indicator
+      const statusDot = document.querySelector('.status-dot');
+      const statusText = document.querySelector('.status-text');
+      if (statusDot) statusDot.style.background = '#ef4444';
+      if (statusText) statusText.textContent = 'Connection Error';
     }
   });
 }
@@ -681,12 +1417,13 @@ function updateLastUpdateTime() {
   const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
   const dateString = now.toLocaleDateString([], {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'});
   
-  document.getElementById("lastUpdate").innerHTML = `
-    <div class="last-update-time">
-      <i class="fas fa-clock me-1"></i> ${timeString}
-    </div>
-    <div class="last-update-date">${dateString}</div>
-  `;
+  const lastUpdateEl = document.getElementById("lastUpdate");
+  if (lastUpdateEl) {
+    lastUpdateEl.innerHTML = `
+      <span class="time"><i class="fas fa-clock me-1"></i> ${timeString}</span>
+      <span class="date">${dateString}</span>
+    `;
+  }
 }
 
 function toggleAutoRefresh() {
@@ -701,6 +1438,105 @@ function toggleAutoRefresh() {
     autoRefreshInterval = null;
     console.log("Auto-refresh disabled");
   }
+}
+
+function toggleSettings() {
+  // Create settings modal
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-cog me-2"></i>Dashboard Settings</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Auto-refresh Interval</label>
+            <select class="form-select" id="refreshInterval">
+              <option value="300000" selected>5 minutes</option>
+              <option value="600000">10 minutes</option>
+              <option value="1800000">30 minutes</option>
+              <option value="3600000">1 hour</option>
+              <option value="0">Off</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Theme Color</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary theme-btn active" data-color="blue">Blue</button>
+              <button class="btn btn-success theme-btn" data-color="green">Green</button>
+              <button class="btn btn-purple theme-btn" data-color="purple">Purple</button>
+              <button class="btn btn-dark theme-btn" data-color="dark">Dark</button>
+            </div>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="compactMode" checked>
+            <label class="form-check-label" for="compactMode">Compact Mode</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Initialize modal (simplified version)
+  modal.style.display = 'block';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+  
+  // Close modal when clicking outside
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+  
+  // Close button
+  modal.querySelector('.btn-close').addEventListener('click', function() {
+    document.body.removeChild(modal);
+  });
+  
+  // Theme buttons
+  modal.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      modal.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+}
+
+function saveSettings() {
+  const intervalSelect = document.getElementById('refreshInterval');
+  const autoRefresh = document.getElementById('autoRefresh');
+  
+  if (intervalSelect && autoRefresh) {
+    const interval = parseInt(intervalSelect.value);
+    
+    if (interval === 0) {
+      autoRefresh.checked = false;
+      toggleAutoRefresh();
+    } else {
+      autoRefresh.checked = true;
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+      autoRefreshInterval = setInterval(loadData, interval);
+    }
+  }
+  
+  // Close modal
+  const modal = document.querySelector('.modal.fade');
+  if (modal) {
+    document.body.removeChild(modal);
+  }
+  
+  alert('Settings saved!');
 }
 
 // Initialize on page load
@@ -721,8 +1557,57 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
+  
+  // Add real-time clock update
+  setInterval(updateLastUpdateTime, 60000);
+  
+  // Add CSS for settings modal
+  const style = document.createElement('style');
+  style.textContent = `
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1050;
+      display: none;
+    }
+    .modal.show {
+      display: block;
+    }
+    .modal-dialog {
+      max-width: 500px;
+      margin: 1.75rem auto;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+    .modal-header {
+      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .modal-body {
+      padding: 1rem;
+    }
+    .modal-footer {
+      padding: 1rem;
+      border-top: 1px solid #dee2e6;
+    }
+    .btn-purple {
+      background-color: #8b5cf6;
+      border-color: #8b5cf6;
+      color: white;
+    }
+    .btn-purple:hover {
+      background-color: #7c3aed;
+      border-color: #7c3aed;
+    }
+  `;
+  document.head.appendChild(style);
 });
 </script>
-
 </body>
 </html>
