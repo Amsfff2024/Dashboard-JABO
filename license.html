@@ -534,6 +534,19 @@ body {
   width: 100%;
 }
 
+/* DISTRIBUTION TABLE COLUMN WIDTHS - MODIFIED */
+.distribution-table thead th:nth-child(1) { /* Alarm Name */
+  width: 85%; /* Diperbesar secara signifikan */
+  min-width: 85%;
+  text-align: left;
+}
+
+.distribution-table thead th:nth-child(2) { /* Count */
+  width: 15%; /* Diperkecil */
+  min-width: 15%;
+  text-align: right;
+}
+
 .distribution-table thead th {
   background: #f8fafc;
   position: sticky;
@@ -549,14 +562,32 @@ body {
 .distribution-table tbody td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
+  vertical-align: top; /* Untuk alignment yang lebih baik */
+}
+
+.distribution-table tbody td:nth-child(1) { /* Alarm Name */
+  text-align: left;
+  white-space: normal; /* Allow text wrapping */
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.distribution-table tbody td:nth-child(2) { /* Count */
+  text-align: right;
+  white-space: nowrap;
 }
 
 .distribution-table tbody tr:hover {
   background-color: #f1f5f9;
 }
 
-.distribution-table tbody td:last-child {
-  text-align: right;
+/* Count badge styling */
+.distribution-table .badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  min-width: 40px;
+  display: inline-block;
+  text-align: center;
 }
 
 /* ============================================
@@ -847,6 +878,17 @@ body {
   .filter-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  
+  /* Distribution table responsive */
+  .distribution-table thead th:nth-child(1) {
+    width: 80%;
+    min-width: 80%;
+  }
+  
+  .distribution-table thead th:nth-child(2) {
+    width: 20%;
+    min-width: 20%;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -888,6 +930,17 @@ body {
     width: 220px;
     min-width: 220px;
     max-width: 220px;
+  }
+  
+  /* Distribution table lebih responsive */
+  .distribution-table thead th:nth-child(1) {
+    width: 75%;
+    min-width: 75%;
+  }
+  
+  .distribution-table thead th:nth-child(2) {
+    width: 25%;
+    min-width: 25%;
   }
 }
 
@@ -1013,6 +1066,22 @@ body {
     width: 180px;
     min-width: 180px;
   }
+  
+  /* Distribution table untuk mobile */
+  .distribution-table thead th:nth-child(1) {
+    width: 70%;
+    min-width: 70%;
+  }
+  
+  .distribution-table thead th:nth-child(2) {
+    width: 30%;
+    min-width: 30%;
+  }
+  
+  .distribution-table tbody td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1066,6 +1135,17 @@ body {
   .badge {
     font-size: 0.7rem;
     padding: 0.15rem 0.35rem;
+  }
+  
+  /* Distribution table untuk small mobile */
+  .distribution-table thead th:nth-child(1) {
+    width: 65%;
+    min-width: 65%;
+  }
+  
+  .distribution-table thead th:nth-child(2) {
+    width: 35%;
+    min-width: 35%;
   }
 }
 
