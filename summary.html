@@ -30,7 +30,7 @@
             background: #f8fafc;
             font-family: var(--font-inter);
             min-height: 100vh;
-            overflow-x: hidden; /* Mencegah scroll horizontal global */
+            overflow-x: hidden;
         }
         
         /* HEADER */
@@ -70,11 +70,17 @@
             border: none;
             overflow: hidden;
             height: 100%;
+            cursor: pointer;
         }
         
         .kpi-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        }
+        
+        .kpi-card.active-filter {
+            border: 2px solid #3b82f6;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
         }
         
         .kpi-value {
@@ -143,7 +149,7 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             padding: 1.5rem;
             border: none;
-            height: 1000px; /* DIUBAH MENJADI 1000px */
+            height: 1000px;
             display: flex;
             flex-direction: column;
         }
@@ -158,7 +164,7 @@
         .table thead th {
             font-family: var(--font-plus-jakarta);
             font-weight: 600;
-            font-size: 13px; /* DIKECILKAN DARI 14px */
+            font-size: 13px;
             cursor: pointer;
             background: linear-gradient(135deg, #1e293b, #334155);
             color: #fff;
@@ -166,15 +172,15 @@
             top: 0;
             z-index: 10;
             border: none;
-            padding: 10px 8px; /* DIKECILKAN PADDING */
+            padding: 10px 8px;
         }
         
         /* TABLE CONTENT - FONT SIZE DIKECILKAN */
         .table tbody td {
             font-family: var(--font-inter);
             font-weight: 400;
-            font-size: 12px; /* DIKECILKAN DARI 13px */
-            padding: 8px 6px; /* DIKECILKAN PADDING */
+            font-size: 12px;
+            padding: 8px 6px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -187,13 +193,27 @@
             background-color: #f1f5f9;
         }
         
+        /* CURSOR POINTER UNTUK ROW YANG BISA DIKLIK */
+        .clickable-row {
+            cursor: pointer;
+        }
+        
+        .clickable-row:hover {
+            background-color: #e6f2ff !important;
+        }
+        
+        .clickable-row.active-row {
+            background-color: #d9ebff !important;
+            border-left: 4px solid #3b82f6;
+        }
+        
         /* BADGES */
         .badge {
             font-family: var(--font-plus-jakarta);
             font-weight: 600;
-            padding: 5px 8px; /* DIKECILKAN */
+            padding: 5px 8px;
             border-radius: 20px;
-            font-size: 11px; /* DIKECILKAN */
+            font-size: 11px;
         }
         
         .badge-priority-P1 {
@@ -225,7 +245,7 @@
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
             font-weight: 600;
             color: #1e40af;
-            font-size: 11px; /* DIKECILKAN */
+            font-size: 11px;
         }
         
         /* LOADING */
@@ -242,27 +262,27 @@
         .alarm-type-badge {
             font-family: var(--font-plus-jakarta);
             font-weight: 600;
-            font-size: 11px; /* DIKECILKAN */
-            padding: 3px 6px; /* DIKECILKAN */
+            font-size: 11px;
+            padding: 3px 6px;
             border-radius: 12px;
         }
         
         .time-cell {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-            font-size: 11px; /* DIKECILKAN */
+            font-size: 11px;
         }
         
         .duration-badge {
-            min-width: 60px; /* DIKECILKAN DARI 70px */
+            min-width: 60px;
             text-align: center;
             font-family: var(--font-plus-jakarta);
             font-weight: 600;
-            font-size: 11px; /* DIKECILKAN */
+            font-size: 11px;
         }
         
         /* PROGRESS BARS */
         .progress {
-            height: 6px; /* DIKECILKAN DARI 8px */
+            height: 6px;
             border-radius: 4px;
         }
         
@@ -277,18 +297,53 @@
             font-weight: 600;
         }
         
+        /* ACTIVE FILTER BADGE */
+        .active-filter-badge {
+            background-color: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        /* FILTER TAG */
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e6f2ff;
+            border: 1px solid #3b82f6;
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-family: var(--font-inter);
+        }
+        
+        .filter-tag .remove-filter {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #3b82f6;
+        }
+        
+        .filter-tag .remove-filter:hover {
+            color: #dc3545;
+        }
+        
         /* SITE BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
         .site-breakdown {
-            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
+            overflow-y: auto;
             flex: 1;
-            max-height: 300px; /* TINGGI UNTUK 10 BARIS */
+            max-height: 300px;
         }
         
         /* VIP BREAKDOWN - DENGAN FREEZE PANE (10 BARIS + SCROLL) */
         .vip-breakdown {
-            overflow-y: auto; /* TAMBAHKAN SCROLL VERTIKAL */
+            overflow-y: auto;
             flex: 1;
-            max-height: 250px; /* TINGGI UNTUK 10 BARIS */
+            max-height: 250px;
         }
         
         .site-breakdown table,
@@ -311,7 +366,7 @@
             border: none;
             overflow: hidden;
             flex: 1;
-            height: 1000px; /* DIUBAH MENJADI 1000px */
+            height: 1000px;
             display: flex;
             flex-direction: column;
         }
@@ -355,6 +410,12 @@
             font-family: var(--font-inter);
             font-weight: 400;
             font-size: 12px;
+        }
+        
+        /* FILTERS CONTAINER */
+        #activeFiltersContainer {
+            min-height: 40px;
+            padding: 8px 0;
         }
         
         /* RESPONSIVE ADJUSTMENTS */
@@ -451,7 +512,7 @@
         .alarm-count-container {
             flex: 1;
             overflow-y: auto;
-            max-height: 880px; /* DITINGKATKAN UNTUK 1000px */
+            max-height: 880px;
         }
         
         /* STYLING UNTUK TABEL DETAIL ALARM */
@@ -461,27 +522,27 @@
         
         /* OPTIMASI KOLOM UNTUK DETAILED TABLE */
         .col-site-id {
-            width: 100px; /* DIKECILKAN */
+            width: 100px;
         }
         
         .col-alarm-source {
-            width: 150px; /* DIKECILKAN */
+            width: 150px;
         }
         
         .col-alarm-name {
-            width: 180px; /* DIKECILKAN */
+            width: 180px;
         }
         
         .col-time {
-            width: 140px; /* DIKECILKAN */
+            width: 140px;
         }
         
         .col-duration {
-            width: 80px; /* DIKECILKAN */
+            width: 80px;
         }
         
         .col-priority {
-            width: 70px; /* DIKECILKAN */
+            width: 70px;
         }
         
         /* TEKS TRUNCATE UNTUK KOLOM PANJANG */
@@ -544,14 +605,26 @@
         </div>
     </div>
 
-    <!-- Main Container - DIUBAH MENJADI CONTAINER-FLUID -->
+    <!-- Main Container -->
     <div class="container-fluid py-4 dashboard-content">
+        <!-- Active Filters Display -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div id="activeFiltersContainer" class="d-flex flex-wrap align-items-center">
+                    <!-- Active filters will be displayed here -->
+                </div>
+            </div>
+        </div>
+
         <!-- Search and Filter Row -->
         <div class="row mb-4">
             <div class="col-lg-8 col-md-7">
                 <div class="card filter-card">
                     <div class="card-body">
-                        <h6 class="card-title mb-3"><i class="fas fa-search me-2"></i>Search & Filter Alarms</h6>
+                        <h6 class="card-title mb-3">
+                            <i class="fas fa-search me-2"></i>Search & Filter Alarms
+                            <span id="activeFilterIndicator" style="display: none;" class="active-filter-badge">Active</span>
+                        </h6>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="input-group">
@@ -571,8 +644,8 @@
                                 <small class="text-muted" id="searchResultsText">Start typing to filter alarms. Matching text will be highlighted.</small>
                             </div>
                             <div class="col-md-4">
-                                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
-                                    <i class="fas fa-eraser me-1"></i> Clear Filters
+                                <button class="btn btn-outline-secondary w-100" onclick="clearAllFilters()">
+                                    <i class="fas fa-eraser me-1"></i> Clear All Filters
                                 </button>
                             </div>
                         </div>
@@ -600,10 +673,10 @@
             </div>
         </div>
 
-        <!-- KPI Summary Row -->
+        <!-- KPI Summary Row (Clickable untuk filter) -->
         <div class="row mb-4">
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                <div class="card kpi-card p-4">
+                <div class="card kpi-card p-4" id="kpiTotalCard" onclick="filterByKPICategory('total')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">TOTAL ALARMS</h6>
@@ -617,7 +690,7 @@
                 </div>
             </div>
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                <div class="card kpi-card p-4">
+                <div class="card kpi-card p-4" id="kpiAffectedCard" onclick="filterByKPICategory('affected')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">AFFECTED SITES</h6>
@@ -631,7 +704,7 @@
                 </div>
             </div>
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                <div class="card kpi-card p-4">
+                <div class="card kpi-card p-4" id="kpiCategoryCard" onclick="filterByKPICategory('category')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">ALARM CATEGORIES</h6>
@@ -645,7 +718,7 @@
                 </div>
             </div>
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                <div class="card kpi-card p-4">
+                <div class="card kpi-card p-4" id="kpiVipCard" onclick="filterByKPICategory('vip')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">VIP SITES</h6>
@@ -683,7 +756,7 @@
                             </table>
                         </div>
                         <div class="freeze-pane-info">
-                            <i class="fas fa-info-circle me-1"></i> Showing top 10 sites. Scroll for more.
+                            <i class="fas fa-info-circle me-1"></i> Click on Site ID to filter. Showing top 10 sites. Scroll for more.
                         </div>
                     </div>
                     
@@ -705,13 +778,13 @@
                             </table>
                         </div>
                         <div class="freeze-pane-info">
-                            <i class="fas fa-info-circle me-1"></i> Showing top 10 VIP sites. Scroll for more.
+                            <i class="fas fa-info-circle me-1"></i> Click on Site ID to filter. Showing top 10 VIP sites. Scroll for more.
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Alarm Count Table -->
+            <!-- Alarm Count Table (Clickable) -->
             <div class="col-lg-7 mb-4">
                 <div class="summary-card">
                     <h6 class="mb-3"><i class="fas fa-sort-numeric-down me-2 text-info"></i>Alarm Count by Type</h6>
@@ -828,8 +901,16 @@
         let currentSort = { column: 'timeFull', direction: 'desc' };
         let autoRefreshInterval = null;
         let refreshCountdown = 60;
-        let currentSearchSiteId = '';
-        let currentSearchAlarmName = '';
+        
+        // Filter state
+        let activeFilters = {
+            siteId: '',
+            alarmName: '',
+            alarmType: '',
+            siteIdExact: '',
+            vipOnly: false,
+            priority: ''
+        };
 
         // ==================== FUNGSI INISIALISASI ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -980,47 +1061,233 @@
             console.log(`Found ${Object.keys(siteCountData).length} unique sites`);
             console.log(`Found ${Object.keys(vipSitesData).length} VIP sites with alarms`);
             
+            // Reset ke tampilan semua data
+            activeFilters = {
+                siteId: '',
+                alarmName: '',
+                alarmType: '',
+                siteIdExact: '',
+                vipOnly: false,
+                priority: ''
+            };
+            
             applyFilters();
         }
 
         // ==================== FUNGSI FILTER & PENCARIAN ====================
         function applyFilters() {
-            currentSearchSiteId = document.getElementById('searchSiteId').value.toLowerCase().trim();
-            currentSearchAlarmName = document.getElementById('searchAlarmName').value.toLowerCase().trim();
+            // Update search inputs ke activeFilters
+            activeFilters.siteId = document.getElementById('searchSiteId').value.toLowerCase().trim();
+            activeFilters.alarmName = document.getElementById('searchAlarmName').value.toLowerCase().trim();
             
-            console.log(`Applying filters - Site: "${currentSearchSiteId}", Alarm: "${currentSearchAlarmName}"`);
+            console.log('Applying filters:', activeFilters);
             
             filteredAlarmData = allAlarmData.filter(alarm => {
-                const siteIdMatch = !currentSearchSiteId || 
-                    alarm.siteId.toLowerCase().includes(currentSearchSiteId);
+                // Filter by site ID (partial match)
+                if (activeFilters.siteId && !alarm.siteId.toLowerCase().includes(activeFilters.siteId)) {
+                    return false;
+                }
                 
-                const alarmNameMatch = !currentSearchAlarmName || 
-                    alarm.alarmName.toLowerCase().includes(currentSearchAlarmName);
+                // Filter by exact site ID (from click)
+                if (activeFilters.siteIdExact && alarm.siteId !== activeFilters.siteIdExact) {
+                    return false;
+                }
                 
-                return siteIdMatch && alarmNameMatch;
+                // Filter by alarm name (partial match)
+                if (activeFilters.alarmName && !alarm.alarmName.toLowerCase().includes(activeFilters.alarmName)) {
+                    return false;
+                }
+                
+                // Filter by exact alarm type (from click)
+                if (activeFilters.alarmType && alarm.alarmName !== activeFilters.alarmType) {
+                    return false;
+                }
+                
+                // Filter by VIP only
+                if (activeFilters.vipOnly && !alarm.isVip) {
+                    return false;
+                }
+                
+                // Filter by priority
+                if (activeFilters.priority && alarm.priority !== activeFilters.priority) {
+                    return false;
+                }
+                
+                return true;
             });
             
+            // Update search results text
             const resultsText = document.getElementById('searchResultsText');
-            if (currentSearchSiteId || currentSearchAlarmName) {
-                resultsText.textContent = `Found ${filteredAlarmData.length} alarms matching your search.`;
+            const hasActiveFilters = Object.values(activeFilters).some(v => v && v !== '');
+            
+            if (hasActiveFilters) {
+                resultsText.textContent = `Found ${filteredAlarmData.length} alarms matching your filters.`;
                 resultsText.className = 'text-success fw-semibold';
             } else {
                 resultsText.textContent = 'Start typing to filter alarms. Matching text will be highlighted.';
                 resultsText.className = 'text-muted';
             }
             
+            // Update UI
             updateSummaryKPIs();
             updateAlarmCountTable();
             updateSiteBreakdown();
             updateDetailedAlarmTable();
             updateVIPSitesTable();
+            updateActiveFiltersDisplay();
+            updateFilterIndicators();
         }
 
-        function clearFilters() {
+        function filterByAlarmType(alarmType) {
+            if (activeFilters.alarmType === alarmType) {
+                // Jika sudah aktif, nonaktifkan
+                activeFilters.alarmType = '';
+            } else {
+                // Set filter baru
+                activeFilters.alarmType = alarmType;
+                // Reset filter lain yang relevan
+                activeFilters.siteIdExact = '';
+                activeFilters.vipOnly = false;
+                activeFilters.priority = '';
+            }
+            
+            // Clear search inputs
             document.getElementById('searchSiteId').value = '';
             document.getElementById('searchAlarmName').value = '';
-            document.getElementById('searchResultsText').textContent = 'Start typing to filter alarms. Matching text will be highlighted.';
-            document.getElementById('searchResultsText').className = 'text-muted';
+            
+            applyFilters();
+        }
+
+        function filterBySiteId(siteId) {
+            if (activeFilters.siteIdExact === siteId) {
+                // Jika sudah aktif, nonaktifkan
+                activeFilters.siteIdExact = '';
+            } else {
+                // Set filter baru
+                activeFilters.siteIdExact = siteId;
+                // Reset filter lain yang relevan
+                activeFilters.alarmType = '';
+                activeFilters.vipOnly = false;
+                activeFilters.priority = '';
+            }
+            
+            // Clear search inputs
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            
+            applyFilters();
+        }
+
+        function filterByVIPOnly() {
+            activeFilters.vipOnly = !activeFilters.vipOnly;
+            
+            if (activeFilters.vipOnly) {
+                // Reset filter lain yang relevan
+                activeFilters.alarmType = '';
+                activeFilters.siteIdExact = '';
+                activeFilters.priority = '';
+            }
+            
+            // Clear search inputs
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            
+            applyFilters();
+        }
+
+        function filterByPriority(priority) {
+            if (activeFilters.priority === priority) {
+                // Jika sudah aktif, nonaktifkan
+                activeFilters.priority = '';
+            } else {
+                // Set filter baru
+                activeFilters.priority = priority;
+                // Reset filter lain yang relevan
+                activeFilters.alarmType = '';
+                activeFilters.siteIdExact = '';
+                activeFilters.vipOnly = false;
+            }
+            
+            // Clear search inputs
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            
+            applyFilters();
+        }
+
+        function filterByKPICategory(category) {
+            // Reset semua KPI card active class
+            document.querySelectorAll('.kpi-card').forEach(card => {
+                card.classList.remove('active-filter');
+            });
+            
+            switch(category) {
+                case 'total':
+                    // Reset semua filter
+                    clearAllFilters();
+                    document.getElementById('kpiTotalCard').classList.add('active-filter');
+                    break;
+                case 'affected':
+                    // Filter untuk affected sites (sudah default)
+                    clearAllFilters();
+                    document.getElementById('kpiAffectedCard').classList.add('active-filter');
+                    break;
+                case 'category':
+                    // Filter untuk alarm categories (sudah default)
+                    clearAllFilters();
+                    document.getElementById('kpiCategoryCard').classList.add('active-filter');
+                    break;
+                case 'vip':
+                    filterByVIPOnly();
+                    document.getElementById('kpiVipCard').classList.add('active-filter');
+                    break;
+            }
+        }
+
+        function removeFilter(filterType) {
+            switch(filterType) {
+                case 'siteId':
+                    activeFilters.siteId = '';
+                    document.getElementById('searchSiteId').value = '';
+                    break;
+                case 'alarmName':
+                    activeFilters.alarmName = '';
+                    document.getElementById('searchAlarmName').value = '';
+                    break;
+                case 'alarmType':
+                    activeFilters.alarmType = '';
+                    break;
+                case 'siteIdExact':
+                    activeFilters.siteIdExact = '';
+                    break;
+                case 'vipOnly':
+                    activeFilters.vipOnly = false;
+                    break;
+                case 'priority':
+                    activeFilters.priority = '';
+                    break;
+            }
+            
+            applyFilters();
+        }
+
+        function clearAllFilters() {
+            activeFilters = {
+                siteId: '',
+                alarmName: '',
+                alarmType: '',
+                siteIdExact: '',
+                vipOnly: false,
+                priority: ''
+            };
+            
+            document.getElementById('searchSiteId').value = '';
+            document.getElementById('searchAlarmName').value = '';
+            
+            document.querySelectorAll('.kpi-card').forEach(card => {
+                card.classList.remove('active-filter');
+            });
+            
             applyFilters();
         }
 
@@ -1055,7 +1322,7 @@
             const totalAlarms = filteredAlarmData.length;
             const sortedAlarms = Object.entries(alarmCounts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 40); // TAMPILKAN LEBIH BANYAK BARIS UNTUK TINGGI 1000px
+                .slice(0, 40);
             
             tbody.innerHTML = '';
             
@@ -1069,9 +1336,14 @@
                 // Potong teks jika terlalu panjang
                 const displayAlarmName = alarmName.length > 50 ? 
                     `<span class="text-expandable" onclick="showFullText(this, '${alarmName.replace(/'/g, "\\'")}')">${alarmName.substring(0, 47)}...</span>` :
-                    highlightSearchText(alarmName, currentSearchAlarmName);
+                    highlightSearchText(alarmName, activeFilters.alarmName);
                 
                 const row = document.createElement('tr');
+                row.className = 'clickable-row';
+                if (activeFilters.alarmType === alarmName) {
+                    row.classList.add('active-row');
+                }
+                row.onclick = function() { filterByAlarmType(alarmName); };
                 row.innerHTML = `
                     <td style="font-family: var(--font-inter); font-size: 12px;">${displayAlarmName}</td>
                     <td class="text-end" style="font-family: var(--font-plus-jakarta); font-weight: 600;">${count.toLocaleString()}</td>
@@ -1116,8 +1388,13 @@
                 const percentage = totalSites > 0 ? ((count / totalSites) * 100).toFixed(0) : 0;
                 
                 const row = document.createElement('tr');
+                row.className = 'clickable-row';
+                if (activeFilters.siteIdExact === siteId) {
+                    row.classList.add('active-row');
+                }
+                row.onclick = function() { filterBySiteId(siteId); };
                 row.innerHTML = `
-                    <td class="site-id-cell small">${highlightSearchText(siteId, currentSearchSiteId)}</td>
+                    <td class="site-id-cell small">${highlightSearchText(siteId, activeFilters.siteId)}</td>
                     <td class="text-end small fw-semibold">${count}</td>
                     <td>
                         <div class="progress" style="height: 6px;">
@@ -1176,9 +1453,13 @@
                     site.siteName;
                 
                 const row = document.createElement('tr');
-                row.className = 'vip-row';
+                row.className = 'vip-row clickable-row';
+                if (activeFilters.siteIdExact === site.siteId) {
+                    row.classList.add('active-row');
+                }
+                row.onclick = function() { filterBySiteId(site.siteId); };
                 row.innerHTML = `
-                    <td class="site-id-cell small">${highlightSearchText(site.siteId, currentSearchSiteId)}</td>
+                    <td class="site-id-cell small">${highlightSearchText(site.siteId, activeFilters.siteId)}</td>
                     <td class="small" style="font-family: var(--font-inter); font-size: 11px;">${displaySiteName}</td>
                     <td class="text-end">
                         <span class="badge vip-badge">${site.count}</span>
@@ -1255,18 +1536,18 @@
                 // Potong teks jika terlalu panjang
                 const displayAlarmName = alarm.alarmName.length > 40 ? 
                     `<span class="text-expandable" onclick="showFullText(this, '${alarm.alarmName.replace(/'/g, "\\'")}')">${alarm.alarmName.substring(0, 37)}...</span>` :
-                    highlightSearchText(alarm.alarmName, currentSearchAlarmName);
+                    highlightSearchText(alarm.alarmName, activeFilters.alarmName);
                 
                 const displayAlarmSource = alarm.alarmSource.length > 25 ? 
                     `<span class="text-expandable" onclick="showFullText(this, '${alarm.alarmSource.replace(/'/g, "\\'")}')">${alarm.alarmSource.substring(0, 22)}...</span>` :
-                    highlightSearchText(alarm.alarmSource, currentSearchAlarmName);
+                    highlightSearchText(alarm.alarmSource, activeFilters.alarmName);
                 
                 const row = document.createElement('tr');
                 if (alarm.isVip) row.className = 'vip-row';
                 
                 row.innerHTML = `
                     <td class="site-id-cell">
-                        ${highlightSearchText(alarm.siteId, currentSearchSiteId)}
+                        ${highlightSearchText(alarm.siteId, activeFilters.siteId)}
                         ${alarm.isVip ? '<span class="badge vip-badge ms-1">VIP</span>' : ''}
                     </td>
                     <td style="font-family: var(--font-inter); font-size: 12px;">
@@ -1286,25 +1567,89 @@
             container.style.display = 'block';
         }
 
+        function updateActiveFiltersDisplay() {
+            const container = document.getElementById('activeFiltersContainer');
+            container.innerHTML = '';
+            
+            let hasFilters = false;
+            
+            // Tampilkan filter yang aktif
+            if (activeFilters.siteId) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('Site ID contains: ' + activeFilters.siteId, 'siteId'));
+            }
+            
+            if (activeFilters.alarmName) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('Alarm contains: ' + activeFilters.alarmName, 'alarmName'));
+            }
+            
+            if (activeFilters.alarmType) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('Alarm Type: ' + activeFilters.alarmType, 'alarmType'));
+            }
+            
+            if (activeFilters.siteIdExact) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('Site ID: ' + activeFilters.siteIdExact, 'siteIdExact'));
+            }
+            
+            if (activeFilters.vipOnly) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('VIP Only', 'vipOnly'));
+            }
+            
+            if (activeFilters.priority) {
+                hasFilters = true;
+                container.appendChild(createFilterTag('Priority: ' + activeFilters.priority, 'priority'));
+            }
+            
+            if (!hasFilters) {
+                const noFilter = document.createElement('span');
+                noFilter.className = 'text-muted';
+                noFilter.style.fontFamily = 'var(--font-inter)';
+                noFilter.style.fontSize = '14px';
+                noFilter.innerHTML = '<i class="fas fa-filter me-1"></i> No active filters';
+                container.appendChild(noFilter);
+            }
+        }
+
+        function createFilterTag(text, filterType) {
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+            tag.innerHTML = `
+                ${text}
+                <span class="remove-filter" onclick="removeFilter('${filterType}')">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+            return tag;
+        }
+
+        function updateFilterIndicators() {
+            const indicator = document.getElementById('activeFilterIndicator');
+            const hasActiveFilters = Object.values(activeFilters).some(v => v && v !== '');
+            
+            if (hasActiveFilters) {
+                indicator.style.display = 'inline-block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
         // ==================== FUNGSI UTILITAS ====================
         function showFullText(element, fullText) {
-            // Hide semua popup lainnya
             hideAllTextPopups();
             
-            // Buat popup baru
             const popup = document.createElement('div');
             popup.className = 'text-full';
             popup.textContent = fullText;
             
-            // Posisikan popup
             const rect = element.getBoundingClientRect();
             popup.style.left = rect.left + 'px';
             popup.style.top = (rect.bottom + 5) + 'px';
             
-            // Tambahkan ke body
             document.body.appendChild(popup);
-            
-            // Tampilkan popup
             popup.style.display = 'block';
         }
         
@@ -1341,8 +1686,12 @@
         function highlightSearchText(text, searchTerm) {
             if (!searchTerm || !text) return text;
             
-            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return text.toString().replace(regex, '<span class="search-highlight">$1</span>');
+            try {
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return text.toString().replace(regex, '<span class="search-highlight">$1</span>');
+            } catch (e) {
+                return text;
+            }
         }
 
         function exportToCSV() {
@@ -1496,7 +1845,6 @@
         }
 
         // ==================== INISIALISASI AKHIR ====================
-        // Memastikan auto-refresh dimulai jika toggle aktif
         setTimeout(() => {
             if (document.getElementById('autoRefreshToggle').checked) {
                 startAutoRefresh();
