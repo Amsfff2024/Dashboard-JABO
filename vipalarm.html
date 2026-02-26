@@ -350,6 +350,14 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   margin-left: 8px;
 }
+
+/* Styling untuk card summary */
+#totalCard {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+#totalCard.active {
+  background: linear-gradient(135deg, #e6f2ff, #b8d9ff);
+}
 </style>
 </head>
 <body>
@@ -572,7 +580,7 @@ let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
 let categoryOptions = [];
 let currentAgingFilter = 'all';
-let selectedAlarmName = null; // Menyimpan alarm name yang dipilih dari distribution
+let selectedAlarmName = null;
 
 function loadData() {
   // Show loading state
@@ -601,15 +609,21 @@ function loadData() {
         // Extract unique categories
         extractCategories();
         
-        // Reset selected alarm
+        // Reset ke tampilan semua alarm (tanpa filter apapun)
+        currentAgingFilter = 'all';
         selectedAlarmName = null;
         
-        // Apply current aging filter
-        applyAgingFilter(currentAgingFilter);
+        // Set filteredData ke semua data
+        filteredData = [...rawData];
+        
+        // Render tabel dengan semua data
         render();
         
-        // Update distribution table
+        // Update distribution table dengan semua data
         updateDistributionTable();
+        
+        // Set active class ke Total Alarms card
+        setActiveAgingCard('all');
         
         // Update filter indicators
         updateFilterIndicators();
@@ -631,6 +645,21 @@ function loadData() {
       `;
     }
   });
+}
+
+function setActiveAgingCard(type) {
+  // Remove active class from all aging cards
+  document.querySelectorAll('.aging-card').forEach(card => {
+    card.classList.remove('active');
+  });
+  document.getElementById('totalCard').classList.remove('active');
+  
+  // Add active class to appropriate card
+  if (type === 'all') {
+    document.getElementById('totalCard').classList.add('active');
+  } else {
+    document.getElementById(`aging${type}Card`).classList.add('active');
+  }
 }
 
 function updateLastUpdateTime() {
@@ -855,13 +884,6 @@ function filterByAlarmFromDistribution(alarmName) {
   // Update input field
   document.getElementById("fAlarm").value = alarmName;
   
-  // Reset aging filter ke 'all' (opsional, bisa diubah sesuai kebutuhan)
-  // currentAgingFilter = 'all';
-  // document.querySelectorAll('.aging-card').forEach(card => {
-  //   card.classList.remove('active');
-  // });
-  // document.getElementById('totalCard').classList.add('active');
-  
   // Apply filter dengan alarm name yang dipilih
   const siteId = document.getElementById("fSite").value.toLowerCase();
   const category = document.getElementById("fCategory").value;
@@ -877,18 +899,8 @@ function filterByAlarmFromDistribution(alarmName) {
 function filterByAging(type) {
   currentAgingFilter = type;
   
-  // Remove active class from all aging cards
-  document.querySelectorAll('.aging-card').forEach(card => {
-    card.classList.remove('active');
-  });
-  document.getElementById('totalCard').classList.remove('active');
-  
-  // Add active class to clicked card
-  if (type === 'all') {
-    document.getElementById('totalCard').classList.add('active');
-  } else {
-    document.getElementById(`aging${type}Card`).classList.add('active');
-  }
+  // Set active class
+  setActiveAgingCard(type);
   
   // Apply the filter with current filter values
   const alarmName = document.getElementById("fAlarm").value.toLowerCase();
@@ -900,6 +912,7 @@ function filterByAging(type) {
   
   // Update distribution table
   updateDistributionTable();
+  updateFilterIndicators();
 }
 
 function clearFilter() {
@@ -912,14 +925,14 @@ function clearFilter() {
   // Reset selected alarm
   selectedAlarmName = null;
   
-  // Reset aging filter
+  // Reset aging filter ke 'all' (menampilkan semua alarm)
   currentAgingFilter = 'all';
-  document.querySelectorAll('.aging-card').forEach(card => {
-    card.classList.remove('active');
-  });
-  document.getElementById('totalCard').classList.add('active');
+  setActiveAgingCard('all');
   
+  // Set filteredData ke semua data
   filteredData = [...rawData];
+  
+  // Render ulang
   render();
   updateDistributionTable();
   updateFilterIndicators();
@@ -953,7 +966,7 @@ function updateDistributionTable() {
   // Update total count
   distTotalCount.textContent = `${filteredData.length} alarms`;
   
-  // Update table with ALL alarms dan tambahkan event click
+  // Update table dengan event click
   distributionBody.innerHTML = "";
   
   sortedAlarms.forEach(([alarmName, count]) => {
@@ -1123,8 +1136,8 @@ function toggleAutoRefresh() {
 document.addEventListener("DOMContentLoaded", function() {
   loadData();
   
-  // Mark total card as active initially
-  document.getElementById('totalCard').classList.add('active');
+  // Total Alarms card akan aktif secara default (tanpa perlu diklik)
+  // Ini sudah diatur di fungsi loadData dengan setActiveAgingCard('all')
   
   // Enable auto-refresh by default
   if (autoRefreshEnabled) {
