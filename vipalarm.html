@@ -259,7 +259,7 @@ h1, h2, h3, h4, h5, h6 {
 .horizontal-sidebar {
   display: flex;
   gap: 24px;
-  height: 600px; /* DIUBAH dari 400px menjadi 600px */
+  height: 600px;
   margin-bottom: 24px;
 }
 .horizontal-sidebar > .filter-card,
@@ -317,13 +317,38 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 12px;
   opacity: 0.9;
 }
-/* Tambahan untuk form fields yang lebih tinggi */
 .filter-fields .mb-3 {
   margin-bottom: 20px !important;
 }
 .filter-fields input, 
 .filter-fields select {
   height: 46px;
+}
+
+/* Style untuk distribution row yang aktif */
+.distribution-row-active {
+  background-color: #e6f2ff !important;
+  border-left: 4px solid #3b82f6;
+}
+.distribution-row-active:hover {
+  background-color: #d9ebff !important;
+}
+.distribution-row {
+  cursor: pointer;
+}
+.distribution-row:hover {
+  background-color: #f1f5f9;
+}
+
+/* Badge untuk menandai filter aktif */
+.active-filter-badge {
+  background-color: #3b82f6;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
 }
 </style>
 </head>
@@ -401,7 +426,10 @@ h1, h2, h3, h4, h5, h6 {
     <div class="horizontal-sidebar">
       <!-- FILTER CARD -->
       <div class="card filter-card p-4">
-        <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filters</h6>
+        <h6 class="mb-3">
+          <i class="fas fa-filter me-2"></i>Filters
+          <span id="activeFilterIndicator" style="display: none;" class="active-filter-badge">Active</span>
+        </h6>
         
         <div class="filter-section">
           <div class="filter-fields">
@@ -448,7 +476,10 @@ h1, h2, h3, h4, h5, h6 {
       <div class="card distribution-card p-4">
         <div class="distribution-content">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="m-0"><i class="fas fa-chart-bar me-2"></i>Alarm Distribution</h6>
+            <h6 class="m-0">
+              <i class="fas fa-chart-bar me-2"></i>Alarm Distribution
+              <span id="selectedAlarmBadge" style="display: none;" class="active-filter-badge">Filtered</span>
+            </h6>
             <span class="badge bg-info" id="distTotalCount" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">0 alarms</span>
           </div>
           <div class="distribution-table-container">
@@ -541,6 +572,7 @@ let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
 let categoryOptions = [];
 let currentAgingFilter = 'all';
+let selectedAlarmName = null; // Menyimpan alarm name yang dipilih dari distribution
 
 function loadData() {
   // Show loading state
@@ -569,12 +601,18 @@ function loadData() {
         // Extract unique categories
         extractCategories();
         
+        // Reset selected alarm
+        selectedAlarmName = null;
+        
         // Apply current aging filter
         applyAgingFilter(currentAgingFilter);
         render();
         
         // Update distribution table
         updateDistributionTable();
+        
+        // Update filter indicators
+        updateFilterIndicators();
       } else {
         console.warn("No data loaded from Google Sheets");
         showError("No data available from Google Sheets");
@@ -769,13 +807,37 @@ function applyFilter() {
   const category = document.getElementById("fCategory").value;
   const source = document.getElementById("fSource").value;
   
+  // Reset selected alarm jika filter manual diubah
+  if (alarmName !== (selectedAlarmName || '').toLowerCase()) {
+    selectedAlarmName = null;
+  }
+  
+  filterData(alarmName, siteId, category, source);
+  
+  updateDistributionTable();
+  updateFilterIndicators();
+}
+
+function filterData(alarmName, siteId, category, source) {
   filteredData = rawData.filter(item => {
     const alarmNameVal = (item["Name"] || "").toLowerCase();
     const siteID = (item["SITE ID"] || "").toLowerCase();
     const categoryVal = item["Category VIP POI"] || "";
     const ossValue = item["Source"] || item["Alarm Source"] || "";
     
+    // Filter berdasarkan aging terlebih dahulu
+    let agingMatch = true;
+    if (currentAgingFilter !== 'all') {
+      const agingDays = item._agingDays;
+      switch(currentAgingFilter) {
+        case '1': agingMatch = agingDays <= 1; break;
+        case '3': agingMatch = agingDays >= 1 && agingDays <= 4; break;
+        case '4': agingMatch = agingDays >= 5; break;
+      }
+    }
+    
     return (
+      agingMatch &&
       (!alarmName || alarmNameVal.includes(alarmName)) &&
       (!siteId || siteID.includes(siteId)) &&
       (!category || categoryVal === category) &&
@@ -784,7 +846,32 @@ function applyFilter() {
   });
   
   render();
+}
+
+function filterByAlarmFromDistribution(alarmName) {
+  // Set selected alarm
+  selectedAlarmName = alarmName;
+  
+  // Update input field
+  document.getElementById("fAlarm").value = alarmName;
+  
+  // Reset aging filter ke 'all' (opsional, bisa diubah sesuai kebutuhan)
+  // currentAgingFilter = 'all';
+  // document.querySelectorAll('.aging-card').forEach(card => {
+  //   card.classList.remove('active');
+  // });
+  // document.getElementById('totalCard').classList.add('active');
+  
+  // Apply filter dengan alarm name yang dipilih
+  const siteId = document.getElementById("fSite").value.toLowerCase();
+  const category = document.getElementById("fCategory").value;
+  const source = document.getElementById("fSource").value;
+  
+  filterData(alarmName.toLowerCase(), siteId, category, source);
+  
+  // Update distribution table (akan menampilkan data yang sudah difilter)
   updateDistributionTable();
+  updateFilterIndicators();
 }
 
 function filterByAging(type) {
@@ -803,34 +890,16 @@ function filterByAging(type) {
     document.getElementById(`aging${type}Card`).classList.add('active');
   }
   
-  // Apply the filter
-  applyAgingFilter(type);
+  // Apply the filter with current filter values
+  const alarmName = document.getElementById("fAlarm").value.toLowerCase();
+  const siteId = document.getElementById("fSite").value.toLowerCase();
+  const category = document.getElementById("fCategory").value;
+  const source = document.getElementById("fSource").value;
+  
+  filterData(alarmName, siteId, category, source);
   
   // Update distribution table
   updateDistributionTable();
-}
-
-function applyAgingFilter(type) {
-  switch(type) {
-    case '1':
-      // ≤ 1 Day
-      filteredData = rawData.filter(item => item._agingDays <= 1);
-      break;
-    case '3':
-      // ≥ 1 Day and ≤ 4 Days
-      filteredData = rawData.filter(item => item._agingDays >= 1 && item._agingDays <= 4);
-      break;
-    case '4':
-      // ≥ 5 Days
-      filteredData = rawData.filter(item => item._agingDays >= 5);
-      break;
-    case 'all':
-    default:
-      filteredData = [...rawData];
-      break;
-  }
-  
-  render();
 }
 
 function clearFilter() {
@@ -839,6 +908,9 @@ function clearFilter() {
   document.getElementById("fSite").value = "";
   document.getElementById("fCategory").value = "";
   document.getElementById("fSource").value = "";
+  
+  // Reset selected alarm
+  selectedAlarmName = null;
   
   // Reset aging filter
   currentAgingFilter = 'all';
@@ -850,6 +922,7 @@ function clearFilter() {
   filteredData = [...rawData];
   render();
   updateDistributionTable();
+  updateFilterIndicators();
 }
 
 function updateDistributionTable() {
@@ -866,7 +939,7 @@ function updateDistributionTable() {
     return;
   }
   
-  // Count alarm occurrences
+  // Count alarm occurrences from filtered data
   const alarmCounts = {};
   filteredData.forEach(item => {
     const alarmName = item["Name"] || "Unknown";
@@ -880,19 +953,54 @@ function updateDistributionTable() {
   // Update total count
   distTotalCount.textContent = `${filteredData.length} alarms`;
   
-  // Update table with ALL alarms
+  // Update table with ALL alarms dan tambahkan event click
   distributionBody.innerHTML = "";
   
   sortedAlarms.forEach(([alarmName, count]) => {
     const tr = document.createElement("tr");
+    tr.className = "distribution-row";
+    if (selectedAlarmName === alarmName) {
+      tr.classList.add("distribution-row-active");
+    }
+    tr.onclick = function() { filterByAlarmFromDistribution(alarmName); };
     tr.innerHTML = `
-      <td style="font-family: 'Inter', sans-serif;">${alarmName}</td>
+      <td style="font-family: 'Inter', sans-serif;">
+        ${alarmName}
+        ${selectedAlarmName === alarmName ? '<i class="fas fa-check-circle ms-2 text-primary" style="font-size: 12px;"></i>' : ''}
+      </td>
       <td class="text-end">
         <span class="badge bg-primary rounded-pill" style="font-family: 'Plus Jakarta Sans', sans-serif;">${count}</span>
       </td>
     `;
     distributionBody.appendChild(tr);
   });
+}
+
+function updateFilterIndicators() {
+  // Update indicator di filter card
+  const filterIndicator = document.getElementById("activeFilterIndicator");
+  const selectedAlarmBadge = document.getElementById("selectedAlarmBadge");
+  
+  // Cek apakah ada filter aktif (selain default)
+  const alarmName = document.getElementById("fAlarm").value;
+  const siteId = document.getElementById("fSite").value;
+  const category = document.getElementById("fCategory").value;
+  const source = document.getElementById("fSource").value;
+  const hasFilters = alarmName || siteId || category || source || currentAgingFilter !== 'all';
+  
+  if (hasFilters) {
+    filterIndicator.style.display = "inline-block";
+  } else {
+    filterIndicator.style.display = "none";
+  }
+  
+  // Tampilkan badge jika ada alarm yang dipilih dari distribution
+  if (selectedAlarmName) {
+    selectedAlarmBadge.style.display = "inline-block";
+    selectedAlarmBadge.textContent = `Filtered: ${selectedAlarmName}`;
+  } else {
+    selectedAlarmBadge.style.display = "none";
+  }
 }
 
 function formatDateTime(datetimeStr) {
@@ -1037,4 +1145,3 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
-
