@@ -371,6 +371,23 @@ h1, h2, h3, h4, h5, h6 {
   padding: 3px 8px;
   border-radius: 12px;
 }
+
+/* Styling untuk Unknown badge */
+.unknown-badge {
+  background-color: #9ca3af;
+  color: white;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-style: italic;
+}
+
+.unknown-row {
+  background-color: #f3f4f6;
+}
+.unknown-row:hover {
+  background-color: #e5e7eb !important;
+}
 </style>
 </head>
 <body>
@@ -588,6 +605,10 @@ let peerSiteOptions = [];
 let currentAgingFilter = 'all';
 let selectedPeerSite = null;
 
+// Constants for special values
+const UNKNOWN_VALUE = "Unknown";
+const BLANK_VALUE = "";
+
 function loadData() {
   // Show loading state
   const loadingRow = document.getElementById("loadingRow");
@@ -611,6 +632,10 @@ function loadData() {
       if (res.data && res.data.length > 0) {
         rawData = processData(res.data);
         console.log(`Data loaded: ${rawData.length} records`);
+        
+        // Hitung jumlah data dengan remark blank
+        const blankCount = rawData.filter(item => !item["Remark"] || item["Remark"].trim() === "").length;
+        console.log(`Records with blank Remark: ${blankCount}`);
         
         // Extract unique values for dropdowns
         extractDropdownOptions();
@@ -725,19 +750,23 @@ function processData(data) {
       ...item,
       _agingDays: agingDays,
       _agingText: agingText,
-      _agingClass: agingClass
+      _agingClass: agingClass,
+      _isBlankRemark: !item["Remark"] || item["Remark"].trim() === ""
     };
   });
 }
 
 function extractDropdownOptions() {
-  // Extract unique peer sites (Remark)
+  // Extract unique peer sites (Remark) - exclude blank values for regular options
   const peerSites = new Set();
+  let hasBlankData = false;
   
   rawData.forEach(item => {
     const peerSite = item["Remark"];
     if (peerSite && peerSite.trim() !== "") {
       peerSites.add(peerSite.trim());
+    } else {
+      hasBlankData = true;
     }
   });
   
@@ -747,6 +776,16 @@ function extractDropdownOptions() {
   // Update peer site dropdown
   const peerSelect = document.getElementById("fPeerSite");
   peerSelect.innerHTML = '<option value="">All Peer Sites</option>';
+  
+  // Add Unknown option if there are blank values
+  if (hasBlankData) {
+    const unknownOption = document.createElement("option");
+    unknownOption.value = UNKNOWN_VALUE;
+    unknownOption.textContent = `${UNKNOWN_VALUE} (Blank Values)`;
+    peerSelect.appendChild(unknownOption);
+  }
+  
+  // Add regular peer site options
   peerSiteOptions.forEach(peer => {
     const option = document.createElement("option");
     option.value = peer;
@@ -779,6 +818,11 @@ function render() {
   filteredData.forEach(item => {
     const tr = document.createElement("tr");
     
+    // Add special class for rows with blank remark
+    if (item._isBlankRemark) {
+      tr.classList.add("unknown-row");
+    }
+    
     // Update aging counters
     const agingDays = item._agingDays;
     if (agingDays <= 1) {
@@ -800,13 +844,21 @@ function render() {
       agingBadge = "-";
     }
     
+    // Format Peer Site Down column
+    let peerSiteDisplay = "";
+    if (item._isBlankRemark) {
+      peerSiteDisplay = `<span class="badge unknown-badge">${UNKNOWN_VALUE}</span>`;
+    } else {
+      peerSiteDisplay = `<span class="badge peer-badge">${item["Remark"] || ""}</span>`;
+    }
+    
     tr.innerHTML = `
       <td><span class="badge bg-primary" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Name"] || ""}</span></td>
       <td class="text-nowrap" style="font-family: 'Inter', sans-serif;">${firstOccurred}</td>
       <td class="site-id-cell">${item["Alarm Source"] || ""}</td>
       <td><span class="badge bg-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">${item["Source"] || ""}</span></td>
       <td><span class="badge enbid-badge">${item["Description"] || ""}</span></td>
-      <td><span class="badge peer-badge">${item["Remark"] || ""}</span></td>
+      <td>${peerSiteDisplay}</td>
       <td class="text-center">${agingBadge}</td>
     `;
     tbody.appendChild(tr);
@@ -850,7 +902,8 @@ function filterData(siteName, source, peerSite) {
   filteredData = rawData.filter(item => {
     const siteID = (item["Alarm Source"] || "").toLowerCase();
     const sourceVal = item["Source"] || "";
-    const peerSiteVal = item["Remark"] || "";
+    const remarkVal = item["Remark"] || "";
+    const isBlankRemark = !remarkVal || remarkVal.trim() === "";
     
     // Filter berdasarkan aging terlebih dahulu
     let agingMatch = true;
@@ -863,11 +916,21 @@ function filterData(siteName, source, peerSite) {
       }
     }
     
+    // Filter berdasarkan peer site (termasuk Unknown untuk blank values)
+    let peerMatch = true;
+    if (peerSite) {
+      if (peerSite === UNKNOWN_VALUE) {
+        peerMatch = isBlankRemark;
+      } else {
+        peerMatch = remarkVal === peerSite;
+      }
+    }
+    
     return (
       agingMatch &&
       (!siteName || siteID.includes(siteName)) &&
       (!source || sourceVal === source) &&
-      (!peerSite || peerSiteVal === peerSite)
+      peerMatch
     );
   });
   
@@ -948,14 +1011,26 @@ function updateDistributionTable() {
   
   // Count peer site occurrences from filtered data
   const peerCounts = {};
+  let unknownCount = 0;
+  
   filteredData.forEach(item => {
-    const peerSite = item["Remark"] || "Unknown";
-    peerCounts[peerSite] = (peerCounts[peerSite] || 0) + 1;
+    const remark = item["Remark"];
+    if (!remark || remark.trim() === "") {
+      unknownCount++;
+    } else {
+      const peerSite = remark;
+      peerCounts[peerSite] = (peerCounts[peerSite] || 0) + 1;
+    }
   });
   
   // Convert to array and sort by count (descending)
-  const sortedPeers = Object.entries(peerCounts)
+  let sortedPeers = Object.entries(peerCounts)
     .sort((a, b) => b[1] - a[1]);
+  
+  // Add Unknown at the top if there are blank values
+  if (unknownCount > 0) {
+    sortedPeers = [[UNKNOWN_VALUE, unknownCount], ...sortedPeers];
+  }
   
   // Update total count
   distTotalCount.textContent = `${filteredData.length} alarms`;
@@ -966,17 +1041,26 @@ function updateDistributionTable() {
   sortedPeers.forEach(([peerSite, count]) => {
     const tr = document.createElement("tr");
     tr.className = "distribution-row";
+    if (peerSite === UNKNOWN_VALUE) {
+      tr.classList.add("unknown-row");
+    }
     if (selectedPeerSite === peerSite) {
       tr.classList.add("distribution-row-active");
     }
     tr.onclick = function() { filterByPeerFromDistribution(peerSite); };
+    
+    let displayName = peerSite;
+    if (peerSite === UNKNOWN_VALUE) {
+      displayName = `${UNKNOWN_VALUE} (Blank Values)`;
+    }
+    
     tr.innerHTML = `
       <td style="font-family: 'Inter', sans-serif;">
-        ${peerSite}
+        ${displayName}
         ${selectedPeerSite === peerSite ? '<i class="fas fa-check-circle ms-2 text-primary" style="font-size: 12px;"></i>' : ''}
       </td>
       <td class="text-end">
-        <span class="badge bg-primary rounded-pill" style="font-family: 'Plus Jakarta Sans', sans-serif;">${count}</span>
+        <span class="badge ${peerSite === UNKNOWN_VALUE ? 'bg-secondary' : 'bg-primary'} rounded-pill" style="font-family: 'Plus Jakarta Sans', sans-serif;">${count}</span>
       </td>
     `;
     distributionBody.appendChild(tr);
@@ -1003,7 +1087,11 @@ function updateFilterIndicators() {
   // Tampilkan badge jika ada peer site yang dipilih dari distribution
   if (selectedPeerSite) {
     selectedPeerBadge.style.display = "inline-block";
-    selectedPeerBadge.textContent = `Filtered: ${selectedPeerSite}`;
+    let displayText = selectedPeerSite;
+    if (selectedPeerSite === UNKNOWN_VALUE) {
+      displayText = "Unknown (Blank)";
+    }
+    selectedPeerBadge.textContent = `Filtered: ${displayText}`;
   } else {
     selectedPeerBadge.style.display = "none";
   }
@@ -1072,6 +1160,8 @@ function exportCSV() {
         let cell;
         if (header === "Aging (Days)") {
           cell = row._agingText || "";
+        } else if (header === "Remark" && (!row[header] || row[header].trim() === "")) {
+          cell = UNKNOWN_VALUE; // Tulis "Unknown" di CSV untuk data blank
         } else {
           cell = row[header] || "";
         }
